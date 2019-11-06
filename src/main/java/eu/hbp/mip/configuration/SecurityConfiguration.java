@@ -88,8 +88,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Value("#{'${hbp.resource.revokeTokenUri:https://services.humanbrainproject.eu/oidc/revoke}'}")
     private String revokeTokenURI;
 
-    @Autowired
-    private HttpServletRequest request;
+//    @Autowired
+//    private HttpServletRequest request;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -112,7 +112,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         }
         else {
             //keycloak
-            (KeycloakSecurityContext) request.getAttribute(KeycloakSecurityContext.class.getName());
+            KeycloakConfiguration.getKeycloakSecurityContext();
 //            http.antMatcher("/**")
 //                    .authorizeRequests()
 //                    .antMatchers("/**").permitAll().and().csrf().disable();

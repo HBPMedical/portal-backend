@@ -16,6 +16,7 @@
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>1.3.8.RELEASE</version>
         <relativePath/>
+
     </parent>
 
     <properties>
@@ -256,8 +257,7 @@
         </dependency>
         <dependency>
             <groupId>org.keycloak</groupId>
-            <artifactId>keycloak-spring-boot-2-starter</artifactId>
-            <version>4.0.0.Final</version>
+            <artifactId>keycloak-spring-boot-starter</artifactId>
         </dependency>
 
 
@@ -354,4 +354,15 @@
       </plugins>
     </build>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.keycloak.bom</groupId>
+                <artifactId>keycloak-adapter-bom</artifactId>
+                <version>7.0.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 </project>

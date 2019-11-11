@@ -49,177 +49,216 @@ import java.io.IOException;
 /**
  * Configuration for security.
  */
-@Configuration
-@EnableOAuth2Client
-public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(SecurityConfiguration.class);
-
+@KeycloakConfiguration
+public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter {
     @Autowired
-    private OAuth2ClientContext oauth2ClientContext;
+    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(keycloakAuthenticationProvider());
+    }
 
     /**
-     * Enable HBP collab authentication (1) or disable it (0). Default is 1
+     * Defines the session authentication strategy.
      */
-    @Value("#{'${hbp.authentication.enabled:1}'}")
-    private boolean authentication;
-
-    /**
-     * Absolute URL to redirect to when login is required
-     */
-    @Value("#{'${frontend.loginUrl:/login/hbp}'}")
-    private String loginUrl;
-
-    /**
-     * Absolute URL to redirect to after successful login
-     */
-    @Value("#{'${frontend.redirectAfterLoginUrl:http://frontend/home}'}")
-    private String frontendRedirectAfterLogin;
-
-    /**
-     * Absolute URL to redirect to after logout has occurred
-     */
-    @Value("#{'${frontend.redirectAfterLogoutUrl:/login/hbp}'}")
-    private String redirectAfterLogoutUrl;
-
-    /**
-     * URL to revoke auth token
-     */
-    @Value("#{'${hbp.resource.revokeTokenUri:https://services.humanbrainproject.eu/oidc/revoke}'}")
-    private String revokeTokenURI;
-
-//    @Autowired
-//    private HttpServletRequest request;
+    @Bean
+    @Override
+    protected SessionAuthenticationStrategy sessionAuthenticationStrategy() {
+        return new NullAuthenticatedSessionStrategy();
+    }
 
     @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        // @formatter:off
-        http.addFilterBefore(new CORSFilter(), ChannelProcessingFilter.class);
+    protected void configure(HttpSecurity http) throws Exception
+    {
+        super.configure(http);
+        http
+                .authorizeRequests()
+                .antMatchers("/user*").authenticated()
+                .antMatchers("/public1*").hasAuthority("public13")
+                .antMatchers("/public2*").hasAuthority("public2")
+                .antMatchers("/public3*").hasAuthority("public3")
+                .antMatchers("/admin*").authenticated()
+                .anyRequest().permitAll()
+                .and()
+                .logout()
+                .addLogoutHandler(keycloakLogoutHandler())//.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                .logoutUrl("/logout").permitAll()
+                .logoutSuccessUrl("/");
+//        .anyRequest().permitAll().and().logout().addLogoutHandler(new KeycloakLogoutHandler(new RestTemplate())).logoutRequestMatcher(new AntPathRequestMatcher("/logout"));
+        ;
+    }
 
-        if (authentication) {
-            http.antMatcher("/**")
-                    .authorizeRequests()
-                    .antMatchers(
-                            "/", "/login/**", "/health/**", "/info/**", "/metrics/**", "/trace/**", "/frontend/**", "/webjars/**", "/v2/api-docs", "/swagger-ui.html", "/swagger-resources/**"
-                    ).permitAll()
-                    .anyRequest().authenticated()
-                    .and().exceptionHandling().authenticationEntryPoint(new CustomLoginUrlAuthenticationEntryPoint(loginUrl))
-                    .and().logout().addLogoutHandler(new CustomLogoutHandler()).logoutSuccessUrl(redirectAfterLogoutUrl)
-                    .and().logout().permitAll()
-                    .and().csrf().ignoringAntMatchers("/logout").csrfTokenRepository(csrfTokenRepository())
-                    .and().addFilterAfter(csrfHeaderFilter(), CsrfFilter.class)
-                    .addFilterBefore(ssoFilter(), BasicAuthenticationFilter.class);
-        }
-        else {
-            //keycloak
-            KeycloakConfiguration.getKeycloakSecurityContext();
+}
+
+//@Configuration
+//@EnableOAuth2Client
+//public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+//
+//    private static final Logger LOGGER = LoggerFactory.getLogger(SecurityConfiguration.class);
+//
+//    @Autowired
+//    private OAuth2ClientContext oauth2ClientContext;
+//
+//    /**
+//     * Enable HBP collab authentication (1) or disable it (0). Default is 1
+//     */
+//    @Value("#{'${hbp.authentication.enabled:1}'}")
+//    private boolean authentication;
+//
+//    /**
+//     * Absolute URL to redirect to when login is required
+//     */
+//    @Value("#{'${frontend.loginUrl:/login/hbp}'}")
+//    private String loginUrl;
+//
+//    /**
+//     * Absolute URL to redirect to after successful login
+//     */
+//    @Value("#{'${frontend.redirectAfterLoginUrl:http://frontend/home}'}")
+//    private String frontendRedirectAfterLogin;
+//
+//    /**
+//     * Absolute URL to redirect to after logout has occurred
+//     */
+//    @Value("#{'${frontend.redirectAfterLogoutUrl:/login/hbp}'}")
+//    private String redirectAfterLogoutUrl;
+//
+//    /**
+//     * URL to revoke auth token
+//     */
+//    @Value("#{'${hbp.resource.revokeTokenUri:https://services.humanbrainproject.eu/oidc/revoke}'}")
+//    private String revokeTokenURI;
+//
+////    @Autowired
+////    private HttpServletRequest request;
+//
+//    @Override
+//    protected void configure(HttpSecurity http) throws Exception {
+//        // @formatter:off
+//        http.addFilterBefore(new CORSFilter(), ChannelProcessingFilter.class);
+//
+//        if (authentication) {
 //            http.antMatcher("/**")
 //                    .authorizeRequests()
-//                    .antMatchers("/**").permitAll().and().csrf().disable();
-        }
-    }
-
-    private Filter ssoFilter() {
-        OAuth2ClientAuthenticationProcessingFilter hbpFilter = new OAuth2ClientAuthenticationProcessingFilter("/login/hbp");
-        OAuth2RestTemplate hbpTemplate = new OAuth2RestTemplate(hbp(), oauth2ClientContext);
-        hbpFilter.setAuthenticationSuccessHandler(new SimpleUrlAuthenticationSuccessHandler(frontendRedirectAfterLogin));
-        hbpFilter.setRestTemplate(hbpTemplate);
-        hbpFilter.setTokenServices(new UserInfoTokenServices(hbpResource().getUserInfoUri(), hbp().getClientId()));
-        return hbpFilter;
-    }
-
-    @Bean
-    public FilterRegistrationBean oauth2ClientFilterRegistration(
-            OAuth2ClientContextFilter filter) {
-        FilterRegistrationBean registration = new FilterRegistrationBean();
-        registration.setFilter(filter);
-        registration.setOrder(-100);
-        return registration;
-    }
-
-    @Bean(name="hbp")
-    @ConfigurationProperties("hbp.client")
-    public OAuth2ProtectedResourceDetails hbp() {
-        return new AuthorizationCodeResourceDetails();
-    }
-
-    @Bean(name="hbpResource")
-    @ConfigurationProperties("hbp.resource")
-    public ResourceServerProperties hbpResource() {
-        return new ResourceServerProperties();
-    }
-
-    public boolean isAuthentication() {
-        return authentication;
-    }
-
-    public String getFrontendRedirectAfterLogin() {
-        return frontendRedirectAfterLogin;
-    }
-
-    private Filter csrfHeaderFilter() {
-        return new OncePerRequestFilter() {
-            @Override
-            protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-                                            FilterChain filterChain) throws ServletException, IOException {
-                CsrfToken csrf = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
-                if (csrf != null) {
-                    Cookie cookie = WebUtils.getCookie(request, "XSRF-TOKEN");
-                    String token = csrf.getToken();
-                    if (cookie == null || token != null && !token.equals(cookie.getValue())) {
-                        cookie = new Cookie("XSRF-TOKEN", token);
-                        cookie.setPath("/");
-                        response.addCookie(cookie);
-                    }
-                }
-                filterChain.doFilter(request, response);
-            }
-        };
-    }
-
-    private CsrfTokenRepository csrfTokenRepository() {
-        HttpSessionCsrfTokenRepository repository = new HttpSessionCsrfTokenRepository();
-        repository.setHeaderName("X-XSRF-TOKEN");
-        return repository;
-    }
-
-    private class CustomLogoutHandler implements LogoutHandler {
-        @Override
-        public void logout(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Authentication authentication) {
-
-            // Hackish way of accessing to this information...
-            final UserInfo userInfo = (UserInfo) httpServletRequest.getSession().getAttribute("userInfo");
-            if (userInfo != null) {
-                userInfo.setFakeAuth(false);
-            }
-
-            if (oauth2ClientContext == null || oauth2ClientContext.getAccessToken() == null)
-            {
-                return;
-            }
-
-            String idToken = oauth2ClientContext.getAccessToken().getAdditionalInformation().get("id_token").toString();
-
-            StringBuilder query = new StringBuilder();
-            query.append("{");
-            query.append("\"token\":");
-            query.append("\"").append(idToken).append("\"");
-            query.append("}");
-
-            try {
-                int responseCode = HTTPUtil.sendPost(revokeTokenURI, query.toString(), new StringBuilder());
-                if (responseCode != 200)
-                {
-                    LOGGER.warn("Cannot send request to OIDC server for revocation ! ");
-                }
-                else{
-                    LOGGER.info("Should be logged out");
-                }
-            } catch (IOException e) {
-                LOGGER.warn("Cannot notify logout to OIDC server !");
-                LOGGER.trace("Cannot notify logout", e);
-            }
-
-        }
-    }
-}
+//                    .antMatchers(
+//                            "/", "/login/**", "/health/**", "/info/**", "/metrics/**", "/trace/**", "/frontend/**", "/webjars/**", "/v2/api-docs", "/swagger-ui.html", "/swagger-resources/**"
+//                    ).permitAll()
+//                    .anyRequest().authenticated()
+//                    .and().exceptionHandling().authenticationEntryPoint(new CustomLoginUrlAuthenticationEntryPoint(loginUrl))
+//                    .and().logout().addLogoutHandler(new CustomLogoutHandler()).logoutSuccessUrl(redirectAfterLogoutUrl)
+//                    .and().logout().permitAll()
+//                    .and().csrf().ignoringAntMatchers("/logout").csrfTokenRepository(csrfTokenRepository())
+//                    .and().addFilterAfter(csrfHeaderFilter(), CsrfFilter.class)
+//                    .addFilterBefore(ssoFilter(), BasicAuthenticationFilter.class);
+//        }
+//        else {
+//            //keycloak
+//            //KeycloakConfiguration.getKeycloakSecurityContext();
+////            http.antMatcher("/**")
+////                    .authorizeRequests()
+////                    .antMatchers("/**").permitAll().and().csrf().disable();
+//        }
+//    }
+//
+//    private Filter ssoFilter() {
+//        OAuth2ClientAuthenticationProcessingFilter hbpFilter = new OAuth2ClientAuthenticationProcessingFilter("/login/hbp");
+//        OAuth2RestTemplate hbpTemplate = new OAuth2RestTemplate(hbp(), oauth2ClientContext);
+//        hbpFilter.setAuthenticationSuccessHandler(new SimpleUrlAuthenticationSuccessHandler(frontendRedirectAfterLogin));
+//        hbpFilter.setRestTemplate(hbpTemplate);
+//        hbpFilter.setTokenServices(new UserInfoTokenServices(hbpResource().getUserInfoUri(), hbp().getClientId()));
+//        return hbpFilter;
+//    }
+//
+//    @Bean
+//    public FilterRegistrationBean oauth2ClientFilterRegistration(
+//            OAuth2ClientContextFilter filter) {
+//        FilterRegistrationBean registration = new FilterRegistrationBean();
+//        registration.setFilter(filter);
+//        registration.setOrder(-100);
+//        return registration;
+//    }
+//
+//    @Bean(name="hbp")
+//    @ConfigurationProperties("hbp.client")
+//    public OAuth2ProtectedResourceDetails hbp() {
+//        return new AuthorizationCodeResourceDetails();
+//    }
+//
+//    @Bean(name="hbpResource")
+//    @ConfigurationProperties("hbp.resource")
+//    public ResourceServerProperties hbpResource() {
+//        return new ResourceServerProperties();
+//    }
+//
+//    public boolean isAuthentication() {
+//        return authentication;
+//    }
+//
+//    public String getFrontendRedirectAfterLogin() {
+//        return frontendRedirectAfterLogin;
+//    }
+//
+//    private Filter csrfHeaderFilter() {
+//        return new OncePerRequestFilter() {
+//            @Override
+//            protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+//                                            FilterChain filterChain) throws ServletException, IOException {
+//                CsrfToken csrf = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
+//                if (csrf != null) {
+//                    Cookie cookie = WebUtils.getCookie(request, "XSRF-TOKEN");
+//                    String token = csrf.getToken();
+//                    if (cookie == null || token != null && !token.equals(cookie.getValue())) {
+//                        cookie = new Cookie("XSRF-TOKEN", token);
+//                        cookie.setPath("/");
+//                        response.addCookie(cookie);
+//                    }
+//                }
+//                filterChain.doFilter(request, response);
+//            }
+//        };
+//    }
+//
+//    private CsrfTokenRepository csrfTokenRepository() {
+//        HttpSessionCsrfTokenRepository repository = new HttpSessionCsrfTokenRepository();
+//        repository.setHeaderName("X-XSRF-TOKEN");
+//        return repository;
+//    }
+//
+//    private class CustomLogoutHandler implements LogoutHandler {
+//        @Override
+//        public void logout(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Authentication authentication) {
+//
+//            // Hackish way of accessing to this information...
+//            final UserInfo userInfo = (UserInfo) httpServletRequest.getSession().getAttribute("userInfo");
+//            if (userInfo != null) {
+//                userInfo.setFakeAuth(false);
+//            }
+//
+//            if (oauth2ClientContext == null || oauth2ClientContext.getAccessToken() == null)
+//            {
+//                return;
+//            }
+//
+//            String idToken = oauth2ClientContext.getAccessToken().getAdditionalInformation().get("id_token").toString();
+//
+//            StringBuilder query = new StringBuilder();
+//            query.append("{");
+//            query.append("\"token\":");
+//            query.append("\"").append(idToken).append("\"");
+//            query.append("}");
+//
+//            try {
+//                int responseCode = HTTPUtil.sendPost(revokeTokenURI, query.toString(), new StringBuilder());
+//                if (responseCode != 200)
+//                {
+//                    LOGGER.warn("Cannot send request to OIDC server for revocation ! ");
+//                }
+//                else{
+//                    LOGGER.info("Should be logged out");
+//                }
+//            } catch (IOException e) {
+//                LOGGER.warn("Cannot notify logout to OIDC server !");
+//                LOGGER.trace("Cannot notify logout", e);
+//            }
+//
+//        }
+//    }
+//}

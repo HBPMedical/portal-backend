@@ -255,12 +255,6 @@
             <artifactId>java-jwt</artifactId>
             <version>3.8.3</version>
         </dependency>
-        <dependency>
-            <groupId>org.keycloak</groupId>
-            <artifactId>keycloak-spring-boot-starter</artifactId>
-        </dependency>
-
-
     </dependencies>
 
     <build>

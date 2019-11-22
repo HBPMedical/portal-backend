@@ -17,6 +17,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
@@ -102,6 +103,7 @@ public class SecurityApi {
      */
 
     @RequestMapping(path = "/galaxy", method = RequestMethod.GET, produces = "application/json")
+	@PreAuthorize("hasRole('Data Manager')")
     @ResponseStatus(value = HttpStatus.OK)
     public ResponseEntity getGalaxyConfiguration(){
         String stringEncoded = Base64.getEncoder().encodeToString((galaxyUsername + ":" + galaxyPassword).getBytes());

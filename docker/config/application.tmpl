@@ -30,11 +30,11 @@ hbp:
     clientSecret: {{ .Env.CLIENT_SECRET }}
     accessTokenUri: {{ default .Env.TOKEN_URI "https://services.humanbrainproject.eu/oidc/token" }}
     userAuthorizationUri: {{ default .Env.AUTH_URI "https://services.humanbrainproject.eu/oidc/authorize" }}
-    tokenName: oauth_token
+    tokenName: access_token
     authenticationScheme: query
     clientAuthenticationScheme: form
     useCurrentUri: false
-    preEstablishedRedirectUri: {{ default .Env.FRONTEND_LOGIN_URL "http://frontend/services/login/hbp" }}
+    preEstablishedRedirectUri: {{ default .Env.FRONTEND_LOGIN_URL "http://localhost:8080/services/login/hbp" }}
   resource:
     userInfoUri: {{ default .Env.USER_INFO_URI "https://services.humanbrainproject.eu/oidc/userinfo" }}
     revokeTokenUri: {{ default .Env.REVOKE_TOKEN_URI "https://services.humanbrainproject.eu/oidc/slo" }}
@@ -52,6 +52,7 @@ logging:
     root: {{ default .Env.LOG_LEVEL "INFO" }}
     org:
       springframework:
+        security: DEBUG
         web: {{ default .Env.LOGGING_LEVEL_WEB "WARN" }}
         web.servlet.handler.BeanNameUrlHandlerMapping: WARN
       hibernate: {{ default .Env.LOGGING_LEVEL_HIBERNATE "WARN" }}

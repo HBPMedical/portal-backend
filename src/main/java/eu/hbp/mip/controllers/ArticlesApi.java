@@ -10,6 +10,7 @@ import eu.hbp.mip.model.Article;
 import eu.hbp.mip.model.User;
 import eu.hbp.mip.model.UserInfo;
 import eu.hbp.mip.repositories.ArticleRepository;
+import eu.hbp.mip.utils.UserActionLogging;
 import io.swagger.annotations.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,8 +31,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @Api(value = "/articles", description = "the articles API")
 public class ArticlesApi {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ArticlesApi.class);
-
     @Autowired
     private UserInfo userInfo;
 
@@ -44,8 +43,6 @@ public class ArticlesApi {
             @ApiParam(value = "Only ask own articles") @RequestParam(value = "own", required = false) Boolean own,
             @ApiParam(value = "Only ask results matching status", allowableValues = "draft, published") @RequestParam(value = "status", required = false) String status
     ) {
-        LOGGER.info("Get articles");
-
         User user = userInfo.getUser();
         Iterable<Article> articles;
 
@@ -69,7 +66,8 @@ public class ArticlesApi {
                 }
             }
         }
-
+		UserActionLogging.LogAction("Get articles", "id : Get All articles");
+        
         return ResponseEntity.ok(articles);
     }
 
@@ -80,8 +78,7 @@ public class ArticlesApi {
     public ResponseEntity<Void> addAnArticle(
             @RequestBody @ApiParam(value = "Article to create", required = true) @Valid Article article
     ) {
-        LOGGER.info("Create an article");
-
+        
         User user = userInfo.getUser();
 
         article.setCreatedAt(new Date());
@@ -111,7 +108,7 @@ public class ArticlesApi {
             slug = new Slugify().slugify(article.getTitle());
         } catch (IOException e) {
             slug = "";
-            LOGGER.trace("Cannot slugify title", e);
+            //LOGGER.trace("Cannot slugify title", e);
         }
 
         boolean alreadyExists = true;
@@ -130,8 +127,7 @@ public class ArticlesApi {
         }
         articleRepository.save(article);
 
-        LOGGER.info("Article saved");
-
+		UserActionLogging.LogAction("Created article", "id : " + article.getSlug());
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
@@ -141,7 +137,7 @@ public class ArticlesApi {
     public ResponseEntity<Article> getAnArticle(
             @ApiParam(value = "slug", required = true) @PathVariable("slug") String slug
     ) {
-        LOGGER.info("Get an article");
+		UserActionLogging.LogAction("Getting an article", "id : " + slug);
 
         User user = userInfo.getUser();
         Article article;
@@ -149,7 +145,7 @@ public class ArticlesApi {
 
         if(article == null)
         {
-            LOGGER.warn("Cannot find article : " + slug);
+            //LOGGER.warn("Cannot find article : " + slug);
             return ResponseEntity.badRequest().body(null);
         }
 
@@ -169,7 +165,7 @@ public class ArticlesApi {
             @ApiParam(value = "slug", required = true) @PathVariable("slug") String slug,
             @RequestBody @ApiParam(value = "Article to update", required = true) @Valid Article article
     ) {
-        LOGGER.info("Update an article");
+        UserActionLogging.LogAction("Update an article", "id : " + slug);
 
         User user = userInfo.getUser();
 
@@ -201,8 +197,7 @@ public class ArticlesApi {
 
         articleRepository.save(article);
 
-        LOGGER.info("Article updated");
-
+        
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 

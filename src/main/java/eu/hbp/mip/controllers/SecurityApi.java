@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
+import eu.hbp.mip.utils.UserActionLogging;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
@@ -29,8 +30,6 @@ import java.util.Base64;
 
 @RestController
 public class SecurityApi {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(SecurityApi.class);
 
     private static final Gson gson = new Gson();
 
@@ -46,7 +45,8 @@ public class SecurityApi {
     @RequestMapping(path = "/user", method = RequestMethod.GET)
     public Object user(Principal principal, HttpServletResponse response) {
         ObjectMapper mapper = new ObjectMapper();
-
+		
+		UserActionLogging.LogAction("get user from /user","");
         try {
             String userJSON = mapper.writeValueAsString(userInfo.getUser());
             Cookie cookie = new Cookie("user", URLEncoder.encode(userJSON, "UTF-8"));
@@ -54,7 +54,7 @@ public class SecurityApi {
             cookie.setPath("/");
             response.addCookie(cookie);
         } catch (JsonProcessingException | UnsupportedEncodingException e) {
-            LOGGER.trace("Cannot read user json", e);
+            //LOGGER.trace("Cannot read user json", e);
         }
 
         if (!securityConfiguration.isAuthentication()) {
@@ -77,6 +77,9 @@ public class SecurityApi {
             user.setAgreeNDA(agreeNDA);
             userRepository.save(user);
         }
+		
+		UserActionLogging.LogAction("user agreeNDA","");
+		
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
@@ -110,7 +113,8 @@ public class SecurityApi {
         JsonObject object = new JsonObject();
         object.addProperty("authorization", stringEncoded);
         object.addProperty("context", galaxyContext);
-
+		UserActionLogging.LogAction("get galaxy information","");
+		
         return ResponseEntity.ok(gson.toJson(object));
     }
 

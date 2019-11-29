@@ -1,0 +1,14 @@
+<configuration>
+    <appender name="FILE1" class="ch.qos.logback.core.FileAppender">
+        <file>logs/log1.txt</file>
+        <append>true</append>
+        <encoder>
+            <pattern>%msg%n</pattern>
+        </encoder>
+    </appender>
+
+
+    <logger name="eu.hbp.mip.utils" level="INFO" additivity="false">
+        <appender-ref ref="FILE1" />
+    </logger>
+</configuration>

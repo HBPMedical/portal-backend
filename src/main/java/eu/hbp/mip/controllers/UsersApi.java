@@ -4,6 +4,7 @@
 
 package eu.hbp.mip.controllers;
 
+import eu.hbp.mip.utils.UserActionLogging;
 import io.swagger.annotations.*;
 import eu.hbp.mip.model.User;
 import eu.hbp.mip.repositories.UserRepository;
@@ -23,8 +24,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @Api(value = "/users", description = "the users API")
 public class UsersApi {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(UsersApi.class);
-
     @Autowired
     private UserRepository userRepository;
 
@@ -33,7 +32,7 @@ public class UsersApi {
     public ResponseEntity<User> getAUser(
             @ApiParam(value = "username", required = true) @PathVariable("username") String username
     )  {
-        LOGGER.info("Get a user");
+        UserActionLogging.LogAction("Get a user","");
 
         return ResponseEntity.ok(userRepository.findOne(username));
     }

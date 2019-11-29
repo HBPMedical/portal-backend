@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import eu.hbp.mip.utils.UserActionLogging;
 
 import java.time.LocalDateTime;
 
@@ -26,8 +27,7 @@ import java.time.LocalDateTime;
 @Api(value = "/protected", description = "the protected files API")
 public class FilesAPI {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(FilesAPI.class);
-
+    
     @Autowired
     private UserInfo userInfo;
 
@@ -36,12 +36,12 @@ public class FilesAPI {
     public ResponseEntity<Void> getProtectedFile(
             @ApiParam(value = "filename", required = true) @PathVariable("filename") String filename
     ) {
-        LOGGER.info("Get protected file");
+        UserActionLogging.LogAction("Get protected file", " filename : " + filename);
 
         String filepath = "/protected/" + filename;
         String user = userInfo.getUser().getUsername();
         String time = LocalDateTime.now().toString();
-        LOGGER.info("User " + user + " downloaded " + filepath + " at "+ time);
+        UserActionLogging.LogAction("User " + user + " downloaded " + filepath, "");
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Accel-Redirect", filepath);

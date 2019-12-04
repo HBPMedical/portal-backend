@@ -26,7 +26,7 @@ else
   DOCKER="sudo docker"
 fi
 
-IMAGE="hbpmip/portal-backend"
+IMAGE="kkech/portal_backend"
 VCS_REF=$(git describe --tags --dirty)
 VERSION=$(git describe --tags --dirty)
 
@@ -36,6 +36,9 @@ docker build --build-arg BUILD_DATE=$(date -Iseconds) \
     --tag "$IMAGE:latest" \
     --tag "$IMAGE:$VERSION" \
     .
+
+docker push kkech/portal_backend:latest
+
 
 BUGSNAG_KEY=""
 eval $(grep -e "^\\s*BUGSNAG_KEY" Dockerfile | tr '\\' ' ')

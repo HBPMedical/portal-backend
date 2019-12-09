@@ -6,10 +6,7 @@ import com.github.jmchilton.blend4j.galaxy.WorkflowsClient;
 import com.github.jmchilton.blend4j.galaxy.beans.Workflow;
 import com.github.jmchilton.blend4j.galaxy.beans.WorkflowDetails;
 import com.github.jmchilton.blend4j.galaxy.beans.WorkflowInputDefinition;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import eu.hbp.mip.controllers.retrofit.RetroFitGalaxyClients;
 import eu.hbp.mip.controllers.retrofit.RetrofitClientInstance;
 import eu.hbp.mip.dto.ErrorResponse;
@@ -461,12 +458,44 @@ class GalaxyAPI {
         logger.info(LogHelper.logUser(userDetails) + "Get error message of workflow called");
 
         RetroFitGalaxyClients service = RetrofitClientInstance.getRetrofitInstance().create(RetroFitGalaxyClients.class);
-        Call<Object> call = service.getErrorMessageOfWorkflowFromGalaxy(id,apiKey);
+        Call<Object> call = service.getWorkflowStatusFromGalaxy(id,apiKey);
+        String errorState = null;
+        try {
+            Response<Object> response = call.execute();
+            if(response.code() >= 400){
+                logger.error(LogHelper.logUser(userDetails) + "Resonse code: " + response.code() + "" + " with body: " + response.errorBody().string());
+                return ResponseEntity.badRequest().build();
+            }
+            JsonParser parser = new JsonParser();
+            String jsonString = new Gson().toJson(response.body());
+            JsonElement jsonElement = parser.parse(jsonString);
+            JsonObject rootObject = jsonElement.getAsJsonObject();
+            String state = rootObject.get("state").getAsString();
+            if(state.equals("error")){
+                JsonArray arrayOfErrors = rootObject.get("state_ids").getAsJsonObject().get("error").getAsJsonArray();
+                errorState = arrayOfErrors.get(0).getAsString();
+            }else if(state.equals("running")){
+                return ResponseEntity.ok(new StringDtoResponse("Still running. No errors yet"));
+            }else if(state.equals("ok")){
+                return ResponseEntity.ok(new StringDtoResponse("Completed. No errors "));
+            }else{
+                logger.warn("Unknown state of the workflow.");
+                return ResponseEntity.ok(new StringDtoResponse("Unknown state. No errors"));
+            }
+
+            logger.info(LogHelper.logUser(userDetails) + jsonString);
+
+            logger.info(LogHelper.logUser(userDetails) + "----" + response.body() + "----" + response.code());
+        } catch (IOException e) {
+            logger.error(LogHelper.logUser(userDetails) + "Cannot make the call to Galaxy API", e);
+        }
+
+        Call<Object> callError = service.getErrorMessageOfWorkflowFromGalaxy(errorState,apiKey);
 
         String fullError = null;
         String returnError = null;
         try {
-            Response<Object> response = call.execute();
+            Response<Object> response = callError.execute();
             if(response.code() >= 400){
                 logger.error(LogHelper.logUser(userDetails) + "Resonse code: " + response.code() + "" + " with body: " + response.errorBody().string());
                 return ResponseEntity.badRequest().build();
@@ -481,6 +510,7 @@ class GalaxyAPI {
             String specError = arrOfStr[arrOfStr.length-1];
             returnError = specError.substring(1);
 
+            System.out.println(fullError);
             logger.info(LogHelper.logUser(userDetails) + "----" + response.body() + "----" + response.code());
         } catch (IOException e) {
             logger.error(LogHelper.logUser(userDetails) + "Cannot make the call to Galaxy API", e);

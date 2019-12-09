@@ -53,6 +53,18 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+//newlyadded for logout
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.RequestEntity;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import java.net.URI;
+
+
 // See https://spring.io/guides/tutorials/spring-boot-oauth2/ for reference about configuring OAuth2 login
 // also http://cscarioni.blogspot.ch/2013/04/pro-spring-security-and-oauth-2.html
 
@@ -76,6 +88,12 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     */
    @Value("#{'${frontend.loginUrl:/login/hbp}'}")
    private String loginUrl;
+ 
+	/**
+    * Absolute URL to redirect to when logout is required
+    */
+   @Value("#{'${hbp.client.logoutUri:http://88.197.53.10:8095/auth/realms/Demo/protocol/openid-connect/logout}'}")
+   private String logoutUri;
 
    /**
     * Absolute URL to redirect to after successful login
@@ -94,6 +112,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     */
    @Value("#{'${hbp.resource.revokeTokenUri:https://services.humanbrainproject.eu/oidc/revoke}'}")
    private String revokeTokenURI;
+   
+   
 
 //    @Autowired
 //    private HttpServletRequest request;
@@ -114,7 +134,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 				   //.anyRequest().authenticated()
 				   .anyRequest().hasRole("Researcher")
                    .and().exceptionHandling().authenticationEntryPoint(new CustomLoginUrlAuthenticationEntryPoint(loginUrl))
-                   .and().logout().addLogoutHandler(new CustomLogoutHandler()).logoutSuccessUrl(redirectAfterLogoutUrl)
+                   .and().logout().addLogoutHandler(authLogoutHandler()).logoutSuccessUrl(redirectAfterLogoutUrl)
                    .and().logout().permitAll()
                    .and().csrf().ignoringAntMatchers("/logout").csrfTokenRepository(csrfTokenRepository())
                    .and().addFilterAfter(csrfHeaderFilter(), CsrfFilter.class)
@@ -260,5 +280,35 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
             return String.join(",", authorities);
         }
     }
+	
+	
+	private LogoutHandler authLogoutHandler() {
+		return (request, response, authentication) -> {
+			logout();
+		};
+    }
+	
+	
+	public void logout() {
+		// POSTするリクエストパラメーターを作成
+		UserActionLogging.LogAction("refresh token ", this.oauth2ClientContext.getAccessToken().getRefreshToken().getValue());
+		RestTemplate restTemplate = new RestTemplate();
+		MultiValueMap<String, String> formParams = new LinkedMultiValueMap<>();
+		formParams.add("client_id", hbp().getClientId());
+	//        formParams.add("client_secret", registration.getClientSecret());
+		formParams.add("refresh_token", this.oauth2ClientContext.getAccessToken().getRefreshToken().getValue());
+		// リクエストヘッダーを作成
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE);
+		// リクエストを作成
+		RequestEntity<MultiValueMap<String, String>> requestEntity =
+				new RequestEntity<>(formParams, httpHeaders, HttpMethod.POST,
+						//URI.create("http://88.197.53.10:8095/auth/realms/Demo/protocol/openid-connect/logout")); //todo make this parameter
+						URI.create(logoutUri)); //todo make this parameter
+		// POSTリクエスト送信（ログアウト実行）
+
+		ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
+    }
+	
    
 }

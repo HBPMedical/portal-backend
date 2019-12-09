@@ -202,7 +202,7 @@ class GalaxyAPI {
         final WorkflowDetails workflowDetails = workflowsClient.showWorkflow(matchingWorkflow.getId());
         for (Map.Entry<String, WorkflowInputDefinition> entry : workflowDetails.getInputs().entrySet()) {
             if(!(allJsonParams.containsKey(entry.getValue().getUuid()))) {
-                logger.warn("Find extra value with label:" + entry.getValue().getLabel() + "and uuid:" + entry.getValue().getUuid() + ", that is mandatory to run the workflow. The uuid will be automate add it with empty value in the parameters to run the workflow.");
+                logger.warn("Find extra value with label:" + entry.getValue().getLabel() + ", and uuid:" + entry.getValue().getUuid() + ", that is mandatory to run the workflow. The uuid will be automate add it with empty value in the parameters to run the workflow.");
                 allJsonParams.put(entry.getValue().getUuid(), "");
             }
         }

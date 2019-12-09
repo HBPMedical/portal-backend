@@ -5,6 +5,7 @@ import com.github.jmchilton.blend4j.galaxy.GalaxyInstanceFactory;
 import com.github.jmchilton.blend4j.galaxy.WorkflowsClient;
 import com.github.jmchilton.blend4j.galaxy.beans.Workflow;
 import com.github.jmchilton.blend4j.galaxy.beans.WorkflowDetails;
+import com.github.jmchilton.blend4j.galaxy.beans.WorkflowInputDefinition;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -185,6 +186,28 @@ class GalaxyAPI {
             logger.info(LogHelper.logUser(userDetails) + "Put to map: " + key + " : " + value);
             allJsonParams.put(key,value);
         }
+        final GalaxyInstance instance = GalaxyInstanceFactory.get(url, apiKey);
+        final WorkflowsClient workflowsClient = instance.getWorkflowsClient();
+
+        Workflow matchingWorkflow = null;
+        for(Workflow workflow : workflowsClient.getWorkflows()) {
+            if(workflow.getId().equals(id)) {
+                matchingWorkflow = workflow;
+            }
+        }
+        if(matchingWorkflow == null){
+            logger.error(LogHelper.logUser(userDetails) + "Run workflow could not find workflow with id : " + id + " ,in order to get missing input parameters");
+            return ResponseEntity.notFound().build();
+        }
+        final WorkflowDetails workflowDetails = workflowsClient.showWorkflow(matchingWorkflow.getId());
+        for (Map.Entry<String, WorkflowInputDefinition> entry : workflowDetails.getInputs().entrySet()) {
+            if(!(allJsonParams.containsKey(entry.getValue().getUuid()))) {
+                logger.warn("Find extra value with label:" + entry.getValue().getLabel() + "and uuid:" + entry.getValue().getUuid() + ", that is mandatory to run the workflow. The uuid will be automate add it with empty value in the parameters to run the workflow.");
+                allJsonParams.put(entry.getValue().getUuid(), "");
+            }
+        }
+
+        ////
 
         StringBuffer stringBuffer = new StringBuffer("{\n" +
                 "\t\"inputs\": {\n");

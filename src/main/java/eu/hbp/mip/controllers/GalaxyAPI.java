@@ -474,13 +474,9 @@ class GalaxyAPI {
             if(state.equals("error")){
                 JsonArray arrayOfErrors = rootObject.get("state_ids").getAsJsonObject().get("error").getAsJsonArray();
                 errorState = arrayOfErrors.get(0).getAsString();
-            }else if(state.equals("running")){
-                return ResponseEntity.ok(new StringDtoResponse("Still running. No errors yet"));
-            }else if(state.equals("ok")){
-                return ResponseEntity.ok(new StringDtoResponse("Completed. No errors "));
             }else{
                 logger.warn("Unknown state of the workflow.");
-                return ResponseEntity.ok(new StringDtoResponse("Unknown state. No errors"));
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
             }
 
             logger.info(LogHelper.logUser(userDetails) + jsonString);

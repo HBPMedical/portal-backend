@@ -1,5 +1,4 @@
 package eu.hbp.mip.controllers;
-
 import eu.hbp.mip.utils.HTTPUtil;
 
 import com.google.gson.Gson;
@@ -9,6 +8,8 @@ import eu.hbp.mip.model.User;
 import eu.hbp.mip.model.UserInfo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
 
 import java.util.*;
 import java.io.IOException;
@@ -68,6 +71,27 @@ public class MiningApi {
 
         String query = gson.toJson(queryList);
         String url = miningExaremeQueryUrl + "/" + "DESCRIPTIVE_STATS";
+
+        try {
+            StringBuilder results = new StringBuilder();
+            int code = HTTPUtil.sendPost(url, query, results);
+
+            return ResponseEntity.ok(gson.toJson(results.toString()));
+        } catch (IOException e) {
+            return new ResponseEntity<>("Not found", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @ApiOperation(value = "Perform an non persisted algorithm on Exareme", response = String.class)
+    @RequestMapping(value = "/exareme/{algorithmName}", method = RequestMethod.POST)
+    public ResponseEntity runExaremeAlgorithm(
+        @RequestBody List<HashMap<String, String>> queryList,
+        @ApiParam(value = "algorithmName", required = true) @PathVariable("algorithmName") String algorithmName
+        ) {
+        LOGGER.info("Run algo");
+
+        String query = gson.toJson(queryList);
+        String url = miningExaremeQueryUrl + "/" + algorithmName;
 
         try {
             StringBuilder results = new StringBuilder();

@@ -65,6 +65,18 @@ import org.springframework.util.MultiValueMap;
 import java.net.URI;
 
 
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+
 // See https://spring.io/guides/tutorials/spring-boot-oauth2/ for reference about configuring OAuth2 login
 // also http://cscarioni.blogspot.ch/2013/04/pro-spring-security-and-oauth-2.html
 
@@ -120,6 +132,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
    @Override
    protected void configure(HttpSecurity http) throws Exception {
+	   disableCertificateValidation();
        // @formatter:off
        http.addFilterBefore(new CORSFilter(), ChannelProcessingFilter.class);
 
@@ -309,6 +322,52 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 		ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
     }
-	
    
+   @Value("#{'${services.keycloak.keycloakUrl:88.197.53.10}'}")
+   private String keycloakUrl;
+   
+    // static {
+        // disableCertificateValidation();
+    // }
+
+    public void disableCertificateValidation() {
+		LOGGER.info("disabling certificate validation host : " + keycloakUrl);
+        // Create a trust manager that does not validate certificate chains
+        TrustManager[] trustAllCerts = new TrustManager[] {
+                new X509TrustManager() {
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return new X509Certificate[0];
+                    }
+                    public void checkClientTrusted(X509Certificate[] certs, String authType) {}
+                    public void checkServerTrusted(X509Certificate[] certs, String authType) {}
+                } };
+
+
+        // Ignore differences between given hostname and certificate hostname
+        HostnameVerifier hv = new HostnameVerifier() {
+            public boolean verify(String hostname, SSLSession session) {
+				
+                // System.out.println("Warning: URL Host: " + hostname + " vs. "
+                        // + session.getPeerHost());
+                if(hostname.equals(keycloakUrl) && session.getPeerHost().equals(keycloakUrl))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        };
+
+        // Install the all-trusting trust manager
+        try {
+            SSLContext sc = SSLContext.getInstance("SSL");
+            sc.init(null, trustAllCerts, new SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+            HttpsURLConnection.setDefaultHostnameVerifier(hv);
+        } catch (Exception e) {}
+
+    } 
+
 }

@@ -47,7 +47,7 @@ frontend:
   loginUrl: {{ default .Env.FRONTEND_LOGIN_URL "http://frontend/services/login/hbp" }}
   redirectAfterLogoutUrl: {{ default .Env.FRONTEND_AFTER_LOGOUT_URL (default .Env.LOGIN_URI "http://frontend/services/login/hbp") }}
   redirectAfterLoginUrl: {{ default .Env.FRONTEND_AFTER_LOGIN_URL "http://frontend/home" }}
-
+  
 logging:
   level:
     root: {{ default .Env.LOG_LEVEL "INFO" }}
@@ -88,4 +88,5 @@ services:
     galaxyUsername:  {{ default .Env.GALAXY_USERNAME "admin" }}
     galaxyPassword:  {{ default .Env.GALAXY_PASSWORD "password" }}
     galaxyContext:  {{ default .Env.GALAXY_CONTEXT "nativeGalaxy" }}
-
+  keycloak:
+    keycloakUrl: {{ default .Env.KEYCLOAK_URL "88.197.53.10"}}

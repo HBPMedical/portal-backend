@@ -35,7 +35,7 @@ hbp:
     authenticationScheme: query
     clientAuthenticationScheme: form
     useCurrentUri: false
-    preEstablishedRedirectUri: {{ default .Env.FRONTEND_LOGIN_URL "http://localhost:8080/services/login/hbp" }}
+    preEstablishedRedirectUri: {{ default .Env.FRONTEND_LOGIN_URL "http://frontend/services/login/hbp" }}
   resource:
     userInfoUri: {{ default .Env.USER_INFO_URI "https://services.humanbrainproject.eu/oidc/userinfo" }}
     revokeTokenUri: {{ default .Env.REVOKE_TOKEN_URI "https://services.humanbrainproject.eu/oidc/slo" }}
@@ -89,4 +89,4 @@ services:
     galaxyPassword:  {{ default .Env.GALAXY_PASSWORD "password" }}
     galaxyContext:  {{ default .Env.GALAXY_CONTEXT "nativeGalaxy" }}
   keycloak:
-    keycloakUrl: {{ default .Env.KEYCLOAK_URL "88.197.53.10"}}
+    keycloakUrl: {{ default .Env.KEYCLOAK_URL "localhost"}}

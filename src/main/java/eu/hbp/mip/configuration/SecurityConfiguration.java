@@ -104,7 +104,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 	/**
     * Absolute URL to redirect to when logout is required
     */
-   @Value("#{'${hbp.client.logoutUri:http://88.197.53.10:8095/auth/realms/Demo/protocol/openid-connect/logout}'}")
+   @Value("#{'${hbp.client.logoutUri}'}")
    private String logoutUri;
 
    /**
@@ -314,16 +314,16 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE);
 		// リクエストを作成
+		UserActionLogging.LogAction("logoutUri is ", logoutUri);
 		RequestEntity<MultiValueMap<String, String>> requestEntity =
 				new RequestEntity<>(formParams, httpHeaders, HttpMethod.POST,
-						//URI.create("http://88.197.53.10:8095/auth/realms/Demo/protocol/openid-connect/logout")); //todo make this parameter
-						URI.create(logoutUri)); //todo make this parameter
+						URI.create(logoutUri)); 
 		// POSTリクエスト送信（ログアウト実行）
 
 		ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
     }
    
-   @Value("#{'${services.keycloak.keycloakUrl:88.197.53.10}'}")
+   @Value("#{'${services.keycloak.keycloakUrl}'}")
    private String keycloakUrl;
    
     // static {

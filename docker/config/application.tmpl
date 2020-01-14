@@ -30,7 +30,7 @@ hbp:
     clientSecret: {{ .Env.CLIENT_SECRET }}
     accessTokenUri: {{ default .Env.TOKEN_URI "https://services.humanbrainproject.eu/oidc/token" }}
     userAuthorizationUri: {{ default .Env.AUTH_URI "https://services.humanbrainproject.eu/oidc/authorize" }}
-    logoutUri: {{ default .Env.LOGOUT_URI }}
+    logoutUri: {{ .Env.LOGOUT_URI }}
     tokenName: access_token
     authenticationScheme: query
     clientAuthenticationScheme: form
@@ -89,4 +89,4 @@ services:
     galaxyPassword:  {{ default .Env.GALAXY_PASSWORD "password" }}
     galaxyContext:  {{ default .Env.GALAXY_CONTEXT "nativeGalaxy" }}
   keycloak:
-    keycloakUrl: {{ default .Env.KEYCLOAK_URL "localhost"}}
+    keycloakUrl: {{ .Env.KEYCLOAK_URL }}

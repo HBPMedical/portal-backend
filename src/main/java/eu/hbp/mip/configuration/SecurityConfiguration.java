@@ -308,7 +308,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 		RestTemplate restTemplate = new RestTemplate();
 		MultiValueMap<String, String> formParams = new LinkedMultiValueMap<>();
 		formParams.add("client_id", hbp().getClientId());
-	//        formParams.add("client_secret", registration.getClientSecret());
+        formParams.add("client_secret", hbp().getClientSecret());
 		formParams.add("refresh_token", this.oauth2ClientContext.getAccessToken().getRefreshToken().getValue());
 		// リクエストヘッダーを作成
 		HttpHeaders httpHeaders = new HttpHeaders();

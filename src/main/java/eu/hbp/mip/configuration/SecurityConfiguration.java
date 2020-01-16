@@ -150,15 +150,13 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                    .and().logout().addLogoutHandler(authLogoutHandler()).logoutSuccessUrl(redirectAfterLogoutUrl)
                    .and().logout().permitAll()
                    .and().csrf().ignoringAntMatchers("/logout").csrfTokenRepository(csrfTokenRepository())
-                   .and().addFilterAfter(csrfHeaderFilter(), CsrfFilter.class)
+				   .and().addFilterAfter(csrfHeaderFilter(), CsrfFilter.class)
                    .addFilterBefore(ssoFilter(), BasicAuthenticationFilter.class);
        }
        else {
-           //keycloak
-           //KeycloakConfiguration.getKeycloakSecurityContext();
-//            http.antMatcher("/**")
-//                    .authorizeRequests()
-//                    .antMatchers("/**").permitAll().and().csrf().disable();
+            http.antMatcher("/**")
+                    .authorizeRequests()
+                    .antMatchers("/**").permitAll().and().csrf().disable();
        }
    }
 

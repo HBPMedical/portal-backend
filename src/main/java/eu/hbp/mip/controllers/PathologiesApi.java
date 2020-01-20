@@ -18,6 +18,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import eu.hbp.mip.utils.UserActionLogging;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -28,6 +29,8 @@ public class PathologiesApi {
 
     @RequestMapping(name = "/pathologies", method = RequestMethod.GET)
     public String getPathologies() {
+		UserActionLogging.LogAction("load the pathologies", "");
+		
         return loadPathologies();
     }
 

@@ -21,6 +21,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
+import eu.hbp.mip.utils.UserActionLogging;
+
 import org.springframework.web.bind.annotation.*;
 
 
@@ -37,7 +40,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @Api(value = "/mining", description = "the mining API")
 public class MiningApi {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MiningApi.class);
     private static final Gson gson = new Gson();
 
     @Autowired
@@ -49,7 +51,7 @@ public class MiningApi {
     @ApiOperation(value = "Create an histogram on Exareme", response = String.class)
     @RequestMapping(value = "/exareme", method = RequestMethod.POST)
     public ResponseEntity runExaremeMining(@RequestBody List<HashMap<String, String>> queryList) {
-        LOGGER.info("Run an histogram");
+        UserActionLogging.LogAction("Run an histogram", "");
 
         String query = gson.toJson(queryList);
         String url = miningExaremeQueryUrl + "/" + "HISTOGRAMS";
@@ -67,7 +69,7 @@ public class MiningApi {
     @ApiOperation(value = "Create an descriptive statistic on Exareme", response = String.class)
     @RequestMapping(value = "/exareme-stats", method = RequestMethod.POST)
     public ResponseEntity runExaremeDescriptiveStats(@RequestBody List<HashMap<String, String>> queryList) {
-        LOGGER.info("Run descriptive stats");
+        UserActionLogging.LogAction("Run descriptive stats", "");
 
         String query = gson.toJson(queryList);
         String url = miningExaremeQueryUrl + "/" + "DESCRIPTIVE_STATS";
@@ -88,7 +90,7 @@ public class MiningApi {
         @RequestBody List<HashMap<String, String>> queryList,
         @ApiParam(value = "algorithmName", required = true) @PathVariable("algorithmName") String algorithmName
         ) {
-        LOGGER.info("Run algo");
+        UserActionLogging.LogAction("Run algo", "");
 
         String query = gson.toJson(queryList);
         String url = miningExaremeQueryUrl + "/" + algorithmName;

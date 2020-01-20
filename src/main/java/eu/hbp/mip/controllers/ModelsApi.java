@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import eu.hbp.mip.utils.UserActionLogging;
 
 import java.io.IOException;
 import java.util.*;
@@ -28,7 +29,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @Api(value = "/models", description = "the models API")
 public class ModelsApi {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ModelsApi.class);
 
     @Autowired
     private UserInfo userInfo;
@@ -54,7 +54,7 @@ public class ModelsApi {
             @ApiParam(value = "Only ask own models") @RequestParam(value = "own", required = false) Boolean own,
             @ApiParam(value = "Only ask published models") @RequestParam(value = "valid", required = false) Boolean valid
     )  {
-        LOGGER.info("Get models");
+        UserActionLogging.LogAction("Get models","");
 
         User user = userInfo.getUser();
 
@@ -98,7 +98,7 @@ public class ModelsApi {
             @RequestBody @ApiParam(value = "Model to create", required = true) Model model
     )  {
 
-        LOGGER.info("Create a model");
+        UserActionLogging.LogAction("Create a model","");
 
         User user = userInfo.getUser();
 
@@ -129,7 +129,7 @@ public class ModelsApi {
         }
         modelRepository.save(model);
 
-        LOGGER.info("Model saved (also saved model.config and model.query)");
+        UserActionLogging.LogAction("Model saved (also saved model.config and model.query)"," id : " + model.getSlug());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(model);
     }
@@ -165,7 +165,7 @@ public class ModelsApi {
             slug = new Slugify().slugify(title);
         } catch (IOException e) {
             slug = "";  // Should never happen
-            LOGGER.trace("Cannot slugify title", e);
+            //LOGGER.trace("Cannot slugify title", e);
         }
         return slug;
     }
@@ -192,7 +192,7 @@ public class ModelsApi {
     public ResponseEntity<Model> getAModel(
             @ApiParam(value = "slug", required = true) @PathVariable("slug") String slug
     )  {
-        LOGGER.info("Get a model");
+        UserActionLogging.LogAction("Get a model", " id : " + slug);
 
         User user = userInfo.getUser();
 
@@ -200,7 +200,7 @@ public class ModelsApi {
 
         if(model == null)
         {
-            LOGGER.warn("Cannot find model : " + slug);
+            //LOGGER.warn("Cannot find model : " + slug);
             return ResponseEntity.badRequest().body(null);
         }
 
@@ -224,7 +224,7 @@ public class ModelsApi {
             @ApiParam(value = "slug", required = true) @PathVariable("slug") String slug,
             @RequestBody @ApiParam(value = "Model to update", required = true) Model model
     )  {
-        LOGGER.info("Update a model");
+        UserActionLogging.LogAction("Update a model", " id : "+ slug);
 
         User user = userInfo.getUser();
         Model oldModel = modelRepository.findOne(slug);
@@ -269,7 +269,7 @@ public class ModelsApi {
         datasetRepository.save(model.getDataset());
         modelRepository.save(model);
 
-        LOGGER.info("Model updated (also saved/updated model.config and model.query)");
+        UserActionLogging.LogAction("Model updated (also saved/updated model.config and model.query)", " id : "+ slug);
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }

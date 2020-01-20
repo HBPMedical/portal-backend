@@ -37,6 +37,7 @@ docker build --build-arg BUILD_DATE=$(date -Iseconds) \
     --tag "$IMAGE:$VERSION" \
     .
 
+
 BUGSNAG_KEY=""
 eval $(grep -e "^\\s*BUGSNAG_KEY" Dockerfile | tr '\\' ' ')
 

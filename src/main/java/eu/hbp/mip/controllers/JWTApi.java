@@ -13,13 +13,12 @@ import org.springframework.web.bind.annotation.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import eu.hbp.mip.utils.JWTUtil;
+import eu.hbp.mip.utils.UserActionLogging;
 
 @RestController
 @RequestMapping(value = "/jwt", produces = { TEXT_PLAIN_VALUE })
 @Api(value = "/jwt", description = "the jwt API")
 public class JWTApi {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(JWTApi.class);
 
     @Autowired
     private UserInfo userInfo;
@@ -31,7 +30,7 @@ public class JWTApi {
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<String> createJWT() {
 
-        LOGGER.info("Create a JSON Web Token");
+        UserActionLogging.LogAction("Create a JSON Web Token", "");
 
         User user = userInfo.getUser();
         String token = JWTUtil.getJWT(jwtSecret, user.getEmail());

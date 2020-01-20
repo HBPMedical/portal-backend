@@ -30,7 +30,8 @@ hbp:
     clientSecret: {{ .Env.CLIENT_SECRET }}
     accessTokenUri: {{ default .Env.TOKEN_URI "https://services.humanbrainproject.eu/oidc/token" }}
     userAuthorizationUri: {{ default .Env.AUTH_URI "https://services.humanbrainproject.eu/oidc/authorize" }}
-    tokenName: oauth_token
+    logoutUri: {{ .Env.LOGOUT_URI }}
+    tokenName: access_token
     authenticationScheme: query
     clientAuthenticationScheme: form
     useCurrentUri: false
@@ -46,12 +47,13 @@ frontend:
   loginUrl: {{ default .Env.FRONTEND_LOGIN_URL "http://frontend/services/login/hbp" }}
   redirectAfterLogoutUrl: {{ default .Env.FRONTEND_AFTER_LOGOUT_URL (default .Env.LOGIN_URI "http://frontend/services/login/hbp") }}
   redirectAfterLoginUrl: {{ default .Env.FRONTEND_AFTER_LOGIN_URL "http://frontend/home" }}
-
+  
 logging:
   level:
     root: {{ default .Env.LOG_LEVEL "INFO" }}
     org:
       springframework:
+        security: DEBUG
         web: {{ default .Env.LOGGING_LEVEL_WEB "WARN" }}
         web.servlet.handler.BeanNameUrlHandlerMapping: WARN
       hibernate: {{ default .Env.LOGGING_LEVEL_HIBERNATE "WARN" }}
@@ -86,4 +88,5 @@ services:
     galaxyUsername:  {{ default .Env.GALAXY_USERNAME "admin" }}
     galaxyPassword:  {{ default .Env.GALAXY_PASSWORD "password" }}
     galaxyContext:  {{ default .Env.GALAXY_CONTEXT "nativeGalaxy" }}
-
+  keycloak:
+    keycloakUrl: {{ .Env.KEYCLOAK_URL }}

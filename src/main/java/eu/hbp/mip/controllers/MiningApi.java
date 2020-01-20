@@ -21,9 +21,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.*;
 
 import eu.hbp.mip.utils.UserActionLogging;
+
+import org.springframework.web.bind.annotation.*;
 
 
 import java.util.*;
@@ -89,7 +90,7 @@ public class MiningApi {
         @RequestBody List<HashMap<String, String>> queryList,
         @ApiParam(value = "algorithmName", required = true) @PathVariable("algorithmName") String algorithmName
         ) {
-        LOGGER.info("Run algo");
+        UserActionLogging.LogAction("Run algo", "");
 
         String query = gson.toJson(queryList);
         String url = miningExaremeQueryUrl + "/" + algorithmName;

@@ -26,7 +26,7 @@ else
   DOCKER="sudo docker"
 fi
 
-IMAGE="kkech/portal_backend"
+IMAGE="thanasulas/portal_backend"
 VCS_REF=$(git describe --tags --dirty)
 VERSION=$(git describe --tags --dirty)
 
@@ -34,8 +34,10 @@ docker build --build-arg BUILD_DATE=$(date -Iseconds) \
     --build-arg VCS_REF=$VCS_REF \
     --build-arg VERSION=$VERSION \
     --tag "$IMAGE:latest" \
-    --tag "$IMAGE:$VERSION" \
     .
+
+docker push thanasulas/portal_backend:latest
+
 
 BUGSNAG_KEY=""
 eval $(grep -e "^\\s*BUGSNAG_KEY" Dockerfile | tr '\\' ' ')

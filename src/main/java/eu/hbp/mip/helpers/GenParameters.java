@@ -7,13 +7,6 @@ package eu.hbp.mip.helpers;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ClassPathResource;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
 
 public class GenParameters {
 
@@ -33,7 +26,7 @@ public class GenParameters {
 
     private String galaxyReverseProxyPassword;
 
-    private GenParameters(){
+    private GenParameters() {
 
     }
 
@@ -49,31 +42,8 @@ public class GenParameters {
             genParams.setGalaxyReverseProxyUsername(System.getenv("GALAXY_REVERSE_PROXY_USERNAME"));
             genParams.setGalaxyReverseProxyPassword(System.getenv("GALAXY_REVERSE_PROXY_PASSWORD"));
 
-
-            //If environment variable not exists read from file.
-            if (genParams.getJwtSecret() == null){
-                throw new RuntimeException("Cannot find Enviroment Variables");
-//                logger.info("->>>>>>>Reading from file");
-//
-//                File file = null;
-//                try {
-//                    file = new ClassPathResource("config.properties").getFile();
-//                    InputStream input = new FileInputStream(file);
-//                    Properties prop = new Properties();
-//
-//                    // load a properties file
-//                    prop.load(input);
-//
-//                    // get the property value and print it out
-//                    genParams.setJwtSecret(prop.getProperty("jwtSecret"));
-//                    genParams.setJwtIssuer(prop.getProperty("jwtIssuer"));
-//                    genParams.setGalaxyURL(prop.getProperty("galaxyURL"));
-//                    genParams.setGalaxyApiKey(prop.getProperty("galaxyApiKey"));
-//                    genParams.setGalaxyReverseProxyUsername(prop.getProperty("galaxyReverseProxyUsername"));
-//                    genParams.setGalaxyReverseProxyPassword(prop.getProperty("galaxyReverseProxyPassword"));
-//                } catch (IOException e) {
-//                    logger.error("Cannot initialize GenParameters from config file", e);
-//                }
+            if (genParams.getJwtSecret() == null) {
+                throw new RuntimeException("Cannot find Environment Variables");
             }
         }
         return genParams;
@@ -88,7 +58,7 @@ public class GenParameters {
     }
 
     public String getJwtIssuer() {
-        return  jwtIssuer;
+        return jwtIssuer;
     }
 
     private void setJwtIssuer(String jwtIssuer) {

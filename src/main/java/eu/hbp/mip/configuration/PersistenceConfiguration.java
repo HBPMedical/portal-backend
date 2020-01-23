@@ -46,5 +46,4 @@ public class PersistenceConfiguration {
         flyway.setDataSource(portalDataSource());
         return flyway;
     }
-
 }

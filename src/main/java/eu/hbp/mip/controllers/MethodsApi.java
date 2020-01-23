@@ -15,14 +15,14 @@ import java.io.IOException;
 import eu.hbp.mip.utils.JWTUtil;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import org.springframework.beans.factory.annotation.Autowired;
+import eu.hbp.mip.utils.UserActionLogging;
 
 @RestController
 @RequestMapping(value = "/methods", produces = { APPLICATION_JSON_VALUE })
 @Api(value = "/methods", description = "the methods API")
 public class MethodsApi {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MethodsApi.class);
-
+    
     private static final Gson gson = new Gson();
 
     @Value("#{'${services.exareme.algorithmsUrl:http://localhost:9090/mining/algorithms.json}'}")
@@ -40,7 +40,7 @@ public class MethodsApi {
     @ApiOperation(value = "List Exareme algorithms and validations", response = String.class)
     @RequestMapping(value = "/exareme", method = RequestMethod.GET)
     public ResponseEntity<Object> getExaremeAlgorithms() {
-        LOGGER.info("List Exareme algorithms and validations");
+        UserActionLogging.LogAction("List Exareme algorithms and validations", "");
 
         try {
             StringBuilder response = new StringBuilder();
@@ -57,7 +57,7 @@ public class MethodsApi {
     @ApiOperation(value = "List Galaxy workflows", response = String.class)
     @RequestMapping(value = "/workflows", method = RequestMethod.GET)
     public ResponseEntity<Object> getWorkflows() {
-        LOGGER.info("List Galaxy workflows");
+        UserActionLogging.LogAction("List Galaxy workflows", "");
 
         try {
             User user = userInfo.getUser();

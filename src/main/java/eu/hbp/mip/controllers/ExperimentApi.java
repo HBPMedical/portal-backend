@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import eu.hbp.mip.utils.JWTUtil;
+import eu.hbp.mip.utils.UserActionLogging;
 
 import java.io.IOException;
 import java.util.*;
@@ -33,7 +34,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @Api(value = "/experiments", description = "the experiments API")
 public class ExperimentApi {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentApi.class);
+    //private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentApi.class);
 
     private static final Gson gson = new Gson();
 
@@ -61,7 +62,7 @@ public class ExperimentApi {
     @ApiOperation(value = "Create an experiment on Exareme", response = Experiment.class)
     @RequestMapping(value = "/exareme", method = RequestMethod.POST)
     public ResponseEntity<String> runExaremeExperiment(@RequestBody ExperimentQuery expQuery) {
-        LOGGER.info("send ExaremeExperiment");
+        //LOGGER.info("send ExaremeExperiment");
 
         Experiment experiment = saveExperiment(expQuery);
 
@@ -87,23 +88,24 @@ public class ExperimentApi {
                 experiment.setHasError(code >= 400);
                 experiment.setHasServerError(code >= 500);
             } catch (IOException e) {
-                LOGGER.trace("Invalid UUID", e);
-                LOGGER.warn("Exareme experiment failed to run properly !");
+                //LOGGER.trace("Invalid UUID", e);
+                //LOGGER.warn("Exareme experiment failed to run properly !");
                 experiment.setHasError(true);
                 experiment.setHasServerError(true);
                 experiment.setResult(e.getMessage());
             }
             finishExperiment(experiment);
         }).start();
-
+		
+		UserActionLogging.LogAction("create ExaremeExperiment", "no info");
+		
         return new ResponseEntity<>(gsonOnlyExposed.toJson(experiment.jsonify()), HttpStatus.OK);
     }
 
     @ApiOperation(value = "Create a workflow", response = Experiment.class)
     @RequestMapping(value = "/workflow", method = RequestMethod.POST)
     public ResponseEntity<String> runWorkflow(@RequestBody ExperimentQuery expQuery) {
-        LOGGER.info("send Workflow");
-
+        
         Experiment experiment = saveExperiment(expQuery);
 
         String algoCode = expQuery.getAlgorithms().get(0).getCode();
@@ -132,7 +134,7 @@ public class ExperimentApi {
                 experiment.setHasError(code >= 400);
                 experiment.setHasServerError(code >= 500);
             } catch (IOException e) {
-                LOGGER.trace("Invalid UUID", e);
+                //LOGGER.trace("Invalid UUID", e);
                 experiment.setHasError(true);
                 experiment.setHasServerError(true);
                 experiment.setResult(e.getMessage());
@@ -140,6 +142,8 @@ public class ExperimentApi {
             finishExperiment(experiment);
         }).start();
 
+		UserActionLogging.LogAction("create workflow", "no info");
+		
         return new ResponseEntity<>(gsonOnlyExposed.toJson(experiment.jsonify()), HttpStatus.OK);
     }
 
@@ -147,15 +151,14 @@ public class ExperimentApi {
     @RequestMapping(value = "/{uuid}", method = RequestMethod.GET)
     public ResponseEntity<String> getExperiment(
             @ApiParam(value = "uuid", required = true) @PathVariable("uuid") String uuid) {
-        LOGGER.info("Get an experiment");
 
         Experiment experiment;
         UUID experimentUuid;
         try {
             experimentUuid = UUID.fromString(uuid);
         } catch (IllegalArgumentException iae) {
-            LOGGER.trace("Invalid UUID", iae);
-            LOGGER.warn("An invalid Experiment UUID was received ! " + uuid);
+            //LOGGER.trace("Invalid UUID", iae);
+            //LOGGER.warn("An invalid Experiment UUID was received ! " + uuid);
             return ResponseEntity.badRequest().body("Invalid Experiment UUID");
         }
 
@@ -164,7 +167,9 @@ public class ExperimentApi {
         if (experiment == null) {
             return new ResponseEntity<>("Not found", HttpStatus.NOT_FOUND);
         }
-
+		
+		UserActionLogging.LogAction("Get an experiment ", " uuid : "+ uuid);
+		
         return new ResponseEntity<>(gsonOnlyExposed.toJson(experiment.jsonify()), HttpStatus.OK);
     }
 
@@ -172,8 +177,9 @@ public class ExperimentApi {
     @RequestMapping(value = "/workflow/status/{historyId}", method = RequestMethod.GET)
     public ResponseEntity<String> getWorkflowStatus(
             @ApiParam(value = "historyId", required = true) @PathVariable("historyId") String historyId) {
-        LOGGER.info("Get a workflow status");
-
+       
+		UserActionLogging.LogAction("Get a workflow status", " historyId : "+ historyId);
+		
         String url = workflowUrl + "/getWorkflowStatus/" + historyId;
         try {
             User user = userInfo.getUser();
@@ -186,6 +192,7 @@ public class ExperimentApi {
         } catch (IOException e) {
             return ResponseEntity.status(500).body(e.getMessage());
         }
+		
     }
 
     // TODO: factorize workflow results
@@ -193,8 +200,8 @@ public class ExperimentApi {
     @RequestMapping(value = "/workflow/results/{historyId}", method = RequestMethod.GET)
     public ResponseEntity<String> getWorkflowResults(
             @ApiParam(value = "historyId", required = true) @PathVariable("historyId") String historyId) {
-        LOGGER.info("Get a workflow results");
-
+        UserActionLogging.LogAction("Get workflow results", " historyId : "+ historyId);
+		
         String url = workflowUrl + "/getWorkflowResults/" + historyId;
         try {
             StringBuilder response = new StringBuilder();
@@ -214,8 +221,9 @@ public class ExperimentApi {
     public ResponseEntity<String> getWorkflowResultBody(
             @ApiParam(value = "historyId", required = true) @PathVariable("historyId") String historyId,
             @ApiParam(value = "resultId", required = true) @PathVariable("resultId") String resultId) {
-        LOGGER.info("Get a workflow result content");
 
+		UserActionLogging.LogAction("Get workflow result content", " historyId : "+ historyId + " resultId : "+ resultId);
+		
         String url = workflowUrl + "/getWorkflowResultsBody/" + historyId + "/contents/" + resultId;
         try {
             StringBuilder response = new StringBuilder();
@@ -235,7 +243,7 @@ public class ExperimentApi {
     public ResponseEntity<String> getWorkflowResultsDetails(
             @ApiParam(value = "historyId", required = true) @PathVariable("historyId") String historyId,
             @ApiParam(value = "resultId", required = true) @PathVariable("resultId") String resultId) {
-        LOGGER.info("Get a workflow result content");
+		UserActionLogging.LogAction("Get workflow result details", " historyId : "+ historyId + " resultId : "+ resultId);
 
         String url = workflowUrl + "/getWorkflowResultsDetails/" + historyId + "/contents/" + resultId;
         try {
@@ -255,7 +263,8 @@ public class ExperimentApi {
     @RequestMapping(value = "/{uuid}/markAsViewed", method = RequestMethod.GET)
     public ResponseEntity<String> markExperimentAsViewed(
             @ApiParam(value = "uuid", required = true) @PathVariable("uuid") String uuid) {
-        LOGGER.info("Mark an experiment as viewed");
+
+		UserActionLogging.LogAction("Mark an experiment as viewed", " uuid : "+ uuid);
 
         Experiment experiment;
         UUID experimentUuid;
@@ -263,8 +272,8 @@ public class ExperimentApi {
         try {
             experimentUuid = UUID.fromString(uuid);
         } catch (IllegalArgumentException iae) {
-            LOGGER.trace("Invalid UUID", iae);
-            LOGGER.warn("An invalid Experiment UUID was received !");
+            //LOGGER.trace("Invalid UUID", iae);
+            //LOGGER.warn("An invalid Experiment UUID was received !");
             return ResponseEntity.badRequest().body("Invalid Experiment UUID");
         }
 
@@ -274,7 +283,7 @@ public class ExperimentApi {
         experiment.setResultsViewed(true);
         experimentRepository.save(experiment);
 
-        LOGGER.info("Experiment updated (marked as viewed)");
+		UserActionLogging.LogAction("Experiment updated (marked as viewed)", " ");
 
         return new ResponseEntity<>(gsonOnlyExposed.toJson(experiment.jsonify()), HttpStatus.OK);
     }
@@ -283,8 +292,9 @@ public class ExperimentApi {
     @RequestMapping(value = "/{uuid}/markAsShared", method = RequestMethod.GET)
     public ResponseEntity<String> markExperimentAsShared(
             @ApiParam(value = "uuid", required = true) @PathVariable("uuid") String uuid) {
-        LOGGER.info("Mark an experiment as shared");
 
+		UserActionLogging.LogAction("Mark an experiment as shared", " uuid : "+ uuid);
+		
         return doMarkExperimentAsShared(uuid, true);
     }
 
@@ -292,8 +302,8 @@ public class ExperimentApi {
     @RequestMapping(value = "/{uuid}/markAsUnshared", method = RequestMethod.GET)
     public ResponseEntity<String> markExperimentAsUnshared(
             @ApiParam(value = "uuid", required = true) @PathVariable("uuid") String uuid) {
-        LOGGER.info("Mark an experiment as unshared");
-
+		UserActionLogging.LogAction("Mark an experiment as unshared", " uuid : "+ uuid);
+		
         return doMarkExperimentAsShared(uuid, false);
     }
 
@@ -301,8 +311,9 @@ public class ExperimentApi {
     @RequestMapping(method = RequestMethod.GET, params = { "maxResultCount" })
     public ResponseEntity<String> listExperiments(
             @ApiParam(value = "maxResultCount") @RequestParam int maxResultCount) {
-        LOGGER.info("List experiments");
 
+		UserActionLogging.LogAction("List experiments", " maxResultCount : "+ maxResultCount);
+		
         return doListExperiments(false, null);
     }
 
@@ -310,7 +321,8 @@ public class ExperimentApi {
     @RequestMapping(method = RequestMethod.GET, params = { "slug", "maxResultCount" })
     public ResponseEntity<String> listExperiments(@ApiParam(value = "slug") @RequestParam("slug") String modelSlug,
             @ApiParam(value = "maxResultCount") @RequestParam("maxResultCount") int maxResultCount) {
-        LOGGER.info("List experiments");
+
+		UserActionLogging.LogAction("List experiments", " modelSlug : "+ modelSlug);
 
         if (maxResultCount <= 0 && (modelSlug == null || "".equals(modelSlug))) {
             return new ResponseEntity<>("You must provide at least a slug or a limit of result",
@@ -323,7 +335,7 @@ public class ExperimentApi {
     @ApiOperation(value = "list my experiments", response = Experiment.class, responseContainer = "List")
     @RequestMapping(method = RequestMethod.GET, params = { "mine" })
     public ResponseEntity<String> listMyExperiments(@ApiParam(value = "mine") @RequestParam("mine") boolean mine) {
-        LOGGER.info("List my experiments");
+        UserActionLogging.LogAction("List my experiments", " mine : "+ mine);
 
         return doListExperiments(true, null);
     }
@@ -361,8 +373,8 @@ public class ExperimentApi {
         try {
             experimentUuid = UUID.fromString(uuid);
         } catch (IllegalArgumentException iae) {
-            LOGGER.trace("Invalid UUID", iae);
-            LOGGER.warn("An invalid Experiment UUID was received !");
+            //LOGGER.trace("Invalid UUID", iae);
+            //LOGGER.warn("An invalid Experiment UUID was received !");
             return ResponseEntity.badRequest().body("Invalid Experiment UUID");
         }
 
@@ -373,8 +385,8 @@ public class ExperimentApi {
 
         experiment.setShared(shared);
         experimentRepository.save(experiment);
-
-        LOGGER.info("Experiment updated (marked as shared)");
+		
+		UserActionLogging.LogAction("Experiment updated (marked as shared)", "");
 
         return new ResponseEntity<>(gsonOnlyExposed.toJson(experiment.jsonify()), HttpStatus.OK);
     }
@@ -383,7 +395,7 @@ public class ExperimentApi {
         experiment.setFinished(new Date());
         experimentRepository.save(experiment);
 
-        LOGGER.info("Experiment updated (finished)");
+        UserActionLogging.LogAction("Experiment updated (finished)","");
     }
 
     private HashMap<String, String> makeObject(String name, String value) {
@@ -395,7 +407,6 @@ public class ExperimentApi {
     }
 
     private Experiment saveExperiment(ExperimentQuery expQuery) {
-        LOGGER.info("saveExperiment");
 
         Experiment experiment = new Experiment();
         experiment.setUuid(UUID.randomUUID());
@@ -408,7 +419,7 @@ public class ExperimentApi {
         experiment.setModel(modelRepository.findOne(expQuery.getModel()));
         experimentRepository.save(experiment);
 
-        LOGGER.info("Experiment saved");
+        UserActionLogging.LogAction("Saved an experiment", " id : "+experiment.getUuid());
 
         return experiment;
     }

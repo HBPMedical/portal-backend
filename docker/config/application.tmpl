@@ -80,13 +80,13 @@ services:
   exareme:
     miningExaremeUrl: {{ default .Env.EXAREME_URL "http://localhost:9090" }}/mining/query
     algorithmsUrl: {{ default .Env.EXAREME_URL "http://localhost:9090" }}/mining/algorithms.json
-  workflows:
-    workflowUrl: {{ default .Env.WORKFLOW_URL "http://localhost:9090" }}
-    jwtSecret: {{ default .Env.JWT_SECRET "secret" }}
-    workflowAuthorization: {{ default .Env.WORKFLOW_AUTHORIZATION "undefined" }}
+
   galaxy:
+    galaxyUrl:      {{ default .Env.GALAXY_URL "http://localhost:8090/nativeGalaxy" }}
+    galaxyContext:  {{ default .Env.GALAXY_CONTEXT "nativeGalaxy/workflows/list" }}
+    galaxyApiKey:   {{ .Env.GALAXY_API_KEY }}
     galaxyUsername:  {{ default .Env.GALAXY_USERNAME "admin" }}
     galaxyPassword:  {{ default .Env.GALAXY_PASSWORD "password" }}
-    galaxyContext:  {{ default .Env.GALAXY_CONTEXT "nativeGalaxy" }}
+
   keycloak:
     keycloakUrl: {{ .Env.KEYCLOAK_URL }}

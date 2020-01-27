@@ -9,3 +9,4 @@ project/
 /.project
 /.settings/
 dependency-reduced-pom.xml
+logs/

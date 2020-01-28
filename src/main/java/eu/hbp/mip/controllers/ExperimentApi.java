@@ -25,7 +25,38 @@ import eu.hbp.mip.utils.UserActionLogging;
 import java.io.IOException;
 import java.util.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+//galaxyapi copy paste
+import com.github.jmchilton.blend4j.galaxy.GalaxyInstance;
+import com.github.jmchilton.blend4j.galaxy.GalaxyInstanceFactory;
+import com.github.jmchilton.blend4j.galaxy.WorkflowsClient;
+import com.github.jmchilton.blend4j.galaxy.beans.Workflow;
+import com.github.jmchilton.blend4j.galaxy.beans.WorkflowDetails;
+import com.github.jmchilton.blend4j.galaxy.beans.WorkflowInputDefinition;
+import com.google.gson.*;
+import eu.hbp.mip.controllers.retrofit.RetroFitGalaxyClients;
+import eu.hbp.mip.controllers.retrofit.RetrofitClientInstance;
+import eu.hbp.mip.dto.ErrorResponse;
+import eu.hbp.mip.dto.GetWorkflowResultsFromGalaxyDtoResponse;
+import eu.hbp.mip.dto.PostWorkflowToGalaxyDtoResponse;
+import eu.hbp.mip.dto.StringDtoResponse;
+import eu.hbp.mip.helpers.LogHelper;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
+import retrofit2.Call;
+import retrofit2.Response;
 
+import java.io.IOException;
+import java.util.*;
+
+//galaxyapi copy paste
 /**
  * Created by habfast on 21/04/16.
  */
@@ -58,7 +89,13 @@ public class ExperimentApi {
 
     @Autowired
     private ExperimentRepository experimentRepository;
+	
+    @Value("#{'${services.galaxy.galaxyUrl}'}")
+    private String galaxyUrl;
 
+    @Value("#{'${services.galaxy.galaxyApiKey}'}")
+    private String galaxyApiKey;
+	
     @ApiOperation(value = "Create an experiment on Exareme", response = Experiment.class)
     @RequestMapping(value = "/exareme", method = RequestMethod.POST)
     public ResponseEntity<String> runExaremeExperiment(@RequestBody ExperimentQuery expQuery) {
@@ -114,37 +151,115 @@ public class ExperimentApi {
         User user = userInfo.getUser();
         String token = JWTUtil.getJWT(jwtSecret, user.getEmail());
 
-        HashMap<String, String> queryMap = new HashMap<String, String>();
+        HashMap<String, String> allJsonParams = new HashMap<String, String>();
 
         if (params != null) {
             for (AlgorithmParam p : params) {
-                queryMap.put(p.getName(), p.getValue());
+                allJsonParams.put(p.getName(), p.getValue());
             }
         }
 
-        String query = gson.toJson(queryMap);
-        String url = workflowUrl + "/runWorkflow/" + algoCode;
+        //String query = gson.toJson(queryMap);
+        //String url = workflowUrl + "/runWorkflow/" + algoCode;
         // Results are stored in the experiment object
 
-        new Thread(() -> {
-            try {
-                StringBuilder results = new StringBuilder();
-                int code = HTTPUtil.sendAuthorizedHTTP(url, query, results, "POST", "Bearer " + token);
-                experiment.setResult("[" + results.toString() + "]");
-                experiment.setHasError(code >= 400);
-                experiment.setHasServerError(code >= 500);
-            } catch (IOException e) {
+        // new Thread(() -> {
+            // try {
+                // StringBuilder results = new StringBuilder();
+                // int code = HTTPUtil.sendAuthorizedHTTP(url, query, results, "POST", "Bearer " + token);
+                // experiment.setResult("[" + results.toString() + "]");
+                // experiment.setHasError(code >= 400);
+                // experiment.setHasServerError(code >= 500);
+            // } catch (IOException e) {
                 //LOGGER.trace("Invalid UUID", e);
-                experiment.setHasError(true);
-                experiment.setHasServerError(true);
-                experiment.setResult(e.getMessage());
-            }
-            finishExperiment(experiment);
-        }).start();
+                // experiment.setHasError(true);
+                // experiment.setHasServerError(true);
+                // experiment.setResult(e.getMessage());
+            // }
+            // finishExperiment(experiment);
+        // }).start();
 
-		UserActionLogging.LogAction("create workflow", "no info");
+		// UserActionLogging.LogAction("create workflow", "no info");
 		
-        return new ResponseEntity<>(gsonOnlyExposed.toJson(experiment.jsonify()), HttpStatus.OK);
+        // return new ResponseEntity<>(gsonOnlyExposed.toJson(experiment.jsonify()), HttpStatus.OK);
+		final GalaxyInstance instance = GalaxyInstanceFactory.get(galaxyUrl, galaxyApiKey);
+        final WorkflowsClient workflowsClient = instance.getWorkflowsClient();
+
+        Workflow matchingWorkflow = null;
+        for(Workflow workflow : workflowsClient.getWorkflows()) {
+            if(workflow.getId().equals(algoCode)) {
+                matchingWorkflow = workflow;
+            }
+        }
+        if(matchingWorkflow == null){
+            //logger.error(LogHelper.logUser(userDetails) + "Run workflow could not find workflow with id : " + algoCode + " ,in order to get missing input parameters");
+            //return ResponseEntity.notFound().build();
+        }
+        final WorkflowDetails workflowDetails = workflowsClient.showWorkflow(matchingWorkflow.getId());
+        for (Map.Entry<String, WorkflowInputDefinition> entry : workflowDetails.getInputs().entrySet()) {
+            if(!(allJsonParams.containsKey(entry.getValue().getUuid()))) {
+                //logger.warn("Find extra value with label:" + entry.getValue().getLabel() + ", and uuid:" + entry.getValue().getUuid() + ", that is mandatory to run the workflow. The uuid will be automate add it with empty value in the parameters to run the workflow.");
+                allJsonParams.put(entry.getValue().getUuid(), "");
+            }
+        }
+		StringBuffer stringBuffer = new StringBuffer("{\n" +
+                "\t\"inputs\": {\n");
+        for (Map.Entry<String, String> entry : allJsonParams.entrySet()) {
+            stringBuffer.append("\t\t\"" + entry.getKey() + "\" " + " : \"" + entry.getValue() + "\",\n");
+            //logger.debug(LogHelper.logUser(userDetails) + entry.getKey() + "/" + entry.getValue());
+        }
+        //Remove Last Comma
+        stringBuffer.deleteCharAt(stringBuffer.length() - 2);
+        stringBuffer.append("\t}\n");
+        stringBuffer.append("}");
+        //logger.info(LogHelper.logUser(userDetails) + stringBuffer.toString());
+
+        JsonObject jsonObject = new JsonParser().parse(stringBuffer.toString()).getAsJsonObject();
+
+        RetroFitGalaxyClients service = RetrofitClientInstance.getRetrofitInstance().create(RetroFitGalaxyClients.class);
+        Call<PostWorkflowToGalaxyDtoResponse> call = service.postWorkflowToGalaxy(algoCode, galaxyApiKey, jsonObject);
+
+        PostWorkflowToGalaxyDtoResponse postWorkflowToGalaxyDtoResponse = null;
+        try {
+            Response<PostWorkflowToGalaxyDtoResponse> response = call.execute();
+            if(response.code() >= 400){
+                //Value are read it from streams.
+                Integer codeErr = response.code();
+                String msgErr = response.errorBody().string();
+                //logger.error(LogHelper.logUser(userDetails) + "Resonse code: " + codeErr + "" + " with body: " + msgErr);
+                //logger.info("---" + msgErr);
+                JSONObject jObjectError  = null;
+                try {
+                    jObjectError = new JSONObject(msgErr);
+                } catch (JSONException e) {
+                    //logger.error(LogHelper.logUser(userDetails) + "Cannot parse Error JSON", e);
+                }
+                //logger.info(jObjectError.toString());
+                String errMsg = jObjectError.get("err_msg").toString();
+                String errCode = jObjectError.get("err_code").toString();
+
+                response.errorBody();
+                // return ResponseEntity
+                        // .status(HttpStatus.BAD_REQUEST)
+                        // .body(new ErrorResponse(errMsg,errCode));
+            }
+            postWorkflowToGalaxyDtoResponse = response.body();
+            //logger.info(LogHelper.logUser(userDetails) + "----" + response.body() + "----" + response.code());
+        } catch (IOException e) {
+            //logger.error(LogHelper.logUser(userDetails) + "Cannot make the call to Galaxy API", e);
+            // return ResponseEntity
+                    // .status(HttpStatus.BAD_REQUEST)
+                    // .body(new ErrorResponse("An error has been occurred","99"));
+        } catch (JSONException e) {
+            //logger.error(LogHelper.logUser(userDetails) + "Cannot find field in Error Json", e);
+            // return ResponseEntity
+                    // .status(HttpStatus.BAD_REQUEST)
+                    // .body(new ErrorResponse("An error has been occurred","99"));
+        }
+        //logger.info(LogHelper.logUser(userDetails) + "Run workflow completed");
+
+        //return ResponseEntity.ok(postWorkflowToGalaxyDtoResponse);
+		return new ResponseEntity<>(gsonOnlyExposed.toJson(experiment.jsonify()), HttpStatus.OK);
     }
 
     @ApiOperation(value = "get an experiment", response = Experiment.class)

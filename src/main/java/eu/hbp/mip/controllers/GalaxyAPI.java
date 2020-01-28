@@ -13,7 +13,6 @@ import eu.hbp.mip.dto.ErrorResponse;
 import eu.hbp.mip.dto.GetWorkflowResultsFromGalaxyDtoResponse;
 import eu.hbp.mip.dto.PostWorkflowToGalaxyDtoResponse;
 import eu.hbp.mip.dto.StringDtoResponse;
-import eu.hbp.mip.helpers.GenParameters;
 import eu.hbp.mip.helpers.LogHelper;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -38,10 +37,10 @@ class GalaxyAPI {
     private static final Logger logger = LoggerFactory.getLogger(GalaxyAPI.class);
 
     //The galaxy URL
-    private final String url = GenParameters.getGenParamInstance().getGalaxyURL();
+    private final String url = "123";
 
     //The galaxy ApiKey
-    private final String apiKey = GenParameters.getGenParamInstance().getGalaxyApiKey();
+    private final String apiKey = "123;";
 
     /**
      * Test if integration works.
@@ -64,8 +63,8 @@ class GalaxyAPI {
     @ResponseStatus(value = HttpStatus.OK)
     public ResponseEntity getGalaxyBasicAccessToken(@AuthenticationPrincipal UserDetails userDetails){
         logger.info(LogHelper.logUser(userDetails) + "Get Galaxy Basic Access Token called");
-        String username = GenParameters.getGenParamInstance().getGalaxyReverseProxyUsername();
-        String password = GenParameters.getGenParamInstance().getGalaxyReverseProxyPassword();
+        String username = "admin";
+        String password = "passwrod";
 
         String stringEncoded = Base64.getEncoder().encodeToString((username + ":" + password).getBytes());
         logger.info(LogHelper.logUser(userDetails) + "Get Galaxy Basic Access Token completed");

@@ -76,7 +76,9 @@ public class MethodsApi {
             }
 
             return ResponseEntity.ok(workflowDetailsList);
-        } catch (ClientHandlerException e) {
+        } catch (Exception e) {
+            UserActionLogging.LogAction("List Galaxy workflows", "Error when calling list galaxy workflows: " + e.getMessage());
+
             return ResponseEntity.ok(new ArrayList<>());
         }
 

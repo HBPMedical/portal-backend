@@ -13,11 +13,10 @@ public class UserActionLogging {
 
     public static void LogAction(String actionName, String actionIdInfo)
     {
-        LOGGER.info( LocalTime.now()+" User : "
+        LOGGER.info( " User : "
                 + SecurityContextHolder.getContext().getAuthentication().getName()
-                + " called enpoint " + actionName
-                + " info "
-                + actionIdInfo);
+                + " called endpoint: " + actionName
+                + " info: " + actionIdInfo);
     }
 
 }

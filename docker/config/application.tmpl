@@ -82,7 +82,7 @@ services:
     algorithmsUrl: {{ default .Env.EXAREME_URL "http://localhost:9090" }}/mining/algorithms.json
 
   galaxy:
-    galaxyUrl:      {{ default .Env.GALAXY_URL "http://localhost:8090/nativeGalaxy" }}
+    galaxyUrl:      {{ default .Env.GALAXY_URL "http://localhost:8090/" }}
     galaxyContext:  {{ default .Env.GALAXY_CONTEXT "nativeGalaxy/workflows/list" }}
     galaxyApiKey:   {{ .Env.GALAXY_API_KEY }}
     galaxyUsername:  {{ default .Env.GALAXY_USERNAME "admin" }}

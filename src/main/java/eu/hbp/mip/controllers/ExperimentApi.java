@@ -12,6 +12,7 @@ import eu.hbp.mip.controllers.retrofit.RetroFitGalaxyClients;
 import eu.hbp.mip.controllers.retrofit.RetrofitClientInstance;
 import eu.hbp.mip.dto.ErrorResponse;
 import eu.hbp.mip.dto.PostWorkflowToGalaxyDtoResponse;
+import eu.hbp.mip.helpers.LogHelper;
 import eu.hbp.mip.model.*;
 import eu.hbp.mip.repositories.ExperimentRepository;
 import eu.hbp.mip.repositories.ModelRepository;
@@ -235,8 +236,9 @@ public class ExperimentApi {
     public ResponseEntity<String> getWorkflowStatus(
             @ApiParam(value = "historyId", required = true) @PathVariable("historyId") String historyId) {
 
-        UserActionLogging.LogAction("Get a workflow status", " historyId : " + historyId);
+        UserActionLogging.LogAction("Get a workflow status", " HistoryId : " + historyId);
 
+        /*
         String url = workflowUrl + "/getWorkflowStatus/" + historyId;
         try {
             User user = userInfo.getUser();
@@ -249,7 +251,31 @@ public class ExperimentApi {
         } catch (IOException e) {
             return ResponseEntity.status(500).body(e.getMessage());
         }
+        */
 
+        // Create the request client
+        RetroFitGalaxyClients service = RetrofitClientInstance.getRetrofitInstance().create(RetroFitGalaxyClients.class);
+        Call<Object> call = service.getWorkflowStatusFromGalaxy(historyId, galaxyApiKey);
+
+        String resultJson = null;
+        try {
+            Response<Object> response = call.execute();
+            if (response.code() >= 400) {
+                UserActionLogging.LogAction("Get a workflow status", " Response code: "
+                        + response.code() + "" + " with body: " + (response.errorBody() != null ? response.errorBody().string() : " "));
+                return ResponseEntity.status(response.code()).body((response.errorBody() != null ? response.errorBody().string() : " "));
+            }
+            resultJson = new Gson().toJson(response.body());
+            UserActionLogging.LogAction("Get a workflow status", " Result: " + resultJson);
+
+        } catch (IOException e) {
+            UserActionLogging.LogAction("Get a workflow status"
+                    , " An exception happend: " + e.getMessage());
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+
+        UserActionLogging.LogAction("Get a workflow status", " Completed!");
+        return ResponseEntity.ok(resultJson);
     }
 
     // TODO: factorize workflow results

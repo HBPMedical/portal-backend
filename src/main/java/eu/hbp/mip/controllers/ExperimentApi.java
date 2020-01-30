@@ -36,16 +36,12 @@ import java.util.*;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-//galaxyapi copy paste
-
-//galaxyapi copy paste
-
 /**
  * Created by habfast on 21/04/16.
  */
 @RestController
 @RequestMapping(value = "/experiments", produces = {APPLICATION_JSON_VALUE})
-@Api(value = "/experiments", description = "the experiments API")
+@Api(value = "/experiments")
 public class ExperimentApi {
 
     //private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentApi.class);
@@ -173,7 +169,19 @@ public class ExperimentApi {
         Call<PostWorkflowToGalaxyDtoResponse> call = service.postWorkflowToGalaxy(workflow.getId(), galaxyApiKey, requestBodyJson);
         try {
             Response<PostWorkflowToGalaxyDtoResponse> response = call.execute();
-            if (response.code() >= 400) {
+
+            if (response.code() == 200) {       // Call succeeded
+                String responseBody = gson.toJson(response.body());
+                UserActionLogging.LogAction("Run workflow", "Response: " + responseBody);
+
+                String historyId = (String) new JSONObject(responseBody).get("history_id");
+                experiment.setWorkflowHistoryId(historyId);
+                experiment.setWorkflowStatus("running");
+                experiment.setResult("");
+                experiment.setHasError(false);
+                experiment.setHasServerError(response.code() >= 500);
+
+            }else {     // Something unexpected happened
                 String msgErr = gson.toJson(response.errorBody());
                 UserActionLogging.LogAction("Run workflow", "Error Response: " + msgErr);
 
@@ -186,12 +194,6 @@ public class ExperimentApi {
                 experiment.setHasError(response.code() >= 400);
                 experiment.setHasServerError(response.code() >= 500);
             }
-            String responseBody = gson.toJson(response.body());
-            UserActionLogging.LogAction("Run workflow", "Response: " + responseBody);
-
-            experiment.setResult(responseBody);
-            experiment.setHasError(response.code() >= 400);
-            experiment.setHasServerError(response.code() >= 500);
 
         } catch (Exception e) {
             UserActionLogging.LogAction("Run workflow", "An exception occurred: " + e.getMessage());
@@ -232,30 +234,35 @@ public class ExperimentApi {
     }
 
     @ApiOperation(value = "get workflow status", response = String.class)
-    @RequestMapping(value = "/workflow/status/{historyId}", method = RequestMethod.GET)
+    @RequestMapping(value = "/workflow/status/{experimentId}", method = RequestMethod.GET)
     public ResponseEntity<String> getWorkflowStatus(
-            @ApiParam(value = "historyId", required = true) @PathVariable("historyId") String historyId) {
+            @ApiParam(value = "historyId", required = true) @PathVariable("experimentId") String experimentId) {
 
-        UserActionLogging.LogAction("Get a workflow status", " HistoryId : " + historyId);
+        UserActionLogging.LogAction("Get a workflow status", " Experiment Id : " + experimentId);
 
-        /*
-        String url = workflowUrl + "/getWorkflowStatus/" + historyId;
+        Experiment experiment;
+        UUID experimentUuid;
         try {
-            User user = userInfo.getUser();
-            String token = JWTUtil.getJWT(jwtSecret, user.getEmail());
-            StringBuilder response = new StringBuilder();
-            HTTPUtil.sendAuthorizedHTTP(url, "", response, "GET", "Bearer " + token);
-            JsonElement element = new JsonParser().parse(response.toString());
-
-            return ResponseEntity.ok(gson.toJson(element));
-        } catch (IOException e) {
-            return ResponseEntity.status(500).body(e.getMessage());
+            experimentUuid = UUID.fromString(experimentId);
+        } catch (IllegalArgumentException iae) {
+            UserActionLogging.LogAction("Get a workflow status", " Invalid Experiment Id");
+            return ResponseEntity.badRequest().body("Invalid Experiment UUID");
         }
-        */
+
+        experiment = experimentRepository.findOne(experimentUuid);
+        if(experiment == null){
+            UserActionLogging.LogAction("Get a workflow status", "The experiment does not exist.");
+            return ResponseEntity.badRequest().body("The experiment does not exist.");
+        }
+
+        if(experiment.getWorkflowHistoryId() == null){
+            UserActionLogging.LogAction("Get a workflow status", "History Id does not exist.");
+            return ResponseEntity.badRequest().body("The experiment is not a workflow.");
+        }
 
         // Create the request client
         RetroFitGalaxyClients service = RetrofitClientInstance.getRetrofitInstance().create(RetroFitGalaxyClients.class);
-        Call<Object> call = service.getWorkflowStatusFromGalaxy(historyId, galaxyApiKey);
+        Call<Object> call = service.getWorkflowStatusFromGalaxy(experiment.getWorkflowHistoryId(), galaxyApiKey);
 
         String resultJson = null;
         try {

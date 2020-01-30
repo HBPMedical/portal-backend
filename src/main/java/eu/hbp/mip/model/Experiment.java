@@ -50,6 +50,14 @@ public class Experiment {
 
     @Column(columnDefinition="TEXT")
     @Expose
+    private String workflowHistoryId;
+
+    @Column(columnDefinition="TEXT")
+    @Expose
+    private String workflowStatus;
+
+    @Column(columnDefinition="TEXT")
+    @Expose
     private String result;
 
     @Expose
@@ -137,6 +145,22 @@ public class Experiment {
 
     public void setHasError(boolean hasError) {
         this.hasError = hasError;
+    }
+
+    public String getWorkflowHistoryId() {
+        return workflowHistoryId;
+    }
+
+    public void setWorkflowHistoryId(String workflowHistoryId) {
+        this.workflowHistoryId = workflowHistoryId;
+    }
+
+    public String getWorkflowStatus() {
+        return workflowStatus;
+    }
+
+    public void setWorkflowStatus(String workflowStatus) {
+        this.workflowStatus = workflowStatus;
     }
 
     public String getResult() {

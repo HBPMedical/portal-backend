@@ -53,7 +53,6 @@ public class MethodsApi {
         } catch (IOException e) {
             return ResponseEntity.status(500).body(e.getMessage());
         }
-
     }
 
     @ApiOperation(value = "List Galaxy workflows", response = String.class)

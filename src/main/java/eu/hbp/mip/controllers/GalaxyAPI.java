@@ -10,7 +10,7 @@ import com.google.gson.*;
 import eu.hbp.mip.controllers.retrofit.RetroFitGalaxyClients;
 import eu.hbp.mip.controllers.retrofit.RetrofitClientInstance;
 import eu.hbp.mip.dto.ErrorResponse;
-import eu.hbp.mip.dto.GetWorkflowResultsFromGalaxyDtoResponse;
+import eu.hbp.mip.dto.GalaxyWorkflowResult;
 import eu.hbp.mip.dto.PostWorkflowToGalaxyDtoResponse;
 import eu.hbp.mip.dto.StringDtoResponse;
 import eu.hbp.mip.helpers.LogHelper;
@@ -368,22 +368,22 @@ class GalaxyAPI {
         logger.info(LogHelper.logUser(userDetails) + "Get workflow results called");
 
         RetroFitGalaxyClients service = RetrofitClientInstance.getRetrofitInstance().create(RetroFitGalaxyClients.class);
-        Call<List<GetWorkflowResultsFromGalaxyDtoResponse>> call = service.getWorkflowResultsFromGalaxy(id,apiKey);
+        Call<List<GalaxyWorkflowResult>> call = service.getWorkflowResultsFromGalaxy(id,apiKey);
 
-        List<GetWorkflowResultsFromGalaxyDtoResponse> getWorkflowResultsFromGalaxyDtoResponsesList = null;
+        List<GalaxyWorkflowResult> workflowGalaxyDtoResponsesList = null;
         try {
-            Response<List<GetWorkflowResultsFromGalaxyDtoResponse>> response = call.execute();
+            Response<List<GalaxyWorkflowResult>> response = call.execute();
             if(response.code() >= 400){
                 logger.error(LogHelper.logUser(userDetails) + "Resonse code: " + response.code() + "" + " with body: " + response.errorBody().string());
                 return ResponseEntity.badRequest().build();
             }
-            getWorkflowResultsFromGalaxyDtoResponsesList = response.body();
+            workflowGalaxyDtoResponsesList = response.body();
         } catch (IOException e) {
             logger.error(LogHelper.logUser(userDetails) + "Cannot make the call to Galaxy API", e);
         }
         logger.info(LogHelper.logUser(userDetails) + "Get workflow results completed");
 
-        return ResponseEntity.ok(getWorkflowResultsFromGalaxyDtoResponsesList);
+        return ResponseEntity.ok(workflowGalaxyDtoResponsesList);
     }
 
     /**
@@ -414,39 +414,6 @@ class GalaxyAPI {
             logger.error(LogHelper.logUser(userDetails) + "Cannot make the call to Galaxy API", e);
         }
         logger.info(LogHelper.logUser(userDetails) + "Get workflow results body completed");
-
-        return ResponseEntity.ok(jsonString);
-    }
-
-    /**
-     * Get the result body of a specific workflow with details.
-     *
-     * @param id : The id as @{@link String} of the workflow.
-     * @param contentId : The content id as @{@link String}.
-     * @return Return a @{@link ResponseEntity}.
-     */
-    @RequestMapping(method = RequestMethod.GET, value = "/getWorkflowResultsDetails/{id}/contents/{contentId}", produces = "application/json")
-    @ResponseStatus(value = HttpStatus.OK)
-    public ResponseEntity getWorkflowResultsDetails(@AuthenticationPrincipal UserDetails userDetails, @PathVariable String id, @PathVariable String contentId) {
-        logger.info(LogHelper.logUser(userDetails) + "Get workflow results details called");
-
-        RetroFitGalaxyClients service = RetrofitClientInstance.getRetrofitInstance().create(RetroFitGalaxyClients.class);
-        Call<Object> call = service.getWorkflowResultsDetailsFromGalaxy(id,contentId,apiKey);
-
-        String jsonString = null;
-        try {
-            Response<Object> response = call.execute();
-            if(response.code() >= 400){
-                logger.error(LogHelper.logUser(userDetails) + "Resonse code: " + response.code() + "" + " with body: " + response.errorBody().string());
-                return ResponseEntity.badRequest().build();
-            }
-            jsonString = new Gson().toJson(response.body());
-            System.out.println(jsonString);
-            logger.info(LogHelper.logUser(userDetails) + "----" + response.body() + "----" + response.code());
-        } catch (IOException e) {
-            logger.error(LogHelper.logUser(userDetails) + "Cannot make the call to Galaxy API", e);
-        }
-        logger.info(LogHelper.logUser(userDetails) + "Get workflow results details completed");
 
         return ResponseEntity.ok(jsonString);
     }

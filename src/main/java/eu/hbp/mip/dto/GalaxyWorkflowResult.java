@@ -9,7 +9,7 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
-public class GetWorkflowResultsFromGalaxyDtoResponse {
+public class GalaxyWorkflowResult {
 
     @SerializedName("history_content_type")
     private String historyContentType;
@@ -46,10 +46,10 @@ public class GetWorkflowResultsFromGalaxyDtoResponse {
     @SerializedName("purged")
     private Boolean purged;
 
-    public GetWorkflowResultsFromGalaxyDtoResponse() {
+    public GalaxyWorkflowResult() {
     }
 
-    public GetWorkflowResultsFromGalaxyDtoResponse(String historyContentType, String updateTime, String name, String extension, String typeId, Boolean deleted, String historyId, List<Object> tags, String id, Boolean visible, String state, String createTime, Integer hid, String url, String datasetId, String type, Boolean purged) {
+    public GalaxyWorkflowResult(String historyContentType, String updateTime, String name, String extension, String typeId, Boolean deleted, String historyId, List<Object> tags, String id, Boolean visible, String state, String createTime, Integer hid, String url, String datasetId, String type, Boolean purged) {
         this.historyContentType = historyContentType;
         this.updateTime = updateTime;
         this.name = name;

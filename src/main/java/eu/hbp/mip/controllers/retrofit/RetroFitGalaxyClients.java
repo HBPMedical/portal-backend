@@ -1,7 +1,7 @@
 package eu.hbp.mip.controllers.retrofit;
 
 import com.google.gson.JsonObject;
-import eu.hbp.mip.dto.GetWorkflowResultsFromGalaxyDtoResponse;
+import eu.hbp.mip.dto.GalaxyWorkflowResult;
 import eu.hbp.mip.dto.PostWorkflowToGalaxyDtoResponse;
 import retrofit2.Call;
 import retrofit2.http.*;
@@ -17,14 +17,11 @@ public interface RetroFitGalaxyClients {
     Call<Object> getWorkflowStatusFromGalaxy(@Path("historyId") String historyId, @Query("key") String key);
 
     @GET("histories/{historyId}/contents")
-    Call<List<GetWorkflowResultsFromGalaxyDtoResponse>> getWorkflowResultsFromGalaxy(@Path("historyId") String historyId, @Query("key") String key);
+    Call<List<GalaxyWorkflowResult>> getWorkflowResultsFromGalaxy(@Path("historyId") String historyId, @Query("key") String key);
 
     @GET("histories/{historyId}/contents/{contentId}/display")
     Call<Object> getWorkflowResultsBodyFromGalaxy(@Path("historyId") String historyId, @Path("contentId") String contentId, @Query("key") String key);
 
-    @GET("histories/{historyId}/contents/{contentId}")
-    Call<Object> getWorkflowResultsDetailsFromGalaxy(@Path("historyId") String historyId, @Path("contentId") String contentId, @Query("key") String key);
-
     @GET("jobs/{jobId}?full=true")
-    Call<Object> getErrorMessageOfWorkflowFromGalaxy(@Path("jobId") String historyId, @Query("key") String key);
+    Call<Object> getErrorMessageOfWorkflowFromGalaxy(@Path("jobId") String jobId, @Query("key") String key);
 }

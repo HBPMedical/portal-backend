@@ -64,10 +64,7 @@ public class MethodsApi {
             final GalaxyInstance instance = GalaxyInstanceFactory.get(galaxyUrl, galaxyApiKey);
             final WorkflowsClient workflowsClient = instance.getWorkflowsClient();
 
-            List<Workflow> workflowList = new ArrayList<>();
-            for(Workflow workflow : workflowsClient.getWorkflows()) {
-                workflowList.add(workflow);
-            }
+            List<Workflow> workflowList = new ArrayList<>(workflowsClient.getWorkflows());
 
             List<WorkflowDetails> workflowDetailsList = new ArrayList<>();
             for(Workflow workflow : workflowList){

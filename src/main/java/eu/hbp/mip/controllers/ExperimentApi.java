@@ -13,12 +13,10 @@ import eu.hbp.mip.controllers.retrofit.RetrofitClientInstance;
 import eu.hbp.mip.dto.ErrorResponse;
 import eu.hbp.mip.dto.GalaxyWorkflowResult;
 import eu.hbp.mip.dto.PostWorkflowToGalaxyDtoResponse;
-import eu.hbp.mip.helpers.LogHelper;
 import eu.hbp.mip.model.*;
 import eu.hbp.mip.repositories.ExperimentRepository;
 import eu.hbp.mip.repositories.ModelRepository;
 import eu.hbp.mip.utils.HTTPUtil;
-import eu.hbp.mip.utils.JWTUtil;
 import eu.hbp.mip.utils.UserActionLogging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -300,7 +298,7 @@ public class ExperimentApi {
                     }
                 }
 
-                if(!resultFound) {      // If there is no visible result
+                if (!resultFound) {      // If there is no visible result
                     UserActionLogging.LogAction("Get workflow experiment", "No visible result");
                     experiment.setResult(new ErrorResponse("The workflow has no visible result.", "500").toString());
                     experiment.setHasError(true);
@@ -333,7 +331,7 @@ public class ExperimentApi {
                     }
                 }
 
-                if(!failedJobFound) {      // If there is no visible failed job
+                if (!failedJobFound) {      // If there is no visible failed job
                     UserActionLogging.LogAction("Get workflow experiment", "No failed result");
                     experiment.setResult(new ErrorResponse("The workflow has no failed result.", "500").toString());
                     experiment.setHasError(true);
@@ -477,20 +475,20 @@ public class ExperimentApi {
 
     /**
      * @param jobId the id of the workflow job that failed
-     * @return  the error that was produced or null if an error occurred
+     * @return the error that was produced or null if an error occurred
      */
-    public String getWorkflowJobError(String jobId){
+    public String getWorkflowJobError(String jobId) {
         UserActionLogging.LogAction("Get workflow job error", " jobId : " + jobId);
 
         RetroFitGalaxyClients service = RetrofitClientInstance.getRetrofitInstance().create(RetroFitGalaxyClients.class);
-        Call<Object> callError = service.getErrorMessageOfWorkflowFromGalaxy(jobId,galaxyApiKey);
+        Call<Object> callError = service.getErrorMessageOfWorkflowFromGalaxy(jobId, galaxyApiKey);
 
         String fullError = null;
         String returnError = null;
         try {
             Response<Object> response = callError.execute();
-            if(response.code() >= 400){
-                UserActionLogging.LogAction("Get workflow job error","Response code: "
+            if (response.code() >= 400) {
+                UserActionLogging.LogAction("Get workflow job error", "Response code: "
                         + response.code() + " with body: " + (response.errorBody() != null ? response.errorBody().string() : " "));
                 return null;
             }
@@ -500,19 +498,19 @@ public class ExperimentApi {
             JsonElement jsonElement = new JsonParser().parse(jsonString);
             JsonObject rootObject = jsonElement.getAsJsonObject();
             fullError = rootObject.get("stderr").getAsString();
-            UserActionLogging.LogAction("Get workflow job error","Error: " + fullError);
+            UserActionLogging.LogAction("Get workflow job error", "Error: " + fullError);
 
             String[] arrOfStr = fullError.split("ValueError", 0);
-            String specError = arrOfStr[arrOfStr.length-1];
+            String specError = arrOfStr[arrOfStr.length - 1];
             returnError = specError.substring(1);
-            UserActionLogging.LogAction("Get workflow job error","Parsed Error: " + returnError);
+            UserActionLogging.LogAction("Get workflow job error", "Parsed Error: " + returnError);
 
         } catch (IOException e) {
-            UserActionLogging.LogAction("Get workflow job error","Exception: " + e.getMessage());
+            UserActionLogging.LogAction("Get workflow job error", "Exception: " + e.getMessage());
             return null;
         }
 
-        UserActionLogging.LogAction("Get workflow job error","Completed successfully!");
+        UserActionLogging.LogAction("Get workflow job error", "Completed successfully!");
 
         return returnError;
     }

@@ -16,8 +16,6 @@ import java.util.*;
 @Table(name = "`experiment`")
 public class Experiment {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Experiment.class);
-
     private static final Gson gson = new Gson();
 
     @Id

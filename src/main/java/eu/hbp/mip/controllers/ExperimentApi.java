@@ -10,10 +10,11 @@ import com.google.common.collect.Lists;
 import com.google.gson.*;
 import eu.hbp.mip.controllers.retrofit.RetroFitGalaxyClients;
 import eu.hbp.mip.controllers.retrofit.RetrofitClientInstance;
-import eu.hbp.mip.dto.ErrorResponse;
-import eu.hbp.mip.dto.GalaxyWorkflowResult;
-import eu.hbp.mip.dto.PostWorkflowToGalaxyDtoResponse;
 import eu.hbp.mip.model.*;
+import eu.hbp.mip.model.ExperimentExecutionDTO.AlgorithmExecutionDTO.AlgorithmExecutionParamDTO;
+import eu.hbp.mip.model.galaxy.ErrorResponse;
+import eu.hbp.mip.model.galaxy.GalaxyWorkflowResult;
+import eu.hbp.mip.model.galaxy.PostWorkflowToGalaxyDtoResponse;
 import eu.hbp.mip.repositories.ExperimentRepository;
 import eu.hbp.mip.repositories.ModelRepository;
 import eu.hbp.mip.utils.HTTPUtil;
@@ -41,21 +42,25 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @Api(value = "/experiments")
 public class ExperimentApi {
 
-    //private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentApi.class);
-
     private static final Gson gson = new Gson();
 
     private static final Gson gsonOnlyExposed = new GsonBuilder().serializeNulls()
             .setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").excludeFieldsWithoutExposeAnnotation().create();
 
-    @Value("#{'${services.exareme.miningExaremeUrl:http://localhost:9090/mining/query}'}")
-    public String miningExaremeQueryUrl;
+    @Value("#{'${services.exareme.miningExaremeUrl}'}")
+    public String exaremeUrl;
 
     @Value("#{'${services.workflows.workflowUrl}'}")
     private String workflowUrl;
 
     @Value("#{'${services.workflows.jwtSecret}'}")
     private String jwtSecret;
+
+    @Value("#{'${services.galaxy.galaxyUrl}'}")
+    private String galaxyUrl;
+
+    @Value("#{'${services.galaxy.galaxyApiKey}'}")
+    private String galaxyApiKey;
 
     @Autowired
     private UserInfo userInfo;
@@ -66,69 +71,110 @@ public class ExperimentApi {
     @Autowired
     private ExperimentRepository experimentRepository;
 
-    @Value("#{'${services.galaxy.galaxyUrl}'}")
-    private String galaxyUrl;
+    @ApiOperation(value = "Create an experiment", response = Experiment.class)
+    @RequestMapping(value = "/runAlgorithm", method = RequestMethod.POST)
+    public ResponseEntity<String> runExperiment(@RequestBody ExperimentExecutionDTO experimentExecutionDTO) {
+        UserActionLogging.LogAction("Run algorithm", "Running the algorithm...");
 
-    @Value("#{'${services.galaxy.galaxyApiKey}'}")
-    private String galaxyApiKey;
+        // Get the type of algorithm
+        String algorithmType = experimentExecutionDTO.getAlgorithms().get(0).getType();
 
-    @ApiOperation(value = "Create an experiment on Exareme", response = Experiment.class)
-    @RequestMapping(value = "/exareme", method = RequestMethod.POST)
-    public ResponseEntity<String> runExaremeExperiment(@RequestBody ExperimentQuery expQuery) {
-        //LOGGER.info("send ExaremeExperiment");
+        if (algorithmType.equals("workflow")) {
+            return runGalaxyWorkflow(experimentExecutionDTO);
+        } else {
+            return runExaremeAlgorithm(experimentExecutionDTO);
+        }
 
-        Experiment experiment = saveExperiment(expQuery);
+    }
 
-        String algoCode = expQuery.getAlgorithms().get(0).getCode();
-        List<AlgorithmParam> params = expQuery.getAlgorithms().get(0).getParameters();
+    /**
+     * The runExaremeExperiment will POST the algorithm to the exareme client
+     *
+     * @param experimentExecutionDTO is the request with the experiment information
+     * @return the response to be returned
+     */
+    public ResponseEntity<String> runExaremeAlgorithm(ExperimentExecutionDTO experimentExecutionDTO) {
+        UserActionLogging.LogAction("Run exareme algorithm", "Running the algorithm...");
+
+        Experiment experiment = createExperiment(experimentExecutionDTO);
+
+        // Run the 1st algorithm from the list
+        String algorithmName = experimentExecutionDTO.getAlgorithms().get(0).getName();
+
+        // Get the parameters
+        List<AlgorithmExecutionParamDTO> algorithmParameters
+                = experimentExecutionDTO.getAlgorithms().get(0).getParameters();
+
+        String body = gson.toJson(algorithmParameters);
+        String url = exaremeUrl + "/" + algorithmName;
+        UserActionLogging.LogAction("Run exareme algorithm", "url: " + url + ", body: " + body);
+
+        ResponseEntity<String> response = new ResponseEntity<>(gsonOnlyExposed.toJson(experiment.jsonify()), HttpStatus.OK);
+        UserActionLogging.LogAction("Run exareme algorithm",
+                "Completed, returning: " + experiment.toString());
+
+        UserActionLogging.LogAction("Run exareme algorithm",
+                "Starting exareme execution thread");
         new Thread(() -> {
-            List<HashMap<String, String>> queryList = new ArrayList<HashMap<String, String>>();
+            // ATTENTION: Inside the Thread only LogThreadAction should be used, not LogAction!
+            UserActionLogging.LogThreadAction("Thread, Run exareme algorithm",
+                    "Thread started!");
 
-            if (params != null) {
-                for (AlgorithmParam p : params) {
-                    queryList.add(makeObject(p.getName(), p.getValue()));
-                }
-            }
-
-            String query = gson.toJson(queryList);
-            String url = miningExaremeQueryUrl + "/" + algoCode;
-
-            // Results are stored in the experiment object
             try {
+                UserActionLogging.LogThreadAction("Thread, Run exareme algorithm",
+                        "Thread started!");
                 StringBuilder results = new StringBuilder();
-                int code = HTTPUtil.sendPost(url, query, results);
+                int code = HTTPUtil.sendPost(url, body, results);
+
+                UserActionLogging.LogThreadAction("Thread, Run exareme algorithm",
+                        "Algorithm finished with code: " + code);
+
+                // Results are stored in the experiment object
                 experiment.setResult("[" + results.toString() + "]");
                 experiment.setHasError(code >= 400);
                 experiment.setHasServerError(code >= 500);
-            } catch (IOException e) {
-                //LOGGER.trace("Invalid UUID", e);
-                //LOGGER.warn("Exareme experiment failed to run properly !");
+            } catch (Exception e) {
+                UserActionLogging.LogThreadAction("Thread, Run exareme algorithm",
+                        "There was an exception: " + e.getMessage());
+
                 experiment.setHasError(true);
                 experiment.setHasServerError(true);
                 experiment.setResult(e.getMessage());
             }
+            UserActionLogging.LogThreadAction("Thread, Run exareme algorithm",
+                    "Finished the experiment: " + experiment.toString());
             finishExperiment(experiment);
+
+            UserActionLogging.LogThreadAction("Thread, Run exareme algorithm",
+                    "Finished!");
         }).start();
 
-        UserActionLogging.LogAction("create ExaremeExperiment", "no info");
-
-        return new ResponseEntity<>(gsonOnlyExposed.toJson(experiment.jsonify()), HttpStatus.OK);
+        return response;
     }
 
-    @ApiOperation(value = "Create a workflow", response = Experiment.class)
-    @RequestMapping(value = "/workflow", method = RequestMethod.POST)
-    public ResponseEntity runWorkflow(@RequestBody ExperimentQuery expQuery) {
+    /**
+     * The runWorkflow will POST the algorithm to the galaxy client
+     *
+     * @param experimentExecutionDTO is the request with the experiment information
+     * @return the response to be returned
+     */
+    public ResponseEntity<String> runGalaxyWorkflow(ExperimentExecutionDTO experimentExecutionDTO) {
         UserActionLogging.LogAction("Run workflow", "Running a workflow...");
 
-        Experiment experiment = saveExperiment(expQuery);
+        Experiment experiment = createExperiment(experimentExecutionDTO);
 
-        // Get the algorithm parameters provided
-        String algorithmName = expQuery.getAlgorithms().get(0).getName();
-        List<AlgorithmParam> algorithmParams = expQuery.getAlgorithms().get(0).getParameters();
+        // Run the 1st algorithm from the list
+        String workflowId = experimentExecutionDTO.getAlgorithms().get(0).getName();
+
+        // Get the parameters
+        List<AlgorithmExecutionParamDTO> algorithmParameters
+                = experimentExecutionDTO.getAlgorithms().get(0).getParameters();
+
+        // Convert the parameters to workflow parameters
         HashMap<String, String> algorithmParamsIncludingEmpty = new HashMap<>();
-        if (algorithmParams != null) {
-            for (AlgorithmParam p : algorithmParams) {
-                algorithmParamsIncludingEmpty.put(p.getName(), p.getValue());
+        if (algorithmParameters != null) {
+            for (AlgorithmExecutionParamDTO param : algorithmParameters) {
+                algorithmParamsIncludingEmpty.put(param.getName(), param.getValue());
             }
         }
 
@@ -137,14 +183,16 @@ public class ExperimentApi {
         final WorkflowsClient workflowsClient = instance.getWorkflowsClient();
         Workflow workflow = null;
         for (Workflow curWorkflow : workflowsClient.getWorkflows()) {
-            if (curWorkflow.getName().equals(algorithmName)) {
+            if (curWorkflow.getId().equals(workflowId)) {
                 workflow = curWorkflow;
                 break;
             }
         }
         if (workflow == null) {
-            UserActionLogging.LogAction("Run workflow", "Could not find algorithm code");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse("Could not find galaxy algorithm.", "99"));
+            UserActionLogging.LogAction("Run workflow",
+                    "Could not find algorithm code: " + workflowId);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ErrorResponse("Could not find galaxy algorithm.", "99").toString());
         }
         final WorkflowDetails workflowDetails = workflowsClient.showWorkflow(workflow.getId());
         for (Map.Entry<String, WorkflowInputDefinition> workflowParameter : workflowDetails.getInputs().entrySet()) {
@@ -197,7 +245,8 @@ public class ExperimentApi {
             experiment.setHasServerError(true);
             experiment.setResult(e.getMessage());
         }
-        finishExperiment(experiment);
+        saveExperiment(experiment);
+
         UserActionLogging.LogAction("Run workflow", "Run workflow completed!");
 
         return new ResponseEntity(gsonOnlyExposed.toJson(experiment.jsonify()), HttpStatus.OK);
@@ -304,6 +353,8 @@ public class ExperimentApi {
                     experiment.setHasError(true);
                     experiment.setHasServerError(true);
                 }
+
+                finishExperiment(experiment);
                 break;
 
             case "error":
@@ -337,12 +388,14 @@ public class ExperimentApi {
                     experiment.setHasError(true);
                     experiment.setHasServerError(true);
                 }
+                finishExperiment(experiment);
                 break;
 
             default:        // InternalError or unexpected result
                 experiment.setResult(new ErrorResponse("An unexpected error occurred.", "500").toString());
                 experiment.setHasError(true);
                 experiment.setHasServerError(true);
+                finishExperiment(experiment);
                 break;
         }
 
@@ -647,37 +700,43 @@ public class ExperimentApi {
         return new ResponseEntity<>(gsonOnlyExposed.toJson(experiment.jsonify()), HttpStatus.OK);
     }
 
+    private Experiment createExperiment(ExperimentExecutionDTO experimentExecutionDTO) throws NullPointerException{
+        User user = userInfo.getUser();
+
+        Experiment experiment = new Experiment();
+        experiment.setUuid(UUID.randomUUID());
+        experiment.setCreatedBy(user);
+        experiment.setAlgorithms(gson.toJson(experimentExecutionDTO.getAlgorithms()));
+        Model model = modelRepository.findOne(experimentExecutionDTO.getModel());
+        experiment.setModel(model);
+        experiment.setName(experimentExecutionDTO.getName());
+        experimentRepository.save(experiment);
+
+        UserActionLogging.LogAction("Created an experiment", " id : " + experiment.getUuid());
+        UserActionLogging.LogAction("Created an experiment", " algorithms : " + experiment.getAlgorithms());
+        UserActionLogging.LogAction("Created an experiment", " model : " + experiment.getModel().getSlug());
+        UserActionLogging.LogAction("Created an experiment", " name : " + experiment.getName());
+        return experiment;
+    }
+
+    private void saveExperiment(Experiment experiment) {
+        UserActionLogging.LogAction("Saved an experiment", " id : " + experiment.getUuid());
+        UserActionLogging.LogAction("Saved an experiment", " algorithms : " + experiment.getAlgorithms());
+        UserActionLogging.LogAction("Saved an experiment", " model : " + experiment.getModel().getSlug());
+        UserActionLogging.LogAction("Saved an experiment", " name : " + experiment.getName());
+        UserActionLogging.LogAction("Saved an experiment", " historyId : " + experiment.getWorkflowHistoryId());
+        UserActionLogging.LogAction("Saved an experiment", " status : " + experiment.getWorkflowStatus());
+
+        experimentRepository.save(experiment);
+
+        UserActionLogging.LogAction("Experiment saved", "");
+    }
+
     private void finishExperiment(Experiment experiment) {
         experiment.setFinished(new Date());
         experimentRepository.save(experiment);
 
-        UserActionLogging.LogAction("Experiment updated (finished)", "");
-    }
-
-    private HashMap<String, String> makeObject(String name, String value) {
-        HashMap<String, String> o = new HashMap<String, String>();
-        o.put("name", name);
-        o.put("value", value);
-
-        return o;
-    }
-
-    private Experiment saveExperiment(ExperimentQuery expQuery) {
-
-        Experiment experiment = new Experiment();
-        experiment.setUuid(UUID.randomUUID());
-        User user = userInfo.getUser();
-
-        experiment.setAlgorithms(gson.toJson(expQuery.getAlgorithms()));
-        experiment.setValidations(gson.toJson(expQuery.getValidations()));
-        experiment.setName(expQuery.getName());
-        experiment.setCreatedBy(user);
-        experiment.setModel(modelRepository.findOne(expQuery.getModel()));
-        experimentRepository.save(experiment);
-
-        UserActionLogging.LogAction("Saved an experiment", " id : " + experiment.getUuid());
-
-        return experiment;
+        UserActionLogging.LogThreadAction("Experiment finished!", "");
     }
 
 }

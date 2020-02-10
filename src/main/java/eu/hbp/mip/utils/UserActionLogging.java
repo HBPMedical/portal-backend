@@ -4,8 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.time.LocalTime;
-
 public class UserActionLogging {
 
 
@@ -19,4 +17,8 @@ public class UserActionLogging {
                 + " info: " + actionIdInfo);
     }
 
+    public static void LogThreadAction(String actionName, String actionIdInfo)
+    {
+        LOGGER.info( "Called endpoint: " + actionName + " info: " + actionIdInfo);
+    }
 }

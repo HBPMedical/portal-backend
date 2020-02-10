@@ -3,7 +3,7 @@
  * Copyright (c) 2019. MIT License
  */
 
-package eu.hbp.mip.dto;
+package eu.hbp.mip.model.galaxy;
 
 import com.google.gson.annotations.SerializedName;
 

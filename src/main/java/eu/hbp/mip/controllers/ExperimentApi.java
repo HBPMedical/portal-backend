@@ -700,7 +700,7 @@ public class ExperimentApi {
         return new ResponseEntity<>(gsonOnlyExposed.toJson(experiment.jsonify()), HttpStatus.OK);
     }
 
-    private Experiment createExperiment(ExperimentExecutionDTO experimentExecutionDTO) throws NullPointerException{
+    private Experiment createExperiment(ExperimentExecutionDTO experimentExecutionDTO){
         User user = userInfo.getUser();
 
         Experiment experiment = new Experiment();

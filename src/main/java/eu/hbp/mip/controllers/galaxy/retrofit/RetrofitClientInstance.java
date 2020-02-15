@@ -1,4 +1,4 @@
-package eu.hbp.mip.controllers.retrofit;
+package eu.hbp.mip.controllers.galaxy.retrofit;
 
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;

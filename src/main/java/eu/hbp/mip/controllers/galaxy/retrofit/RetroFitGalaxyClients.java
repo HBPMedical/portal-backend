@@ -1,4 +1,4 @@
-package eu.hbp.mip.controllers.retrofit;
+package eu.hbp.mip.controllers.galaxy.retrofit;
 
 import com.google.gson.JsonObject;
 import eu.hbp.mip.model.galaxy.GalaxyWorkflowResult;

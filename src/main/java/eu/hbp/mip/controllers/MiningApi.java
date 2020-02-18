@@ -54,7 +54,7 @@ public class MiningApi {
         UserActionLogging.LogAction("Run an histogram", "");
 
         String query = gson.toJson(queryList);
-        String url = miningExaremeQueryUrl + "/" + "HISTOGRAMS";
+        String url = miningExaremeQueryUrl + "/" + "MULTIPLE_HISTOGRAMS";
 
         try {
             StringBuilder results = new StringBuilder();

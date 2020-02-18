@@ -45,8 +45,8 @@ public class MiningApi {
     @Autowired
     private UserInfo userInfo;
 
-    @Value("#{'${services.exareme.miningExaremeUrl:http://localhost:9090/mining/query}'}")
-    public String miningExaremeQueryUrl;
+    @Value("#{'${services.exareme.queryExaremeUrl:http://localhost:9090/mining/query}'}")
+    public String queryExaremeUrl;
 
     @ApiOperation(value = "Create an histogram on Exareme", response = String.class)
     @RequestMapping(value = "/exareme", method = RequestMethod.POST)
@@ -54,7 +54,7 @@ public class MiningApi {
         UserActionLogging.LogAction("Run an histogram", "");
 
         String query = gson.toJson(queryList);
-        String url = miningExaremeQueryUrl + "/" + "MULTIPLE_HISTOGRAMS";
+        String url = queryExaremeUrl + "/" + "MULTIPLE_HISTOGRAMS";
 
         try {
             StringBuilder results = new StringBuilder();
@@ -72,7 +72,7 @@ public class MiningApi {
         UserActionLogging.LogAction("Run descriptive stats", "");
 
         String query = gson.toJson(queryList);
-        String url = miningExaremeQueryUrl + "/" + "DESCRIPTIVE_STATS";
+        String url = queryExaremeUrl + "/" + "DESCRIPTIVE_STATS";
 
         try {
             StringBuilder results = new StringBuilder();
@@ -93,7 +93,7 @@ public class MiningApi {
         UserActionLogging.LogAction("Run algo", "");
 
         String query = gson.toJson(queryList);
-        String url = miningExaremeQueryUrl + "/" + algorithmName;
+        String url = queryExaremeUrl + "/" + algorithmName;
 
         try {
             StringBuilder results = new StringBuilder();

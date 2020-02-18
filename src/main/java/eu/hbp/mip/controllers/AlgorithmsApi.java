@@ -45,7 +45,7 @@ public class AlgorithmsApi {
     private String galaxyApiKey;
 
     @ApiOperation(value = "List all algorithms", response = String.class)
-    @RequestMapping(value = "/", method = RequestMethod.GET)
+    @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<AlgorithmDTO>> getAlgorithms() {
         UserActionLogging.LogAction("List all algorithms", "");
 

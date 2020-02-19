@@ -48,9 +48,9 @@ public class MiningApi {
     @Value("#{'${services.exareme.queryExaremeUrl:http://localhost:9090/mining/query}'}")
     public String queryExaremeUrl;
 
-    @ApiOperation(value = "Create an histogram on Exareme", response = String.class)
-    @RequestMapping(value = "/exareme", method = RequestMethod.POST)
-    public ResponseEntity runExaremeMining(@RequestBody List<HashMap<String, String>> queryList) {
+    @ApiOperation(value = "Create a histogram on Exareme", response = String.class)
+    @RequestMapping(value = "/histograms", method = RequestMethod.POST)
+    public ResponseEntity runExaremeHistograms(@RequestBody List<HashMap<String, String>> queryList) {
         UserActionLogging.LogAction("Run an histogram", "");
 
         String query = gson.toJson(queryList);
@@ -66,8 +66,8 @@ public class MiningApi {
         }
     }
 
-    @ApiOperation(value = "Create an descriptive statistic on Exareme", response = String.class)
-    @RequestMapping(value = "/exareme-stats", method = RequestMethod.POST)
+    @ApiOperation(value = "Create a descriptive statistic on Exareme", response = String.class)
+    @RequestMapping(value = "/descriptive_stats", method = RequestMethod.POST)
     public ResponseEntity runExaremeDescriptiveStats(@RequestBody List<HashMap<String, String>> queryList) {
         UserActionLogging.LogAction("Run descriptive stats", "");
 

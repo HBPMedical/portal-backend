@@ -83,25 +83,4 @@ public class MiningApi {
             return new ResponseEntity<>("Not found", HttpStatus.BAD_REQUEST);
         }
     }
-
-    @ApiOperation(value = "Perform an non persisted algorithm on Exareme", response = String.class)
-    @RequestMapping(value = "/exareme/{algorithmName}", method = RequestMethod.POST)
-    public ResponseEntity runExaremeAlgorithm(
-        @RequestBody List<HashMap<String, String>> queryList,
-        @ApiParam(value = "algorithmName", required = true) @PathVariable("algorithmName") String algorithmName
-        ) {
-        UserActionLogging.LogAction("Run algo", "");
-
-        String query = gson.toJson(queryList);
-        String url = queryExaremeUrl + "/" + algorithmName;
-
-        try {
-            StringBuilder results = new StringBuilder();
-            int code = HTTPUtil.sendPost(url, query, results);
-
-            return ResponseEntity.ok(gson.toJson(results.toString()));
-        } catch (IOException e) {
-            return new ResponseEntity<>("Not found", HttpStatus.BAD_REQUEST);
-        }
-    }
 }

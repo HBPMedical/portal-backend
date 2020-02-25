@@ -43,7 +43,6 @@ public class Experiment {
     private String algorithms;
 
     @Column(columnDefinition="TEXT")
-    @Expose
     private String validations;
 
     @Column(columnDefinition="TEXT")

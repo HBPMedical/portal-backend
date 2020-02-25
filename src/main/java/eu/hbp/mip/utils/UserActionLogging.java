@@ -17,7 +17,7 @@ public class UserActionLogging {
                 + " info: " + actionIdInfo);
     }
 
-    // Used from Threads because LogAction won't wor.
+    // Used from Threads because LogAction won't work.
     public static void LogThreadAction(String actionName, String actionIdInfo)
     {
         LOGGER.info( "Thread -->" + actionName + " info: " + actionIdInfo);

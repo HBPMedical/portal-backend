@@ -1,6 +1,7 @@
 package eu.hbp.mip.model;
 
 import com.google.gson.Gson;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -14,7 +15,7 @@ public class MiningQuery {
     private List<Variable> grouping;
     private List<Variable> datasets;
     private String filters;
-    private Algorithm algorithm;
+    private ExperimentExecutionDTO.AlgorithmExecutionDTO algorithm;
 
     public MiningQuery() {
         this.variables = new LinkedList<>();
@@ -32,7 +33,9 @@ public class MiningQuery {
         this.variables = variables;
     }
 
-    public  void addVariable(Variable variable) { this.variables.add(variable); }
+    public void addVariable(Variable variable) {
+        this.variables.add(variable);
+    }
 
     public List<Variable> getCovariables() {
         return covariables;
@@ -42,7 +45,9 @@ public class MiningQuery {
         this.covariables = covariables;
     }
 
-    public  void addCovariable(Variable variable) { this.covariables.add(variable); }
+    public void addCovariable(Variable variable) {
+        this.covariables.add(variable);
+    }
 
     public List<Variable> getGrouping() {
         return grouping;
@@ -52,15 +57,21 @@ public class MiningQuery {
         this.grouping = grouping;
     }
 
-    public List<Variable> getDatasets() { return datasets; }
+    public List<Variable> getDatasets() {
+        return datasets;
+    }
 
     public void setDataset(List<Variable> datasets) {
         this.datasets = datasets;
     }
 
-    public  void addDataset(Variable variable) { this.datasets.add(variable); }
+    public void addDataset(Variable variable) {
+        this.datasets.add(variable);
+    }
 
-    public  void addGrouping(Variable variable) { this.grouping.add(variable); }
+    public void addGrouping(Variable variable) {
+        this.grouping.add(variable);
+    }
 
     public String getFilters() {
         return filters;
@@ -70,11 +81,11 @@ public class MiningQuery {
         this.filters = filters;
     }
 
-    public Algorithm getAlgorithm() {
+    public ExperimentExecutionDTO.AlgorithmExecutionDTO getAlgorithm() {
         return algorithm;
     }
 
-    public void setAlgorithm(Algorithm algorithm) {
+    public void setAlgorithm(ExperimentExecutionDTO.AlgorithmExecutionDTO algorithm) {
         this.algorithm = algorithm;
     }
 

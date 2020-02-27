@@ -4,8 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.time.LocalTime;
-
 public class UserActionLogging {
 
 
@@ -13,11 +11,15 @@ public class UserActionLogging {
 
     public static void LogAction(String actionName, String actionIdInfo)
     {
-        LOGGER.info( LocalTime.now()+" User : "
+        LOGGER.info( " User : "
                 + SecurityContextHolder.getContext().getAuthentication().getName()
-                + " called enpoint " + actionName
-                + " info "
-                + actionIdInfo);
+                + " called endpoint: " + actionName
+                + " info: " + actionIdInfo);
     }
 
+    // Used from Threads because LogAction won't work.
+    public static void LogThreadAction(String actionName, String actionIdInfo)
+    {
+        LOGGER.info( "Thread -->" + actionName + " info: " + actionIdInfo);
+    }
 }

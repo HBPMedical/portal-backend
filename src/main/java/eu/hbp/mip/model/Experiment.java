@@ -16,8 +16,6 @@ import java.util.*;
 @Table(name = "`experiment`")
 public class Experiment {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Experiment.class);
-
     private static final Gson gson = new Gson();
 
     @Id
@@ -45,8 +43,15 @@ public class Experiment {
     private String algorithms;
 
     @Column(columnDefinition="TEXT")
-    @Expose
     private String validations;
+
+    @Column(columnDefinition="TEXT")
+    @Expose
+    private String workflowHistoryId;
+
+    @Column(columnDefinition="TEXT")
+    @Expose
+    private String workflowStatus;
 
     @Column(columnDefinition="TEXT")
     @Expose
@@ -137,6 +142,22 @@ public class Experiment {
 
     public void setHasError(boolean hasError) {
         this.hasError = hasError;
+    }
+
+    public String getWorkflowHistoryId() {
+        return workflowHistoryId;
+    }
+
+    public void setWorkflowHistoryId(String workflowHistoryId) {
+        this.workflowHistoryId = workflowHistoryId;
+    }
+
+    public String getWorkflowStatus() {
+        return workflowStatus;
+    }
+
+    public void setWorkflowStatus(String workflowStatus) {
+        this.workflowStatus = workflowStatus;
     }
 
     public String getResult() {

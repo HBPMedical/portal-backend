@@ -45,16 +45,16 @@ public class MiningApi {
     @Autowired
     private UserInfo userInfo;
 
-    @Value("#{'${services.exareme.miningExaremeUrl:http://localhost:9090/mining/query}'}")
-    public String miningExaremeQueryUrl;
+    @Value("#{'${services.exareme.queryExaremeUrl:http://localhost:9090/mining/query}'}")
+    public String queryExaremeUrl;
 
-    @ApiOperation(value = "Create an histogram on Exareme", response = String.class)
-    @RequestMapping(value = "/exareme", method = RequestMethod.POST)
-    public ResponseEntity runExaremeMining(@RequestBody List<HashMap<String, String>> queryList) {
+    @ApiOperation(value = "Create a histogram on Exareme", response = String.class)
+    @RequestMapping(value = "/histograms", method = RequestMethod.POST)
+    public ResponseEntity runExaremeHistograms(@RequestBody List<HashMap<String, String>> queryList) {
         UserActionLogging.LogAction("Run an histogram", "");
 
         String query = gson.toJson(queryList);
-        String url = miningExaremeQueryUrl + "/" + "HISTOGRAMS";
+        String url = queryExaremeUrl + "/" + "MULTIPLE_HISTOGRAMS";
 
         try {
             StringBuilder results = new StringBuilder();
@@ -66,13 +66,13 @@ public class MiningApi {
         }
     }
 
-    @ApiOperation(value = "Create an descriptive statistic on Exareme", response = String.class)
-    @RequestMapping(value = "/exareme-stats", method = RequestMethod.POST)
+    @ApiOperation(value = "Create a descriptive statistic on Exareme", response = String.class)
+    @RequestMapping(value = "/descriptive_stats", method = RequestMethod.POST)
     public ResponseEntity runExaremeDescriptiveStats(@RequestBody List<HashMap<String, String>> queryList) {
         UserActionLogging.LogAction("Run descriptive stats", "");
 
         String query = gson.toJson(queryList);
-        String url = miningExaremeQueryUrl + "/" + "DESCRIPTIVE_STATS";
+        String url = queryExaremeUrl + "/" + "DESCRIPTIVE_STATS";
 
         try {
             StringBuilder results = new StringBuilder();
@@ -84,24 +84,11 @@ public class MiningApi {
         }
     }
 
-    @ApiOperation(value = "Perform an non persisted algorithm on Exareme", response = String.class)
-    @RequestMapping(value = "/exareme/{algorithmName}", method = RequestMethod.POST)
-    public ResponseEntity runExaremeAlgorithm(
-        @RequestBody List<HashMap<String, String>> queryList,
-        @ApiParam(value = "algorithmName", required = true) @PathVariable("algorithmName") String algorithmName
-        ) {
-        UserActionLogging.LogAction("Run algo", "");
+    @ApiOperation(value = "Check if a formula is valid", response = String.class)
+    @RequestMapping(value = "/checkFormula", method = RequestMethod.POST)
+    public ResponseEntity checkFormulaValidity(String formula) {
+        UserActionLogging.LogAction("Check Formula Validity", "");
 
-        String query = gson.toJson(queryList);
-        String url = miningExaremeQueryUrl + "/" + algorithmName;
-
-        try {
-            StringBuilder results = new StringBuilder();
-            int code = HTTPUtil.sendPost(url, query, results);
-
-            return ResponseEntity.ok(gson.toJson(results.toString()));
-        } catch (IOException e) {
-            return new ResponseEntity<>("Not found", HttpStatus.BAD_REQUEST);
-        }
+        return ResponseEntity.ok("");
     }
 }

@@ -83,4 +83,12 @@ public class MiningApi {
             return new ResponseEntity<>("Not found", HttpStatus.BAD_REQUEST);
         }
     }
+
+    @ApiOperation(value = "Check if a formula is valid", response = String.class)
+    @RequestMapping(value = "/checkFormula", method = RequestMethod.POST)
+    public ResponseEntity checkFormulaValidity(String formula) {
+        UserActionLogging.LogAction("Check Formula Validity", "");
+
+        return ResponseEntity.ok("");
+    }
 }

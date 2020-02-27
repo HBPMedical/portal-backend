@@ -400,7 +400,7 @@ public class ExperimentApi {
             UserActionLogging.LogAction("Run workflow",
                     "Could not find algorithm code: " + workflowId);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ErrorResponse("Could not find galaxy algorithm.", "99").toString());
+                    .body(new ErrorResponse("Could not find galaxy algorithm.").toString());
         }
         final WorkflowDetails workflowDetails = workflowsClient.showWorkflow(workflow.getId());
         for (Map.Entry<String, WorkflowInputDefinition> workflowParameter : workflowDetails.getInputs().entrySet()) {
@@ -440,9 +440,8 @@ public class ExperimentApi {
                 // Values are read from streams.
                 JSONObject jObjectError = new JSONObject(msgErr);
                 String errMsg = jObjectError.get("err_msg").toString();
-                String errCode = jObjectError.get("err_code").toString();
 
-                experiment.setResult(new ErrorResponse(errMsg, errCode).toString());
+                experiment.setResult("[" + new ErrorResponse(errMsg).toString() + "]");
                 experiment.setHasError(response.code() >= 400);
                 experiment.setHasServerError(response.code() >= 500);
             }
@@ -531,7 +530,7 @@ public class ExperimentApi {
                                     experiment.setHasError(true);
                                     experiment.setHasServerError(true);
                                 }
-                                experiment.setResult(result);
+                                experiment.setResult("[" + result + "]");
                                 experiment.setWorkflowStatus("completed");
                                 resultFound = true;
                             }
@@ -539,7 +538,7 @@ public class ExperimentApi {
 
                         if (!resultFound) {      // If there is no visible result
                             UserActionLogging.LogThreadAction("Update workflow experiment", "No visible result");
-                            experiment.setResult(new ErrorResponse("The workflow has no visible result.", "500").toString());
+                            experiment.setResult("[" + new ErrorResponse("The workflow has no visible result.").toString() + "]");
                             experiment.setHasError(true);
                             experiment.setHasServerError(true);
                         }
@@ -566,7 +565,7 @@ public class ExperimentApi {
                                     experiment.setHasError(true);
                                     experiment.setHasServerError(true);
                                 }
-                                experiment.setResult(result);
+                                experiment.setResult("[" + result + "]");
                                 experiment.setWorkflowStatus("error");
                                 failedJobFound = true;
                             }
@@ -574,7 +573,7 @@ public class ExperimentApi {
 
                         if (!failedJobFound) {      // If there is no visible failed job
                             UserActionLogging.LogThreadAction("Update workflow experiment", "No failed result");
-                            experiment.setResult(new ErrorResponse("The workflow has no failed result.", "500").toString());
+                            experiment.setResult("[" + new ErrorResponse("The workflow has no failed result.").toString() + "]");
                             experiment.setHasError(true);
                             experiment.setHasServerError(true);
                         }
@@ -582,7 +581,7 @@ public class ExperimentApi {
                         break;
 
                     default:        // InternalError or unexpected result
-                        experiment.setResult(new ErrorResponse("An unexpected error occurred.", "500").toString());
+                        experiment.setResult("[" + new ErrorResponse("An unexpected error occurred.").toString() + "]");
                         experiment.setHasError(true);
                         experiment.setHasServerError(true);
                         finishExperiment(experiment);

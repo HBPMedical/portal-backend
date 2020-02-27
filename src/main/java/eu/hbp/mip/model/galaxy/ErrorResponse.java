@@ -7,35 +7,44 @@ package eu.hbp.mip.model.galaxy;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ErrorResponse {
 
-    @SerializedName("err_msg")
-    String errMsg;
-
-    @SerializedName("err_code")
-    String errCode;
+    @SerializedName("result")
+    List<ErrorMessage> result;
 
     public ErrorResponse() {
     }
 
-    public ErrorResponse(String errMsg, String errCode) {
-        this.errMsg = errMsg;
-        this.errCode = errCode;
+    public ErrorResponse(String errMsg) {
+        this.result = new ArrayList<>();
+        this.result.add(new ErrorMessage(errMsg));
     }
 
-    public String getErrMsg() {
-        return errMsg;
-    }
+    public static class ErrorMessage {
 
-    public void setErrMsg(String errMsg) {
-        this.errMsg = errMsg;
-    }
+        @SerializedName("data")
+        String errMsg;
 
-    public String getErrCode() {
-        return errCode;
-    }
+        @SerializedName("type")
+        String errType;
 
-    public void setErrCode(String errCode) {
-        this.errCode = errCode;
+        public ErrorMessage() {
+        }
+
+        public ErrorMessage(String errMsg) {
+            this.errMsg = errMsg;
+            this.errType = "text/plain+error";
+        }
+
+        public String getErrMsg() {
+            return errMsg;
+        }
+
+        public void setErrMsg(String errMsg) {
+            this.errMsg = errMsg;
+        }
     }
 }

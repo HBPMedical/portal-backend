@@ -26,7 +26,7 @@ else
   DOCKER="sudo docker"
 fi
 
-IMAGE="thanasulas/portal-backend"
+IMAGE="hbpmip/portal-backend"
 VCS_REF=$(git describe --tags --dirty)
 VERSION=$(git describe --tags --dirty)
 
@@ -34,9 +34,8 @@ docker build --build-arg BUILD_DATE=$(date -Iseconds) \
     --build-arg VCS_REF=$VCS_REF \
     --build-arg VERSION=$VERSION \
     --tag "$IMAGE:latest" \
+    --tag "$IMAGE:$VERSION" \
     .
-
-docker push thanasulas/portal-backend:latest
 
 
 BUGSNAG_KEY=""

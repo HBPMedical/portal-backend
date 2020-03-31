@@ -31,6 +31,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import retrofit2.Call;
 import retrofit2.Response;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.io.IOException;
 import java.util.*;
@@ -81,6 +82,8 @@ public class ExperimentApi {
     @RequestMapping(value = "/{uuid}", method = RequestMethod.GET)
     public ResponseEntity<String> getExperiment(
             @ApiParam(value = "uuid", required = true) @PathVariable("uuid") String uuid) {
+		
+		UserActionLogging.LogAction("authorities: "+ SecurityContextHolder.getContext().getAuthentication().getAuthorities(),"");
 
         Experiment experiment;
         UUID experimentUuid;
@@ -101,7 +104,9 @@ public class ExperimentApi {
 
         return new ResponseEntity<>(gsonOnlyExposed.toJson(experiment.jsonify()), HttpStatus.OK);
     }
-
+	
+	
+	
     @ApiOperation(value = "Create an experiment", response = Experiment.class)
     @RequestMapping(value = "/runAlgorithm", method = RequestMethod.POST)
     public ResponseEntity<String> runExperiment(@RequestBody ExperimentExecutionDTO experimentExecutionDTO) {

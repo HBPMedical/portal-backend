@@ -51,7 +51,7 @@ public class MiningApi {
     @ApiOperation(value = "Create a histogram on Exareme", response = String.class)
     @RequestMapping(value = "/histograms", method = RequestMethod.POST)
     public ResponseEntity runExaremeHistograms(@RequestBody List<HashMap<String, String>> queryList) {
-        UserActionLogging.LogAction("Run an histogram", "");
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run an histogram", "");
 
         String query = gson.toJson(queryList);
         String url = queryExaremeUrl + "/" + "MULTIPLE_HISTOGRAMS";
@@ -69,7 +69,7 @@ public class MiningApi {
     @ApiOperation(value = "Create a descriptive statistic on Exareme", response = String.class)
     @RequestMapping(value = "/descriptive_stats", method = RequestMethod.POST)
     public ResponseEntity runExaremeDescriptiveStats(@RequestBody List<HashMap<String, String>> queryList) {
-        UserActionLogging.LogAction("Run descriptive stats", "");
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run descriptive stats", "");
 
         String query = gson.toJson(queryList);
         String url = queryExaremeUrl + "/" + "DESCRIPTIVE_STATS";
@@ -87,7 +87,7 @@ public class MiningApi {
     @ApiOperation(value = "Check if a formula is valid", response = String.class)
     @RequestMapping(value = "/checkFormula", method = RequestMethod.POST)
     public ResponseEntity checkFormulaValidity(String formula) {
-        UserActionLogging.LogAction("Check Formula Validity", "");
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Check Formula Validity", "");
 
         return ResponseEntity.ok("");
     }

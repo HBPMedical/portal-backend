@@ -5,6 +5,7 @@
 package eu.hbp.mip.controllers;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import eu.hbp.mip.model.UserInfo;
 import eu.hbp.mip.utils.CustomResourceLoader;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,9 +28,12 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @Api(value = "/pathologies")
 public class PathologiesApi {
 
+    @Autowired
+    private UserInfo userInfo;
+
     @RequestMapping(name = "/pathologies", method = RequestMethod.GET)
     public String getPathologies() {
-		UserActionLogging.LogAction("load the pathologies", "");
+		UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "load the pathologies", "");
 		
         return loadPathologies();
     }

@@ -3,16 +3,15 @@
  */
 
 package eu.hbp.mip.controllers;
-import eu.hbp.mip.utils.UserActionLogging;
+
 import eu.hbp.mip.model.GeneralStats;
+import eu.hbp.mip.model.UserInfo;
 import eu.hbp.mip.repositories.ArticleRepository;
 import eu.hbp.mip.repositories.UserRepository;
+import eu.hbp.mip.utils.UserActionLogging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -24,10 +23,11 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RequestMapping(value = "/stats", produces = {APPLICATION_JSON_VALUE})
 @Api(value = "/stats", description = "the stats API")
 public class StatsApi {
-
-    
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UserInfo userInfo;
 
     @Autowired
     private ArticleRepository articleRepository;
@@ -35,8 +35,8 @@ public class StatsApi {
 
     @ApiOperation(value = "Get general statistics", response = GeneralStats.class)
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<GeneralStats> getGeneralStatistics()  {
-        UserActionLogging.LogAction("Get statistics (count on users, articles and variables)","");
+    public ResponseEntity<GeneralStats> getGeneralStatistics() {
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Get statistics (count on users, articles and variables)", "");
 
         GeneralStats stats = new GeneralStats();
 

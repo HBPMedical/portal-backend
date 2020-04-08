@@ -69,186 +69,181 @@ import java.util.Map;
 @EnableOAuth2Client
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-   private static final Logger LOGGER = LoggerFactory.getLogger(SecurityConfiguration.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SecurityConfiguration.class);
 
-   @Autowired
-   private OAuth2ClientContext oauth2ClientContext;
+    @Autowired
+    private OAuth2ClientContext oauth2ClientContext;
 
-   /**
-    * Enable HBP collab authentication (1) or disable it (0). Default is 1
-    */
-   @Value("#{'${hbp.authentication.enabled:1}'}")
-   private boolean authentication;
+    /**
+     * Enable HBP collab authentication (1) or disable it (0). Default is 1
+     */
+    @Value("#{'${hbp.authentication.enabled:1}'}")
+    private boolean authentication;
 
-   /**
-    * Absolute URL to redirect to when login is required
-    */
-   @Value("#{'${frontend.loginUrl:/login/hbp}'}")
-   private String loginUrl;
- 
-	/**
-    * Absolute URL to redirect to when logout is required
-    */
-   @Value("#{'${hbp.client.logoutUri}'}")
-   private String logoutUri;
+    /**
+     * Absolute URL to redirect to when login is required
+     */
+    @Value("#{'${frontend.loginUrl:/login/hbp}'}")
+    private String loginUrl;
 
-   /**
-    * Absolute URL to redirect to after successful login
-    */
-   @Value("#{'${frontend.redirectAfterLoginUrl:http://frontend/home}'}")
-   private String frontendRedirectAfterLogin;
+    /**
+     * Absolute URL to redirect to when logout is required
+     */
+    @Value("#{'${hbp.client.logoutUri}'}")
+    private String logoutUri;
 
-   /**
-    * Absolute URL to redirect to after logout has occurred
-    */
-   @Value("#{'${frontend.redirectAfterLogoutUrl:/login/hbp}'}")
-   private String redirectAfterLogoutUrl;
+    /**
+     * Absolute URL to redirect to after successful login
+     */
+    @Value("#{'${frontend.redirectAfterLoginUrl:http://frontend/home}'}")
+    private String frontendRedirectAfterLogin;
 
-   /**
-    * URL to revoke auth token
-    */
-   @Value("#{'${hbp.resource.revokeTokenUri:https://services.humanbrainproject.eu/oidc/revoke}'}")
-   private String revokeTokenURI;
-   
-   
+    /**
+     * Absolute URL to redirect to after logout has occurred
+     */
+    @Value("#{'${frontend.redirectAfterLogoutUrl:/login/hbp}'}")
+    private String redirectAfterLogoutUrl;
+
+    /**
+     * URL to revoke auth token
+     */
+    @Value("#{'${hbp.resource.revokeTokenUri:https://services.humanbrainproject.eu/oidc/revoke}'}")
+    private String revokeTokenURI;
+
 
 //    @Autowired
 //    private HttpServletRequest request;
 
-   @Override
-   protected void configure(HttpSecurity http) throws Exception {
-	   disableCertificateValidation();
-       // @formatter:off
-       http.addFilterBefore(new CORSFilter(), ChannelProcessingFilter.class);
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        disableCertificateValidation();
+        // @formatter:off
+        http.addFilterBefore(new CORSFilter(), ChannelProcessingFilter.class);
 
-       if (authentication) {
-           http.antMatcher("/**")
-                   .authorizeRequests()
-                   .antMatchers(
-                           "/", "/login/**", "/health/**", "/info/**", "/metrics/**", "/trace/**", "/frontend/**", "/webjars/**", "/v2/api-docs", "/swagger-ui.html", "/swagger-resources/**"
-                   )
-				   .permitAll()
-                   .antMatchers("/galaxy*","/galaxy/*").hasRole("Data Manager")
-				   //.anyRequest().authenticated()
-				   .anyRequest().hasRole("Researcher")
-                   .and().exceptionHandling().authenticationEntryPoint(new CustomLoginUrlAuthenticationEntryPoint(loginUrl))
-                   .and().logout().addLogoutHandler(authLogoutHandler()).logoutSuccessUrl(redirectAfterLogoutUrl)
-                   .and().logout().permitAll()
-                   .and().csrf().ignoringAntMatchers("/logout").csrfTokenRepository(csrfTokenRepository())
-				   .and().addFilterAfter(csrfHeaderFilter(), CsrfFilter.class)
-                   .addFilterBefore(ssoFilter(), BasicAuthenticationFilter.class);
-       }
-       else {
+        if (authentication) {
+            http.antMatcher("/**")
+                    .authorizeRequests()
+                    .antMatchers(
+                            "/", "/login/**", "/health/**", "/info/**", "/metrics/**", "/trace/**", "/frontend/**", "/webjars/**", "/v2/api-docs", "/swagger-ui.html", "/swagger-resources/**"
+                    )
+                    .permitAll()
+                    .antMatchers("/galaxy*", "/galaxy/*").hasRole("Data Manager")
+                    //.anyRequest().authenticated()
+                    .anyRequest().hasRole("Researcher")
+                    .and().exceptionHandling().authenticationEntryPoint(new CustomLoginUrlAuthenticationEntryPoint(loginUrl))
+                    .and().logout().addLogoutHandler(authLogoutHandler()).logoutSuccessUrl(redirectAfterLogoutUrl)
+                    .and().logout().permitAll()
+                    .and().csrf().ignoringAntMatchers("/logout").csrfTokenRepository(csrfTokenRepository())
+                    .and().addFilterAfter(csrfHeaderFilter(), CsrfFilter.class)
+                    .addFilterBefore(ssoFilter(), BasicAuthenticationFilter.class);
+        } else {
             http.antMatcher("/**")
                     .authorizeRequests()
                     .antMatchers("/**").permitAll().and().csrf().disable();
-       }
-   }
+        }
+    }
 
-   private Filter ssoFilter() {
-       OAuth2ClientAuthenticationProcessingFilter hbpFilter = new OAuth2ClientAuthenticationProcessingFilter("/login/hbp");
-       OAuth2RestTemplate hbpTemplate = new OAuth2RestTemplate(hbp(), oauth2ClientContext);
-	   hbpFilter.setAuthenticationSuccessHandler(new SimpleUrlAuthenticationSuccessHandler(frontendRedirectAfterLogin));
-       hbpFilter.setRestTemplate(hbpTemplate);
-       hbpFilter.setTokenServices(new UserInfoTokenServices(hbpResource().getUserInfoUri(), hbp().getClientId()));
-       return hbpFilter;
-   }
+    private Filter ssoFilter() {
+        OAuth2ClientAuthenticationProcessingFilter hbpFilter = new OAuth2ClientAuthenticationProcessingFilter("/login/hbp");
+        OAuth2RestTemplate hbpTemplate = new OAuth2RestTemplate(hbp(), oauth2ClientContext);
+        hbpFilter.setAuthenticationSuccessHandler(new SimpleUrlAuthenticationSuccessHandler(frontendRedirectAfterLogin));
+        hbpFilter.setRestTemplate(hbpTemplate);
+        hbpFilter.setTokenServices(new UserInfoTokenServices(hbpResource().getUserInfoUri(), hbp().getClientId()));
+        return hbpFilter;
+    }
 
-   @Bean
-   public FilterRegistrationBean oauth2ClientFilterRegistration(
-           OAuth2ClientContextFilter filter) {
-       FilterRegistrationBean registration = new FilterRegistrationBean();
-       registration.setFilter(filter);
-       registration.setOrder(-100);
-       return registration;
-   }
+    @Bean
+    public FilterRegistrationBean oauth2ClientFilterRegistration(
+            OAuth2ClientContextFilter filter) {
+        FilterRegistrationBean registration = new FilterRegistrationBean();
+        registration.setFilter(filter);
+        registration.setOrder(-100);
+        return registration;
+    }
 
-   @Bean(name="hbp")
-   @ConfigurationProperties("hbp.client")
-   public BaseOAuth2ProtectedResourceDetails hbp() {
-       return new AuthorizationCodeResourceDetails();
-   }
+    @Bean(name = "hbp")
+    @ConfigurationProperties("hbp.client")
+    public BaseOAuth2ProtectedResourceDetails hbp() {
+        return new AuthorizationCodeResourceDetails();
+    }
 
-   @Bean(name="hbpResource")
-   @ConfigurationProperties("hbp.resource")
-   public ResourceServerProperties hbpResource() {
-       return new ResourceServerProperties();
-   }
+    @Bean(name = "hbpResource")
+    @ConfigurationProperties("hbp.resource")
+    public ResourceServerProperties hbpResource() {
+        return new ResourceServerProperties();
+    }
 
-   public boolean isAuthentication() {
-       return authentication;
-   }
+    public boolean isAuthentication() {
+        return authentication;
+    }
 
-   public String getFrontendRedirectAfterLogin() {
-       return frontendRedirectAfterLogin;
-   }
+    public String getFrontendRedirectAfterLogin() {
+        return frontendRedirectAfterLogin;
+    }
 
-   private Filter csrfHeaderFilter() {
-       return new OncePerRequestFilter() {
-           @Override
-           protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-                                           FilterChain filterChain) throws ServletException, IOException {
-               CsrfToken csrf = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
-               if (csrf != null) {
-                   Cookie cookie = WebUtils.getCookie(request, "XSRF-TOKEN");
-                   String token = csrf.getToken();
-                   if (cookie == null || token != null && !token.equals(cookie.getValue())) {
-                       cookie = new Cookie("XSRF-TOKEN", token);
-                       cookie.setPath("/");
-                       response.addCookie(cookie);
-                   }
-               }
-               filterChain.doFilter(request, response);
-           }
-       };
-   }
+    private Filter csrfHeaderFilter() {
+        return new OncePerRequestFilter() {
+            @Override
+            protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                            FilterChain filterChain) throws ServletException, IOException {
+                CsrfToken csrf = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
+                if (csrf != null) {
+                    Cookie cookie = WebUtils.getCookie(request, "XSRF-TOKEN");
+                    String token = csrf.getToken();
+                    if (cookie == null || token != null && !token.equals(cookie.getValue())) {
+                        cookie = new Cookie("XSRF-TOKEN", token);
+                        cookie.setPath("/");
+                        response.addCookie(cookie);
+                    }
+                }
+                filterChain.doFilter(request, response);
+            }
+        };
+    }
 
-   private CsrfTokenRepository csrfTokenRepository() {
-       HttpSessionCsrfTokenRepository repository = new HttpSessionCsrfTokenRepository();
-       repository.setHeaderName("X-XSRF-TOKEN");
-       return repository;
-   }
+    private CsrfTokenRepository csrfTokenRepository() {
+        HttpSessionCsrfTokenRepository repository = new HttpSessionCsrfTokenRepository();
+        repository.setHeaderName("X-XSRF-TOKEN");
+        return repository;
+    }
 
-   private class CustomLogoutHandler implements LogoutHandler {
-       @Override
-       public void logout(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Authentication authentication) {
+    private class CustomLogoutHandler implements LogoutHandler {
+        @Override
+        public void logout(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Authentication authentication) {
 
-           // Hackish way of accessing to this information...
-           final UserInfo userInfo = (UserInfo) httpServletRequest.getSession().getAttribute("userInfo");
-           if (userInfo != null) {
-               userInfo.setFakeAuth(false);
-           }
+            // Hackish way of accessing to this information...
+            final UserInfo userInfo = (UserInfo) httpServletRequest.getSession().getAttribute("userInfo");
+            if (userInfo != null) {
+                userInfo.setFakeAuth(false);
+            }
 
-           if (oauth2ClientContext == null || oauth2ClientContext.getAccessToken() == null)
-           {
-               return;
-           }
+            if (oauth2ClientContext == null || oauth2ClientContext.getAccessToken() == null) {
+                return;
+            }
 
-           String idToken = oauth2ClientContext.getAccessToken().getAdditionalInformation().get("id_token").toString();
+            String idToken = oauth2ClientContext.getAccessToken().getAdditionalInformation().get("id_token").toString();
 
-           StringBuilder query = new StringBuilder();
-           query.append("{");
-           query.append("\"token\":");
-           query.append("\"").append(idToken).append("\"");
-           query.append("}");
+            StringBuilder query = new StringBuilder();
+            query.append("{");
+            query.append("\"token\":");
+            query.append("\"").append(idToken).append("\"");
+            query.append("}");
 
-           try {
-               int responseCode = HTTPUtil.sendPost(revokeTokenURI, query.toString(), new StringBuilder());
-               if (responseCode != 200)
-               {
-                   LOGGER.warn("Cannot send request to OIDC server for revocation ! ");
-               }
-               else{
-                   LOGGER.info("Should be logged out");
-               }
-           } catch (IOException e) {
-               LOGGER.warn("Cannot notify logout to OIDC server !");
-               LOGGER.trace("Cannot notify logout", e);
-           }
+            try {
+                int responseCode = HTTPUtil.sendPost(revokeTokenURI, query.toString(), new StringBuilder());
+                if (responseCode != 200) {
+                    LOGGER.warn("Cannot send request to OIDC server for revocation ! ");
+                } else {
+                    LOGGER.info("Should be logged out");
+                }
+            } catch (IOException e) {
+                LOGGER.warn("Cannot notify logout to OIDC server !");
+                LOGGER.trace("Cannot notify logout", e);
+            }
 
-       }
-   }
-   
+        }
+    }
+
     @Bean
     public AuthoritiesExtractor keycloakAuthoritiesExtractor() {
         return new KeycloakAuthoritiesExtractor();
@@ -276,68 +271,69 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
             return String.join(",", authorities);
         }
     }
-	
-	
-	private LogoutHandler authLogoutHandler() {
-		return (request, response, authentication) -> {
-			logout();
-		};
-    }
-	
-	
-	public void logout() {
-		// POSTするリクエストパラメーターを作成
-		UserActionLogging.LogAction("refresh token ", this.oauth2ClientContext.getAccessToken().getRefreshToken().getValue());
-		RestTemplate restTemplate = new RestTemplate();
-		MultiValueMap<String, String> formParams = new LinkedMultiValueMap<>();
-		formParams.add("client_id", hbp().getClientId());
-        formParams.add("client_secret", hbp().getClientSecret());
-		formParams.add("refresh_token", this.oauth2ClientContext.getAccessToken().getRefreshToken().getValue());
-		// リクエストヘッダーを作成
-		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE);
-		// リクエストを作成
-		UserActionLogging.LogAction("logoutUri is ", logoutUri);
-		RequestEntity<MultiValueMap<String, String>> requestEntity =
-				new RequestEntity<>(formParams, httpHeaders, HttpMethod.POST,
-						URI.create(logoutUri)); 
-		// POSTリクエスト送信（ログアウト実行）
 
-		ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
+
+    private LogoutHandler authLogoutHandler() {
+        return (request, response, authentication) -> {
+            logout();
+        };
     }
-   
-   @Value("#{'${services.keycloak.keycloakUrl}'}")
-   private String keycloakUrl;
-   
+
+
+    public void logout() {
+        // POSTするリクエストパラメーターを作成
+        UserActionLogging.LogAction("refresh token ", this.oauth2ClientContext.getAccessToken().getRefreshToken().getValue());
+        RestTemplate restTemplate = new RestTemplate();
+        MultiValueMap<String, String> formParams = new LinkedMultiValueMap<>();
+        formParams.add("client_id", hbp().getClientId());
+        formParams.add("client_secret", hbp().getClientSecret());
+        formParams.add("refresh_token", this.oauth2ClientContext.getAccessToken().getRefreshToken().getValue());
+        // リクエストヘッダーを作成
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE);
+        // リクエストを作成
+        UserActionLogging.LogAction("logoutUri is ", logoutUri);
+        RequestEntity<MultiValueMap<String, String>> requestEntity =
+                new RequestEntity<>(formParams, httpHeaders, HttpMethod.POST,
+                        URI.create(logoutUri));
+        // POSTリクエスト送信（ログアウト実行）
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
+    }
+
+    @Value("#{'${services.keycloak.keycloakUrl}'}")
+    private String keycloakUrl;
+
     // static {
-        // disableCertificateValidation();
+    // disableCertificateValidation();
     // }
 
     public void disableCertificateValidation() {
-		LOGGER.info("disabling certificate validation host : " + keycloakUrl);
+        LOGGER.info("disabling certificate validation host : " + keycloakUrl);
         // Create a trust manager that does not validate certificate chains
-        TrustManager[] trustAllCerts = new TrustManager[] {
+        TrustManager[] trustAllCerts = new TrustManager[]{
                 new X509TrustManager() {
                     public X509Certificate[] getAcceptedIssuers() {
                         return new X509Certificate[0];
                     }
-                    public void checkClientTrusted(X509Certificate[] certs, String authType) {}
-                    public void checkServerTrusted(X509Certificate[] certs, String authType) {}
-                } };
+
+                    public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                    }
+
+                    public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                    }
+                }};
 
 
         // Ignore differences between given hostname and certificate hostname
         HostnameVerifier hv = new HostnameVerifier() {
             public boolean verify(String hostname, SSLSession session) {
-				
+
                 // System.out.println("Warning: URL Host: " + hostname + " vs. "
-                        // + session.getPeerHost());
-                if(hostname.equals(keycloakUrl) && session.getPeerHost().equals(keycloakUrl))
-                {
+                // + session.getPeerHost());
+                if (hostname.equals(keycloakUrl) && session.getPeerHost().equals(keycloakUrl)) {
                     return true;
-                }
-                else
-                {
+                } else {
                     return false;
                 }
             }
@@ -349,8 +345,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
             sc.init(null, trustAllCerts, new SecureRandom());
             HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
             HttpsURLConnection.setDefaultHostnameVerifier(hv);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
 
-    } 
+    }
 
 }

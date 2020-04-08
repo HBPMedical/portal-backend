@@ -1,6 +1,6 @@
 <configuration>
     <appender name="FILE1" class="ch.qos.logback.core.FileAppender">
-        <file>logs/log1.txt</file>
+        <file>logs/portal-backend.txt</file>
         <append>true</append>
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %msg%n</pattern>

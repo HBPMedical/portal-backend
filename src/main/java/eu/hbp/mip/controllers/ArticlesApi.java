@@ -66,7 +66,7 @@ public class ArticlesApi {
                 }
             }
         }
-		UserActionLogging.LogAction("Get articles", "id : Get All articles");
+		UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Get articles", "id : Get All articles");
         
         return ResponseEntity.ok(articles);
     }
@@ -127,7 +127,7 @@ public class ArticlesApi {
         }
         articleRepository.save(article);
 
-		UserActionLogging.LogAction("Created article", "id : " + article.getSlug());
+		UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Created article", "id : " + article.getSlug());
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
@@ -137,7 +137,7 @@ public class ArticlesApi {
     public ResponseEntity<Article> getAnArticle(
             @ApiParam(value = "slug", required = true) @PathVariable("slug") String slug
     ) {
-		UserActionLogging.LogAction("Getting an article", "id : " + slug);
+		UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Getting an article", "id : " + slug);
 
         User user = userInfo.getUser();
         Article article;
@@ -165,7 +165,7 @@ public class ArticlesApi {
             @ApiParam(value = "slug", required = true) @PathVariable("slug") String slug,
             @RequestBody @ApiParam(value = "Article to update", required = true) @Valid Article article
     ) {
-        UserActionLogging.LogAction("Update an article", "id : " + slug);
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Update an article", "id : " + slug);
 
         User user = userInfo.getUser();
 

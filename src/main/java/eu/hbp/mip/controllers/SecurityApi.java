@@ -46,7 +46,7 @@ public class SecurityApi {
     public Object user(Principal principal, HttpServletResponse response) {
         ObjectMapper mapper = new ObjectMapper();
 		
-		UserActionLogging.LogAction("get user from /user","");
+		UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "get user from /user","");
         try {
             String userJSON = mapper.writeValueAsString(userInfo.getUser());
             Cookie cookie = new Cookie("user", URLEncoder.encode(userJSON, "UTF-8"));
@@ -78,7 +78,7 @@ public class SecurityApi {
             userRepository.save(user);
         }
 		
-		UserActionLogging.LogAction("user agreeNDA","");
+		UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "user agreeNDA","");
 		
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -113,7 +113,7 @@ public class SecurityApi {
         JsonObject object = new JsonObject();
         object.addProperty("authorization", stringEncoded);
         object.addProperty("context", galaxyContext);
-		UserActionLogging.LogAction("get galaxy information","");
+		UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "get galaxy information","");
 		
         return ResponseEntity.ok(gson.toJson(object));
     }

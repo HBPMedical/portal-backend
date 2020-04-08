@@ -54,7 +54,7 @@ public class ModelsApi {
             @ApiParam(value = "Only ask own models") @RequestParam(value = "own", required = false) Boolean own,
             @ApiParam(value = "Only ask published models") @RequestParam(value = "valid", required = false) Boolean valid
     )  {
-        UserActionLogging.LogAction("Get models","");
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Get models","");
 
         User user = userInfo.getUser();
 
@@ -98,7 +98,7 @@ public class ModelsApi {
             @RequestBody @ApiParam(value = "Model to create", required = true) Model model
     )  {
 
-        UserActionLogging.LogAction("Create a model","");
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Create a model","");
 
         User user = userInfo.getUser();
 
@@ -129,7 +129,7 @@ public class ModelsApi {
         }
         modelRepository.save(model);
 
-        UserActionLogging.LogAction("Model saved (also saved model.config and model.query)"," id : " + model.getSlug());
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Model saved (also saved model.config and model.query)"," id : " + model.getSlug());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(model);
     }
@@ -192,7 +192,7 @@ public class ModelsApi {
     public ResponseEntity<Model> getAModel(
             @ApiParam(value = "slug", required = true) @PathVariable("slug") String slug
     )  {
-        UserActionLogging.LogAction("Get a model", " id : " + slug);
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Get a model", " id : " + slug);
 
         User user = userInfo.getUser();
 
@@ -224,7 +224,7 @@ public class ModelsApi {
             @ApiParam(value = "slug", required = true) @PathVariable("slug") String slug,
             @RequestBody @ApiParam(value = "Model to update", required = true) Model model
     )  {
-        UserActionLogging.LogAction("Update a model", " id : "+ slug);
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Update a model", " id : "+ slug);
 
         User user = userInfo.getUser();
         Model oldModel = modelRepository.findOne(slug);
@@ -269,7 +269,7 @@ public class ModelsApi {
         datasetRepository.save(model.getDataset());
         modelRepository.save(model);
 
-        UserActionLogging.LogAction("Model updated (also saved/updated model.config and model.query)", " id : "+ slug);
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Model updated (also saved/updated model.config and model.query)", " id : "+ slug);
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }

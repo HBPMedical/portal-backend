@@ -51,6 +51,9 @@ public class ExperimentApi {
 
     private static final Gson gson = new Gson();
 
+    @Autowired
+    private UserInfo userInfo;
+
     private static final Gson gsonOnlyExposed = new GsonBuilder().serializeNulls()
             .setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").excludeFieldsWithoutExposeAnnotation().create();
 
@@ -68,9 +71,6 @@ public class ExperimentApi {
 
     @Value("#{'${services.galaxy.galaxyApiKey}'}")
     private String galaxyApiKey;
-
-    @Autowired
-    private UserInfo userInfo;
 
     @Autowired
     private ModelRepository modelRepository;
@@ -323,7 +323,7 @@ public class ExperimentApi {
         experiment.setFinished(new Date());
         experimentRepository.save(experiment);
 
-        UserActionLogging.LogThreadAction("Experiment finished!", "");
+        UserActionLogging.LogAction("Experiment finished!", "");
     }
 
     /* --------------------------------------  EXAREME CALLS ---------------------------------------------------------*/
@@ -357,17 +357,17 @@ public class ExperimentApi {
         UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run exareme algorithm",
                 "Starting exareme execution thread");
         new Thread(() -> {
-            // ATTENTION: Inside the Thread only LogThreadAction should be used, not LogAction!
-            UserActionLogging.LogThreadAction("Run exareme algorithm",
+            // ATTENTION: Inside the Thread only LogAction should be used, not LogAction!
+            UserActionLogging.LogAction("Run exareme algorithm",
                     "Thread started!");
 
             try {
-                UserActionLogging.LogThreadAction("Run exareme algorithm",
+                UserActionLogging.LogAction("Run exareme algorithm",
                         "Thread started!");
                 StringBuilder results = new StringBuilder();
                 int code = HTTPUtil.sendPost(url, body, results);
 
-                UserActionLogging.LogThreadAction("Run exareme algorithm",
+                UserActionLogging.LogAction("Run exareme algorithm",
                         "Algorithm finished with code: " + code);
 
                 // Results are stored in the experiment object
@@ -375,18 +375,18 @@ public class ExperimentApi {
                 experiment.setHasError(code >= 400);
                 experiment.setHasServerError(code >= 500);
             } catch (Exception e) {
-                UserActionLogging.LogThreadAction("Run exareme algorithm",
+                UserActionLogging.LogAction("Run exareme algorithm",
                         "There was an exception: " + e.getMessage());
 
                 experiment.setHasError(true);
                 experiment.setHasServerError(true);
                 experiment.setResult(e.getMessage());
             }
-            UserActionLogging.LogThreadAction("Run exareme algorithm",
+            UserActionLogging.LogAction("Run exareme algorithm",
                     "Finished the experiment: " + experiment.toString());
             finishExperiment(experiment);
 
-            UserActionLogging.LogThreadAction("Run exareme algorithm",
+            UserActionLogging.LogAction("Run exareme algorithm",
                     "Finished!");
         }).start();
 
@@ -524,44 +524,44 @@ public class ExperimentApi {
         UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Update workflow experiment", "Starting Thread...");
         new Thread(() -> {
             while (true) {
-                // ATTENTION: Inside the Thread only LogThreadAction should be used, not LogAction!
-                UserActionLogging.LogThreadAction("Update workflow experiment", "Thread is running...");
+                // ATTENTION: Inside the Thread only LogAction should be used, not LogAction!
+                UserActionLogging.LogAction("Update workflow experiment", "Thread is running...");
 
                 try {
                     sleep(2000);
                 } catch (InterruptedException e) {
-                    UserActionLogging.LogThreadAction("Update workflow experiment",
+                    UserActionLogging.LogAction("Update workflow experiment",
                             "Sleep was disrupted: " + e.getMessage());
                 }
 
-                UserActionLogging.LogThreadAction("Update workflow experiment",
+                UserActionLogging.LogAction("Update workflow experiment",
                         "Fetching status for experiment Id: " + experiment.getUuid());
 
                 String state = getWorkflowStatus(experiment.getWorkflowHistoryId());
-                UserActionLogging.LogThreadAction("Update workflow experiment", "State is: " + state);
+                UserActionLogging.LogAction("Update workflow experiment", "State is: " + state);
 
                 switch (state) {
                     case "running":
                         // Do nothing, when the experiment is created the status is set to running
-                        UserActionLogging.LogThreadAction("Update workflow experiment",
+                        UserActionLogging.LogAction("Update workflow experiment",
                                 "Workflow is still running.");
                         break;
 
                     case "completed":
                         // Get only the job result that is visible
                         List<GalaxyWorkflowResult> workflowJobsResults = getWorkflowResults(experiment.getWorkflowHistoryId());
-                        UserActionLogging.LogThreadAction("Update workflow experiment",
+                        UserActionLogging.LogAction("Update workflow experiment",
                                 "Results are: " + workflowJobsResults.toString());
 
                         boolean resultFound = false;
                         for (GalaxyWorkflowResult jobResult : workflowJobsResults) {
                             if (jobResult.getVisible()) {
-                                UserActionLogging.LogThreadAction("Update workflow experiment",
+                                UserActionLogging.LogAction("Update workflow experiment",
                                         "Visible result are: " + jobResult.getId());
 
                                 String result = getWorkflowResultBody(experiment.getWorkflowHistoryId(), jobResult.getId());
 
-                                UserActionLogging.LogThreadAction("Update workflow experiment", "Result: " + result);
+                                UserActionLogging.LogAction("Update workflow experiment", "Result: " + result);
                                 if (result == null) {
                                     experiment.setHasError(true);
                                     experiment.setHasServerError(true);
@@ -573,7 +573,7 @@ public class ExperimentApi {
                         }
 
                         if (!resultFound) {      // If there is no visible result
-                            UserActionLogging.LogThreadAction("Update workflow experiment", "No visible result");
+                            UserActionLogging.LogAction("Update workflow experiment", "No visible result");
                             experiment.setResult("[" + new ErrorResponse("The workflow has no visible result.").toString() + "]");
                             experiment.setHasError(true);
                             experiment.setHasServerError(true);
@@ -585,18 +585,18 @@ public class ExperimentApi {
                     case "error":
                         // Get the job result that failed
                         workflowJobsResults = getWorkflowResults(experiment.getWorkflowHistoryId());
-                        UserActionLogging.LogThreadAction("Update workflow experiment",
+                        UserActionLogging.LogAction("Update workflow experiment",
                                 "Error results are: " + workflowJobsResults.toString());
 
                         boolean failedJobFound = false;
                         for (GalaxyWorkflowResult jobResult : workflowJobsResults) {
                             if (jobResult.getState().equals("error")) {
-                                UserActionLogging.LogThreadAction("Update workflow experiment",
+                                UserActionLogging.LogAction("Update workflow experiment",
                                         "Failed job is: " + jobResult.getId());
 
                                 String result = getWorkflowJobError(jobResult.getId());
 
-                                UserActionLogging.LogThreadAction("Update workflow experiment", "Job result: " + result);
+                                UserActionLogging.LogAction("Update workflow experiment", "Job result: " + result);
                                 if (result == null) {
                                     experiment.setHasError(true);
                                     experiment.setHasServerError(true);
@@ -608,7 +608,7 @@ public class ExperimentApi {
                         }
 
                         if (!failedJobFound) {      // If there is no visible failed job
-                            UserActionLogging.LogThreadAction("Update workflow experiment", "No failed result");
+                            UserActionLogging.LogAction("Update workflow experiment", "No failed result");
                             experiment.setResult("[" + new ErrorResponse("The workflow has no failed result.").toString() + "]");
                             experiment.setHasError(true);
                             experiment.setHasServerError(true);
@@ -626,7 +626,7 @@ public class ExperimentApi {
 
                 // If result exists return
                 if (experiment.getResult() != null) {
-                    UserActionLogging.LogThreadAction("Update workflow experiment",
+                    UserActionLogging.LogAction("Update workflow experiment",
                             "Result exists: " + experiment.getResult());
                     return;
                 }
@@ -643,8 +643,8 @@ public class ExperimentApi {
      * "completed"         ->      When the workflow completed successfully
      */
     public String getWorkflowStatus(String historyId) {
-        // ATTENTION: This function is used from a Thread. Only LogThreadAction should be used, not LogAction!
-        UserActionLogging.LogThreadAction("Get workflow status", " History Id : " + historyId);
+        // ATTENTION: This function is used from a Thread. Only LogAction should be used, not LogAction!
+        UserActionLogging.LogAction("Get workflow status", " History Id : " + historyId);
 
         // Create the request client
         RetroFitGalaxyClients service = RetrofitClientInstance.getRetrofitInstance().create(RetroFitGalaxyClients.class);
@@ -654,15 +654,15 @@ public class ExperimentApi {
         try {
             Response<Object> response = call.execute();
             if (response.code() >= 400) {
-                UserActionLogging.LogThreadAction("Get workflow status", " Response code: "
+                UserActionLogging.LogAction("Get workflow status", " Response code: "
                         + response.code() + "" + " with body: " + (response.errorBody() != null ? response.errorBody().string() : " "));
                 return "internalError";
             }
             result = new Gson().toJson(response.body());
-            UserActionLogging.LogThreadAction("Get workflow status", " Result: " + result);
+            UserActionLogging.LogAction("Get workflow status", " Result: " + result);
 
         } catch (IOException e) {
-            UserActionLogging.LogThreadAction("Get workflow status"
+            UserActionLogging.LogAction("Get workflow status"
                     , " An exception happened: " + e.getMessage());
             return "internalError";
         }
@@ -672,12 +672,12 @@ public class ExperimentApi {
             JSONObject resultJson = new JSONObject(result);
             state = resultJson.getString("state");
         } catch (JSONException e) {
-            UserActionLogging.LogThreadAction("Get workflow status"
+            UserActionLogging.LogAction("Get workflow status"
                     , " An exception happened: " + e.getMessage());
             return "internalError";
         }
 
-        UserActionLogging.LogThreadAction("Get workflow status", " Completed!");
+        UserActionLogging.LogAction("Get workflow status", " Completed!");
         switch (state) {
             case "ok":
                 return "completed";
@@ -698,7 +698,7 @@ public class ExperimentApi {
      * @return a List<GalaxyWorkflowResult>   or null when an error occurred
      */
     public List<GalaxyWorkflowResult> getWorkflowResults(String historyId) {
-        UserActionLogging.LogThreadAction("Get workflow results", " historyId : " + historyId);
+        UserActionLogging.LogAction("Get workflow results", " historyId : " + historyId);
 
         RetroFitGalaxyClients service = RetrofitClientInstance.getRetrofitInstance().create(RetroFitGalaxyClients.class);
         Call<List<GalaxyWorkflowResult>> call = service.getWorkflowResultsFromGalaxy(historyId, galaxyApiKey);
@@ -707,20 +707,20 @@ public class ExperimentApi {
         try {
             Response<List<GalaxyWorkflowResult>> response = call.execute();
             if (response.code() >= 400) {
-                UserActionLogging.LogThreadAction("Get workflow results", " Response code: "
+                UserActionLogging.LogAction("Get workflow results", " Response code: "
                         + response.code() + "" + " with body: " + (response.errorBody() != null ? response.errorBody().string() : " "));
                 return null;
             }
             getGalaxyWorkflowResultList = response.body();
-            UserActionLogging.LogThreadAction("Get workflow results", " Result: " + response.body());
+            UserActionLogging.LogAction("Get workflow results", " Result: " + response.body());
 
         } catch (IOException e) {
-            UserActionLogging.LogThreadAction("Get workflow results"
+            UserActionLogging.LogAction("Get workflow results"
                     , " An exception happened: " + e.getMessage());
             return null;
         }
 
-        UserActionLogging.LogThreadAction("Get workflow results", " Completed!");
+        UserActionLogging.LogAction("Get workflow results", " Completed!");
         return getGalaxyWorkflowResultList;
 
     }
@@ -731,7 +731,7 @@ public class ExperimentApi {
      * @return the result of the specific workflow job, null if there was an error
      */
     public String getWorkflowResultBody(String historyId, String contentId) {
-        UserActionLogging.LogThreadAction("Get workflow results Body", " historyId : " + historyId);
+        UserActionLogging.LogAction("Get workflow results Body", " historyId : " + historyId);
 
         RetroFitGalaxyClients service = RetrofitClientInstance.getRetrofitInstance().create(RetroFitGalaxyClients.class);
         Call<Object> call =
@@ -741,20 +741,20 @@ public class ExperimentApi {
         try {
             Response<Object> response = call.execute();
             if (response.code() >= 400) {
-                UserActionLogging.LogThreadAction("Get workflow results Body", " Response code: "
+                UserActionLogging.LogAction("Get workflow results Body", " Response code: "
                         + response.code() + "" + " with body: " + (response.errorBody() != null ? response.errorBody().string() : " "));
                 return null;
             }
             resultJson = new Gson().toJson(response.body());
-            UserActionLogging.LogThreadAction("Get workflow results Body", " Result: " + resultJson);
+            UserActionLogging.LogAction("Get workflow results Body", " Result: " + resultJson);
 
         } catch (IOException e) {
-            UserActionLogging.LogThreadAction("Get workflow results Body",
+            UserActionLogging.LogAction("Get workflow results Body",
                     " An exception happened: " + e.getMessage());
             return null;
         }
 
-        UserActionLogging.LogThreadAction("Get workflow results Body", " Completed!");
+        UserActionLogging.LogAction("Get workflow results Body", " Completed!");
         return resultJson;
     }
 
@@ -764,7 +764,7 @@ public class ExperimentApi {
      * @return the error that was produced or null if an error occurred
      */
     public String getWorkflowJobError(String jobId) {
-        UserActionLogging.LogThreadAction("Get workflow job error", " jobId : " + jobId);
+        UserActionLogging.LogAction("Get workflow job error", " jobId : " + jobId);
 
         RetroFitGalaxyClients service = RetrofitClientInstance.getRetrofitInstance().create(RetroFitGalaxyClients.class);
         Call<Object> callError = service.getErrorMessageOfWorkflowFromGalaxy(jobId, galaxyApiKey);
@@ -774,7 +774,7 @@ public class ExperimentApi {
         try {
             Response<Object> response = callError.execute();
             if (response.code() >= 400) {
-                UserActionLogging.LogThreadAction("Get workflow job error", "Response code: "
+                UserActionLogging.LogAction("Get workflow job error", "Response code: "
                         + response.code() + " with body: " + (response.errorBody() != null ? response.errorBody().string() : " "));
                 return null;
             }
@@ -784,19 +784,19 @@ public class ExperimentApi {
             JsonElement jsonElement = new JsonParser().parse(jsonString);
             JsonObject rootObject = jsonElement.getAsJsonObject();
             fullError = rootObject.get("stderr").getAsString();
-            UserActionLogging.LogThreadAction("Get workflow job error", "Error: " + fullError);
+            UserActionLogging.LogAction("Get workflow job error", "Error: " + fullError);
 
             String[] arrOfStr = fullError.split("ValueError", 0);
             String specError = arrOfStr[arrOfStr.length - 1];
             returnError = specError.substring(1);
-            UserActionLogging.LogThreadAction("Get workflow job error", "Parsed Error: " + returnError);
+            UserActionLogging.LogAction("Get workflow job error", "Parsed Error: " + returnError);
 
         } catch (IOException e) {
-            UserActionLogging.LogThreadAction("Get workflow job error", "Exception: " + e.getMessage());
+            UserActionLogging.LogAction("Get workflow job error", "Exception: " + e.getMessage());
             return null;
         }
 
-        UserActionLogging.LogThreadAction("Get workflow job error", "Completed successfully!");
+        UserActionLogging.LogAction("Get workflow job error", "Completed successfully!");
 
         return returnError;
     }

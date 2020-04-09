@@ -110,8 +110,8 @@ public class ExperimentApi {
         UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run algorithm", "Running the algorithm...");
 
         // --- Validating proper access rights on the datasets  ---
-        String allowedDatasets = authentication.getAuthorities().toString();
-        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Authorities", allowedDatasets.toString());
+        String userRoles = authentication.getAuthorities().toString();
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Authorities", userRoles);
 
         // Getting the dataset from the experiment parameters
         String experimentDatasets = null;
@@ -131,7 +131,7 @@ public class ExperimentApi {
 
         for (String dataset : experimentDatasets.split(",")) {
             String datasetRole = "role_" + dataset;
-            if (!allowedDatasets.toLowerCase().contains(datasetRole.toLowerCase())) {
+            if (!userRoles.toLowerCase().contains(datasetRole.toLowerCase())) {
                 UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run algorithm",
                         "You are not allowed to use dataset: " + dataset);
                 return ResponseEntity.status(403).body("You are not allowed to use dataset: " + dataset);

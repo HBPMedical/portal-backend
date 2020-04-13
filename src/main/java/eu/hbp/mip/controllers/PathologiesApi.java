@@ -9,6 +9,7 @@ import com.google.gson.reflect.TypeToken;
 import eu.hbp.mip.model.PathologyDTO;
 import eu.hbp.mip.model.PathologyDTO.PathologyDatasetDTO;
 import eu.hbp.mip.model.UserInfo;
+import eu.hbp.mip.utils.ClaimUtils;
 import eu.hbp.mip.utils.CustomResourceLoader;
 import eu.hbp.mip.utils.UserActionLogging;
 import io.swagger.annotations.Api;
@@ -47,27 +48,30 @@ public class PathologiesApi {
     public ResponseEntity<String> getPathologies(Authentication authentication) {
         UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Load all the pathologies", "");
 
+        // Load pathologies from file
         Resource resource = resourceLoader.getResource("file:/opt/portal/api/pathologies.json");
         List<PathologyDTO> allPathologies;
         try {
             allPathologies = gson.fromJson(convertInputStreamToString(resource.getInputStream()), new TypeToken<List<PathologyDTO>>() {
             }.getType());
         } catch (IOException e) {
-            return ResponseEntity.badRequest().body("{\"error\" : \"The pathologies.json file could not be read.\"}");
+            return ResponseEntity.badRequest().body("The pathologies.json file could not be read.");
         }
 
         // --- Providing only the allowed pathologies/datasets to the user  ---
         UserActionLogging.LogUserAction(userInfo.getUser().getUsername(),
                 "Load all the pathologies", "Filter out the unauthorised datasets.");
 
-        List<String> userRoles = Arrays.asList(authentication.getAuthorities().toString().toLowerCase()
-                .replaceAll("[\\s+\\]\\[]","").split(","));
+        List<String> userClaims = Arrays.asList(authentication.getAuthorities().toString().toLowerCase()
+                .replaceAll("[\\s+\\]\\[]", "").split(","));
 
         UserActionLogging.LogUserAction(userInfo.getUser().getUsername(),
-                "Load all the pathologies", "Authorities : " + authentication.getAuthorities().toString());
+                "Load all the pathologies", "User Claims: " + userClaims);
 
-        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(),
-                "Load all the pathologies", "Authorities: " + userRoles);
+        // If the "dataset_all" claim exists then return everything
+        if (userClaims.contains(ClaimUtils.allDatasetsAllowedClaim())) {
+            return ResponseEntity.ok().body(gson.toJson(allPathologies));
+        }
 
         List<PathologyDTO> userPathologies = new ArrayList<>();
         for (PathologyDTO curPathology : allPathologies) {
@@ -76,17 +80,14 @@ public class PathologiesApi {
 
             List<PathologyDatasetDTO> userPathologyDatasets = new ArrayList<PathologyDatasetDTO>();
             for (PathologyDatasetDTO dataset : curPathology.getDatasets()) {
-                if(userRoles.contains("role_" + dataset.getCode())){
+                if (userClaims.contains(ClaimUtils.getDatasetClaim(dataset.getCode()))) {
                     userPathologyDatasets.add(dataset);
                 }
             }
 
-            UserActionLogging.LogUserAction(userInfo.getUser().getUsername(),
-                    "Load all the pathologies", "User Pathologies size: " + userPathologyDatasets.size());
-
-            if(userPathologyDatasets.size() > 0){
-                UserActionLogging.LogUserAction(userInfo.getUser().getUsername(),
-                        "Load all the pathologies", "Added the pathology");
+            if (userPathologyDatasets.size() > 0) {
+                UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Load all the pathologies",
+                        "Added pathology '" + curPathology.getLabel() + " with datasets: '" + userPathologyDatasets + "'");
 
                 PathologyDTO userPathology = new PathologyDTO();
                 userPathology.setCode(curPathology.getCode());

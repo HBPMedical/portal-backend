@@ -17,6 +17,7 @@ import eu.hbp.mip.model.galaxy.GalaxyWorkflowResult;
 import eu.hbp.mip.model.galaxy.PostWorkflowToGalaxyDtoResponse;
 import eu.hbp.mip.repositories.ExperimentRepository;
 import eu.hbp.mip.repositories.ModelRepository;
+import eu.hbp.mip.utils.ClaimUtils;
 import eu.hbp.mip.utils.HTTPUtil;
 import eu.hbp.mip.utils.UserActionLogging;
 import io.swagger.annotations.Api;
@@ -110,37 +111,39 @@ public class ExperimentApi {
         UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run algorithm", "Running the algorithm...");
 
         // --- Validating proper access rights on the datasets  ---
-        List<String> userRoles = Arrays.asList(authentication.getAuthorities().toString().toLowerCase()
-                .replaceAll("[\\s+\\]\\[]","").split(","));
-        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Authorities", userRoles.toString());
+        List<String> userClaims = Arrays.asList(authentication.getAuthorities().toString().toLowerCase()
+                .replaceAll("[\\s+\\]\\[]", "").split(","));
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "User Claims", userClaims.toString());
 
-        // Getting the dataset from the experiment parameters
-        String experimentDatasets = null;
-        for (AlgorithmExecutionParamDTO parameter : experimentExecutionDTO.getAlgorithms().get(0).getParameters()) {
-            if (parameter.getName().equals("dataset")) {
-                experimentDatasets = parameter.getValue();
-                UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run algorithm", "Found the dataset parameter!");
-                break;
+        // Don't check for dataset claims if "super" claim exists allowing everything
+        if (!userClaims.contains(ClaimUtils.allDatasetsAllowedClaim())) {
+            // Getting the dataset from the experiment parameters
+            String experimentDatasets = null;
+            for (AlgorithmExecutionParamDTO parameter : experimentExecutionDTO.getAlgorithms().get(0).getParameters()) {
+                if (parameter.getName().equals("dataset")) {
+                    experimentDatasets = parameter.getValue();
+                    UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run algorithm", "Found the dataset parameter!");
+                    break;
+                }
             }
-        }
 
-        if (experimentDatasets == null || experimentDatasets.equals("")) {
-            UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run algorithm",
-                    "A dataset should be specified when running an algorithm.");
-            return ResponseEntity.badRequest().body("A dataset should be specified when running an algorithm.");
-        }
-
-        for (String dataset : experimentDatasets.split(",")) {
-            String datasetRole = "role_" + dataset;
-            if (!userRoles.contains(datasetRole.toLowerCase())) {
+            if (experimentDatasets == null || experimentDatasets.equals("")) {
                 UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run algorithm",
-                        "You are not allowed to use dataset: " + dataset);
-                return ResponseEntity.status(403).body("You are not allowed to use dataset: " + dataset);
+                        "A dataset should be specified when running an algorithm.");
+                return ResponseEntity.badRequest().body("A dataset should be specified when running an algorithm.");
             }
-        }
-        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run algorithm",
-                "User is authorized to use the datasets: " + experimentDatasets);
 
+            for (String dataset : experimentDatasets.split(",")) {
+                String datasetRole = ClaimUtils.getDatasetClaim(dataset);
+                if (!userClaims.contains(datasetRole.toLowerCase())) {
+                    UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run algorithm",
+                            "You are not allowed to use dataset: " + dataset);
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not allowed to use dataset: " + dataset);
+                }
+            }
+            UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run algorithm",
+                    "User is authorized to use the datasets: " + experimentDatasets);
+        }
 
         // --- Run the experiment ---
 

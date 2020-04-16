@@ -1,10 +1,7 @@
 package eu.hbp.mip.configuration;
 
 import eu.hbp.mip.model.UserInfo;
-import eu.hbp.mip.utils.CORSFilter;
-import eu.hbp.mip.utils.CustomLoginUrlAuthenticationEntryPoint;
-import eu.hbp.mip.utils.HTTPUtil;
-import eu.hbp.mip.utils.UserActionLogging;
+import eu.hbp.mip.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +14,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.*;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.Authentication;
@@ -40,8 +36,6 @@ import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.WebUtils;
@@ -111,15 +105,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Value("#{'${hbp.resource.revokeTokenUri:https://services.humanbrainproject.eu/oidc/revoke}'}")
     private String revokeTokenURI;
 
-    @ControllerAdvice
-    class AccessDeniedExceptionHandler {
-
-        @ExceptionHandler(value = AccessDeniedException.class)
-        public void handleConflict(HttpServletResponse response) throws IOException {
-            response.sendError(403, "Access is denied. Please contact the system administrator to request access.");
-        }
-    }
-
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         disableCertificateValidation();
@@ -137,6 +122,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                     //.anyRequest().authenticated()
                     .anyRequest().hasRole("Researcher")
                     .and().exceptionHandling().authenticationEntryPoint(new CustomLoginUrlAuthenticationEntryPoint(loginUrl))
+                    .accessDeniedHandler(new CustomAccessDeniedHandler())
                     .and().logout().addLogoutHandler(authLogoutHandler()).logoutSuccessUrl(redirectAfterLogoutUrl)
                     .and().logout().permitAll()
                     .and().csrf().ignoringAntMatchers("/logout").csrfTokenRepository(csrfTokenRepository())

@@ -17,6 +17,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.*;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.Authentication;
@@ -39,6 +40,8 @@ import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.WebUtils;
@@ -58,8 +61,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-//newlyadded for logout
 
 
 // See https://spring.io/guides/tutorials/spring-boot-oauth2/ for reference about configuring OAuth2 login
@@ -110,9 +111,14 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Value("#{'${hbp.resource.revokeTokenUri:https://services.humanbrainproject.eu/oidc/revoke}'}")
     private String revokeTokenURI;
 
+    @ControllerAdvice
+    class AccessDeniedExceptionHandler {
 
-//    @Autowired
-//    private HttpServletRequest request;
+        @ExceptionHandler(value = AccessDeniedException.class)
+        public void handleConflict(HttpServletResponse response) throws IOException {
+            response.sendError(403, "Access is denied. Please contact the system administrator to request access.");
+        }
+    }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {

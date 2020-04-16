@@ -64,7 +64,7 @@ public class ExperimentApi {
     @Value("#{'${services.workflows.workflowUrl}'}")
     private String workflowUrl;
 
-    @Value("#{'${services.workflows.jwtSecret}'}")
+    @Value("#{'${services.workflows.jwtSecret}'}")Α
     private String jwtSecret;
 
     @Value("#{'${services.galaxy.galaxyUrl}'}")

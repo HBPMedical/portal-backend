@@ -14,6 +14,7 @@ import eu.hbp.mip.utils.CustomResourceLoader;
 import eu.hbp.mip.utils.UserActionLogging;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -41,6 +42,10 @@ public class PathologiesApi {
     @Autowired
     private UserInfo userInfo;
 
+    // Enable HBP collab authentication (1) or disable it (0). Default is 1
+    @Value("#{'${hbp.authentication.enabled:1}'}")
+    private boolean authenticationIsEnabled;
+
     @Autowired
     private CustomResourceLoader resourceLoader;
 
@@ -56,6 +61,11 @@ public class PathologiesApi {
             }.getType());
         } catch (IOException e) {
             return ResponseEntity.badRequest().body("The pathologies.json file could not be read.");
+        }
+
+        // If authentication is disabled return everything
+        if (!authenticationIsEnabled) {
+            return ResponseEntity.ok().body(gson.toJson(allPathologies));
         }
 
         // --- Providing only the allowed pathologies/datasets to the user  ---

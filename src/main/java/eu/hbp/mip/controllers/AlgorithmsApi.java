@@ -8,11 +8,13 @@ import com.google.gson.Gson;
 import eu.hbp.mip.controllers.galaxy.retrofit.RetroFitGalaxyClients;
 import eu.hbp.mip.controllers.galaxy.retrofit.RetrofitClientInstance;
 import eu.hbp.mip.model.AlgorithmDTO;
+import eu.hbp.mip.model.UserInfo;
 import eu.hbp.mip.model.galaxy.WorkflowDTO;
 import eu.hbp.mip.utils.HTTPUtil;
 import eu.hbp.mip.utils.UserActionLogging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,6 +37,9 @@ public class AlgorithmsApi {
 
     private static final Gson gson = new Gson();
 
+    @Autowired
+    private UserInfo userInfo;
+
     @Value("#{'${services.exareme.algorithmsUrl}'}")
     private String exaremeAlgorithmsUrl;
 
@@ -47,7 +52,7 @@ public class AlgorithmsApi {
     @ApiOperation(value = "List all algorithms", response = String.class)
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<AlgorithmDTO>> getAlgorithms() {
-        UserActionLogging.LogAction("List all algorithms", "");
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "List all algorithms", "");
 
         List<AlgorithmDTO> exaremeAlgorithms = getExaremeAlgorithms();
         List<AlgorithmDTO> galaxyAlgorithms = getGalaxyWorkflows();
@@ -56,13 +61,13 @@ public class AlgorithmsApi {
         if (exaremeAlgorithms != null) {
             algorithms.addAll(exaremeAlgorithms);
         } else {
-            UserActionLogging.LogAction("List all algorithms",
+            UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "List all algorithms",
                     "Getting exareme algorithms failed and returned null");
         }
         if (galaxyAlgorithms != null) {
             algorithms.addAll(galaxyAlgorithms);
         } else {
-            UserActionLogging.LogAction("List all algorithms",
+            UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "List all algorithms",
                     "Getting galaxy workflows failed and returned null");
         }
 
@@ -75,7 +80,7 @@ public class AlgorithmsApi {
      * @return a list of AlgorithmDTOs or null if something fails
      */
     public List<AlgorithmDTO> getExaremeAlgorithms() {
-        UserActionLogging.LogAction("List exareme algorithms", "");
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "List exareme algorithms", "");
 
         List<AlgorithmDTO> algorithms = new LinkedList<>();
         // Get exareme algorithms
@@ -85,11 +90,11 @@ public class AlgorithmsApi {
 
             algorithms = gson.fromJson(response.toString(), algorithms.getClass());
         } catch (IOException e) {
-            UserActionLogging.LogAction("List exareme algorithms", "An exception occurred: " + e.getMessage());
+            UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "List exareme algorithms", "An exception occurred: " + e.getMessage());
             return null;
         }
 
-        UserActionLogging.LogAction("List exareme algorithms",
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "List exareme algorithms",
                 "Completed, returned " + algorithms.size() + " algorithms.");
         return algorithms;
     }
@@ -100,7 +105,7 @@ public class AlgorithmsApi {
      * @return a list of AlgorithmDTOs or null if something fails
      */
     public List<AlgorithmDTO> getGalaxyWorkflows() {
-        UserActionLogging.LogAction("List Galaxy workflows", "");
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "List Galaxy workflows", "");
 
         List<Workflow> workflowList = null;
         try {
@@ -110,7 +115,7 @@ public class AlgorithmsApi {
 
             workflowList = new ArrayList<>(workflowsClient.getWorkflows());
         } catch (Exception e) {
-            UserActionLogging.LogAction("List Galaxy workflows", "Error when calling list galaxy workflows: " + e.getMessage());
+            UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "List Galaxy workflows", "Error when calling list galaxy workflows: " + e.getMessage());
 
             return null;
         }
@@ -130,28 +135,28 @@ public class AlgorithmsApi {
 
                 } else {     // Something unexpected happened
                     String msgErr = gson.toJson(response.errorBody());
-                    UserActionLogging.LogAction("List Galaxy workflows", "Error Response: " + msgErr);
+                    UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "List Galaxy workflows", "Error Response: " + msgErr);
                     return null;
                 }
             } catch (Exception e) {
-                UserActionLogging.LogAction("List Galaxy workflows", "An exception occurred: " + e.getMessage());
+                UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "List Galaxy workflows", "An exception occurred: " + e.getMessage());
                 return null;
             }
         }
-        UserActionLogging.LogAction("List Galaxy workflows", "Workflows fetched: " + workflows.size());
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "List Galaxy workflows", "Workflows fetched: " + workflows.size());
 
         // Convert the workflows to algorithms
         List<AlgorithmDTO> algorithms = new LinkedList<>();
         for (WorkflowDTO workflow : workflows) {
-            UserActionLogging.LogAction("List Galaxy workflows", "Converting workflow: " + workflow);
+            UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "List Galaxy workflows", "Converting workflow: " + workflow);
 
             algorithms.add(workflow.convertToAlgorithmDTO());
 
-            UserActionLogging.LogAction("List Galaxy workflows",
+            UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "List Galaxy workflows",
                     "Converted algorithm: " + algorithms.get(algorithms.size() - 1));
         }
 
-        UserActionLogging.LogAction("List Galaxy workflows", "Completed!");
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "List Galaxy workflows", "Completed!");
         return algorithms;
     }
 }

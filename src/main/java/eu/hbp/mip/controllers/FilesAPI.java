@@ -36,12 +36,12 @@ public class FilesAPI {
     public ResponseEntity<Void> getProtectedFile(
             @ApiParam(value = "filename", required = true) @PathVariable("filename") String filename
     ) {
-        UserActionLogging.LogAction("Get protected file", " filename : " + filename);
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Get protected file", " filename : " + filename);
 
         String filepath = "/protected/" + filename;
         String user = userInfo.getUser().getUsername();
         String time = LocalDateTime.now().toString();
-        UserActionLogging.LogAction("User " + user + " downloaded " + filepath, "");
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Downloaded " + filepath, "");
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Accel-Redirect", filepath);

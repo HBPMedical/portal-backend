@@ -17,6 +17,7 @@ import eu.hbp.mip.model.galaxy.GalaxyWorkflowResult;
 import eu.hbp.mip.model.galaxy.PostWorkflowToGalaxyDtoResponse;
 import eu.hbp.mip.repositories.ExperimentRepository;
 import eu.hbp.mip.repositories.ModelRepository;
+import eu.hbp.mip.utils.ClaimUtils;
 import eu.hbp.mip.utils.HTTPUtil;
 import eu.hbp.mip.utils.UserActionLogging;
 import io.swagger.annotations.Api;
@@ -28,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -50,6 +52,9 @@ public class ExperimentApi {
 
     private static final Gson gson = new Gson();
 
+    @Autowired
+    private UserInfo userInfo;
+
     private static final Gson gsonOnlyExposed = new GsonBuilder().serializeNulls()
             .setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").excludeFieldsWithoutExposeAnnotation().create();
 
@@ -68,8 +73,9 @@ public class ExperimentApi {
     @Value("#{'${services.galaxy.galaxyApiKey}'}")
     private String galaxyApiKey;
 
-    @Autowired
-    private UserInfo userInfo;
+    // Enable HBP collab authentication (1) or disable it (0). Default is 1
+    @Value("#{'${hbp.authentication.enabled:1}'}")
+    private boolean authenticationIsEnabled;
 
     @Autowired
     private ModelRepository modelRepository;
@@ -87,7 +93,7 @@ public class ExperimentApi {
         try {
             experimentUuid = UUID.fromString(uuid);
         } catch (IllegalArgumentException iae) {
-            UserActionLogging.LogAction("Get Experiment", "Invalid Experiment UUID.");
+            UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Get Experiment", "Invalid Experiment UUID.");
             return ResponseEntity.badRequest().body("Invalid Experiment UUID");
         }
 
@@ -97,19 +103,60 @@ public class ExperimentApi {
             return new ResponseEntity<>("Not found", HttpStatus.NOT_FOUND);
         }
 
-        UserActionLogging.LogAction("Get an experiment ", " uuid : " + uuid);
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Get an experiment ", " uuid : " + uuid);
 
         return new ResponseEntity<>(gsonOnlyExposed.toJson(experiment.jsonify()), HttpStatus.OK);
     }
 
+
     @ApiOperation(value = "Create an experiment", response = Experiment.class)
     @RequestMapping(value = "/runAlgorithm", method = RequestMethod.POST)
-    public ResponseEntity<String> runExperiment(@RequestBody ExperimentExecutionDTO experimentExecutionDTO) {
-        UserActionLogging.LogAction("Run algorithm", "Running the algorithm...");
+    public ResponseEntity<String> runExperiment(Authentication authentication, @RequestBody ExperimentExecutionDTO experimentExecutionDTO) {
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run algorithm", "Running the algorithm...");
+
+        if(authenticationIsEnabled) {
+            // --- Validating proper access rights on the datasets  ---
+            List<String> userClaims = Arrays.asList(authentication.getAuthorities().toString().toLowerCase()
+                    .replaceAll("[\\s+\\]\\[]", "").split(","));
+            UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "User Claims", userClaims.toString());
+
+            // Don't check for dataset claims if "super" claim exists allowing everything
+            if (!userClaims.contains(ClaimUtils.allDatasetsAllowedClaim())) {
+                // Getting the dataset from the experiment parameters
+                String experimentDatasets = null;
+                for (AlgorithmExecutionParamDTO parameter : experimentExecutionDTO.getAlgorithms().get(0).getParameters()) {
+                    if (parameter.getName().equals("dataset")) {
+                        experimentDatasets = parameter.getValue();
+                        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run algorithm", "Found the dataset parameter!");
+                        break;
+                    }
+                }
+
+                if (experimentDatasets == null || experimentDatasets.equals("")) {
+                    UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run algorithm",
+                            "A dataset should be specified when running an algorithm.");
+                    return ResponseEntity.badRequest().body("A dataset should be specified when running an algorithm.");
+                }
+
+                for (String dataset : experimentDatasets.split(",")) {
+                    String datasetRole = ClaimUtils.getDatasetClaim(dataset);
+                    if (!userClaims.contains(datasetRole.toLowerCase())) {
+                        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run algorithm",
+                                "You are not allowed to use dataset: " + dataset);
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not allowed to use dataset: " + dataset);
+                    }
+                }
+                UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run algorithm",
+                        "User is authorized to use the datasets: " + experimentDatasets);
+            }
+        }
+
+        // --- Run the experiment ---
 
         // Get the type of algorithm
         String algorithmType = experimentExecutionDTO.getAlgorithms().get(0).getType();
 
+        // Run with the appropriate engine
         if (algorithmType.equals("workflow")) {
             return runGalaxyWorkflow(experimentExecutionDTO);
         } else {
@@ -122,7 +169,7 @@ public class ExperimentApi {
     public ResponseEntity<String> markExperimentAsViewed(
             @ApiParam(value = "uuid", required = true) @PathVariable("uuid") String uuid) {
 
-        UserActionLogging.LogAction("Mark an experiment as viewed", " uuid : " + uuid);
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Mark an experiment as viewed", " uuid : " + uuid);
 
         Experiment experiment;
         UUID experimentUuid;
@@ -130,8 +177,7 @@ public class ExperimentApi {
         try {
             experimentUuid = UUID.fromString(uuid);
         } catch (IllegalArgumentException iae) {
-            //LOGGER.trace("Invalid UUID", iae);
-            //LOGGER.warn("An invalid Experiment UUID was received !");
+            UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Mark an experiment as viewed", "Invalid Experiment UUID" + uuid);
             return ResponseEntity.badRequest().body("Invalid Experiment UUID");
         }
 
@@ -141,7 +187,7 @@ public class ExperimentApi {
         experiment.setResultsViewed(true);
         experimentRepository.save(experiment);
 
-        UserActionLogging.LogAction("Experiment updated (marked as viewed)", " ");
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Experiment updated (marked as viewed)", " ");
 
         return new ResponseEntity<>(gsonOnlyExposed.toJson(experiment.jsonify()), HttpStatus.OK);
     }
@@ -151,7 +197,7 @@ public class ExperimentApi {
     public ResponseEntity<String> markExperimentAsShared(
             @ApiParam(value = "uuid", required = true) @PathVariable("uuid") String uuid) {
 
-        UserActionLogging.LogAction("Mark an experiment as shared", " uuid : " + uuid);
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Mark an experiment as shared", " uuid : " + uuid);
 
         return doMarkExperimentAsShared(uuid, true);
     }
@@ -160,7 +206,7 @@ public class ExperimentApi {
     @RequestMapping(value = "/{uuid}/markAsUnshared", method = RequestMethod.GET)
     public ResponseEntity<String> markExperimentAsUnshared(
             @ApiParam(value = "uuid", required = true) @PathVariable("uuid") String uuid) {
-        UserActionLogging.LogAction("Mark an experiment as unshared", " uuid : " + uuid);
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Mark an experiment as unshared", " uuid : " + uuid);
 
         return doMarkExperimentAsShared(uuid, false);
     }
@@ -170,7 +216,7 @@ public class ExperimentApi {
     public ResponseEntity<String> listExperiments(
             @ApiParam(value = "maxResultCount") @RequestParam int maxResultCount) {
 
-        UserActionLogging.LogAction("List experiments", " maxResultCount : " + maxResultCount);
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "List experiments", " maxResultCount : " + maxResultCount);
 
         return doListExperiments(false, null);
     }
@@ -180,7 +226,7 @@ public class ExperimentApi {
     public ResponseEntity<String> listExperiments(@ApiParam(value = "slug") @RequestParam("slug") String modelSlug,
                                                   @ApiParam(value = "maxResultCount") @RequestParam("maxResultCount") int maxResultCount) {
 
-        UserActionLogging.LogAction("List experiments", " modelSlug : " + modelSlug);
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "List experiments", " modelSlug : " + modelSlug);
 
         if (maxResultCount <= 0 && (modelSlug == null || "".equals(modelSlug))) {
             return new ResponseEntity<>("You must provide at least a slug or a limit of result",
@@ -192,8 +238,8 @@ public class ExperimentApi {
 
     @ApiOperation(value = "list my experiments", response = Experiment.class, responseContainer = "List")
     @RequestMapping(method = RequestMethod.GET, params = {"mine"})
-    public ResponseEntity<String> listMyExperiments(@ApiParam(value = "mine") @RequestParam("mine") boolean mine) {
-        UserActionLogging.LogAction("List my experiments", " mine : " + mine);
+    public ResponseEntity<String> listMyExperiments(Authentication authentication, @ApiParam(value = "mine") @RequestParam("mine") boolean mine) {
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "List my experiments", " mine : " + mine);
 
         return doListExperiments(true, null);
     }
@@ -244,14 +290,14 @@ public class ExperimentApi {
         experiment.setShared(shared);
         experimentRepository.save(experiment);
 
-        UserActionLogging.LogAction("Experiment updated (marked as shared)", "");
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Experiment updated (marked as shared)", "");
 
         return new ResponseEntity<>(gsonOnlyExposed.toJson(experiment.jsonify()), HttpStatus.OK);
     }
 
     /* -------------------------------  EXPERIMENT MODEL METHODS  ----------------------------------------------------*/
 
-    public Experiment createExperiment(ExperimentExecutionDTO experimentExecutionDTO){
+    public Experiment createExperiment(ExperimentExecutionDTO experimentExecutionDTO) {
         User user = userInfo.getUser();
 
         Experiment experiment = new Experiment();
@@ -263,31 +309,31 @@ public class ExperimentApi {
         experiment.setName(experimentExecutionDTO.getName());
         experimentRepository.save(experiment);
 
-        UserActionLogging.LogAction("Created an experiment", " id : " + experiment.getUuid());
-        UserActionLogging.LogAction("Created an experiment", " algorithms : " + experiment.getAlgorithms());
-        UserActionLogging.LogAction("Created an experiment", " model : " + experiment.getModel().getSlug());
-        UserActionLogging.LogAction("Created an experiment", " name : " + experiment.getName());
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Created an experiment", " id : " + experiment.getUuid());
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Created an experiment", " algorithms : " + experiment.getAlgorithms());
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Created an experiment", " model : " + experiment.getModel().getSlug());
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Created an experiment", " name : " + experiment.getName());
         return experiment;
     }
 
     private void saveExperiment(Experiment experiment) {
-        UserActionLogging.LogAction("Saved an experiment", " id : " + experiment.getUuid());
-        UserActionLogging.LogAction("Saved an experiment", " algorithms : " + experiment.getAlgorithms());
-        UserActionLogging.LogAction("Saved an experiment", " model : " + experiment.getModel().getSlug());
-        UserActionLogging.LogAction("Saved an experiment", " name : " + experiment.getName());
-        UserActionLogging.LogAction("Saved an experiment", " historyId : " + experiment.getWorkflowHistoryId());
-        UserActionLogging.LogAction("Saved an experiment", " status : " + experiment.getWorkflowStatus());
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Saved an experiment", " id : " + experiment.getUuid());
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Saved an experiment", " algorithms : " + experiment.getAlgorithms());
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Saved an experiment", " model : " + experiment.getModel().getSlug());
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Saved an experiment", " name : " + experiment.getName());
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Saved an experiment", " historyId : " + experiment.getWorkflowHistoryId());
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Saved an experiment", " status : " + experiment.getWorkflowStatus());
 
         experimentRepository.save(experiment);
 
-        UserActionLogging.LogAction("Experiment saved", "");
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Experiment saved", "");
     }
 
     private void finishExperiment(Experiment experiment) {
         experiment.setFinished(new Date());
         experimentRepository.save(experiment);
 
-        UserActionLogging.LogThreadAction("Experiment finished!", "");
+        UserActionLogging.LogAction("Experiment finished!", "");
     }
 
     /* --------------------------------------  EXAREME CALLS ---------------------------------------------------------*/
@@ -299,7 +345,7 @@ public class ExperimentApi {
      * @return the response to be returned
      */
     public ResponseEntity<String> runExaremeAlgorithm(ExperimentExecutionDTO experimentExecutionDTO) {
-        UserActionLogging.LogAction("Run exareme algorithm", "Running the algorithm...");
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run exareme algorithm", "Running the algorithm...");
 
         Experiment experiment = createExperiment(experimentExecutionDTO);
 
@@ -312,26 +358,26 @@ public class ExperimentApi {
 
         String body = gson.toJson(algorithmParameters);
         String url = queryExaremeUrl + "/" + algorithmName;
-        UserActionLogging.LogAction("Run exareme algorithm", "url: " + url + ", body: " + body);
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run exareme algorithm", "url: " + url + ", body: " + body);
 
         ResponseEntity<String> response = new ResponseEntity<>(gsonOnlyExposed.toJson(experiment.jsonify()), HttpStatus.OK);
-        UserActionLogging.LogAction("Run exareme algorithm",
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run exareme algorithm",
                 "Completed, returning: " + experiment.toString());
 
-        UserActionLogging.LogAction("Run exareme algorithm",
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run exareme algorithm",
                 "Starting exareme execution thread");
         new Thread(() -> {
-            // ATTENTION: Inside the Thread only LogThreadAction should be used, not LogAction!
-            UserActionLogging.LogThreadAction("Run exareme algorithm",
+            // ATTENTION: Inside the Thread only LogAction should be used, not LogAction!
+            UserActionLogging.LogAction("Run exareme algorithm",
                     "Thread started!");
 
             try {
-                UserActionLogging.LogThreadAction("Run exareme algorithm",
+                UserActionLogging.LogAction("Run exareme algorithm",
                         "Thread started!");
                 StringBuilder results = new StringBuilder();
                 int code = HTTPUtil.sendPost(url, body, results);
 
-                UserActionLogging.LogThreadAction("Run exareme algorithm",
+                UserActionLogging.LogAction("Run exareme algorithm",
                         "Algorithm finished with code: " + code);
 
                 // Results are stored in the experiment object
@@ -339,18 +385,18 @@ public class ExperimentApi {
                 experiment.setHasError(code >= 400);
                 experiment.setHasServerError(code >= 500);
             } catch (Exception e) {
-                UserActionLogging.LogThreadAction("Run exareme algorithm",
+                UserActionLogging.LogAction("Run exareme algorithm",
                         "There was an exception: " + e.getMessage());
 
                 experiment.setHasError(true);
                 experiment.setHasServerError(true);
                 experiment.setResult(e.getMessage());
             }
-            UserActionLogging.LogThreadAction("Run exareme algorithm",
+            UserActionLogging.LogAction("Run exareme algorithm",
                     "Finished the experiment: " + experiment.toString());
             finishExperiment(experiment);
 
-            UserActionLogging.LogThreadAction("Run exareme algorithm",
+            UserActionLogging.LogAction("Run exareme algorithm",
                     "Finished!");
         }).start();
 
@@ -367,7 +413,7 @@ public class ExperimentApi {
      * @return the response to be returned
      */
     public ResponseEntity<String> runGalaxyWorkflow(ExperimentExecutionDTO experimentExecutionDTO) {
-        UserActionLogging.LogAction("Run workflow", "Running a workflow...");
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run workflow", "Running a workflow...");
 
         Experiment experiment = createExperiment(experimentExecutionDTO);
 
@@ -397,7 +443,7 @@ public class ExperimentApi {
             }
         }
         if (workflow == null) {
-            UserActionLogging.LogAction("Run workflow",
+            UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run workflow",
                     "Could not find algorithm code: " + workflowId);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ErrorResponse("Could not find galaxy algorithm.").toString());
@@ -416,7 +462,7 @@ public class ExperimentApi {
 
         // Create the request client
         RetroFitGalaxyClients service = RetrofitClientInstance.getRetrofitInstance().create(RetroFitGalaxyClients.class);
-        UserActionLogging.LogAction("Run workflow", "Running Galaxy workflow with id: " + workflow.getId());
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run workflow", "Running Galaxy workflow with id: " + workflow.getId());
 
         // Call Galaxy to run the workflow
         Call<PostWorkflowToGalaxyDtoResponse> call = service.postWorkflowToGalaxy(workflow.getId(), galaxyApiKey, requestBodyJson);
@@ -425,7 +471,7 @@ public class ExperimentApi {
 
             if (response.code() == 200) {       // Call succeeded
                 String responseBody = gson.toJson(response.body());
-                UserActionLogging.LogAction("Run workflow", "Response: " + responseBody);
+                UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run workflow", "Response: " + responseBody);
 
                 String historyId = (String) new JSONObject(responseBody).get("history_id");
                 experiment.setWorkflowHistoryId(historyId);
@@ -435,7 +481,7 @@ public class ExperimentApi {
 
             } else {     // Something unexpected happened
                 String msgErr = gson.toJson(response.errorBody());
-                UserActionLogging.LogAction("Run workflow", "Error Response: " + msgErr);
+                UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run workflow", "Error Response: " + msgErr);
 
                 // Values are read from streams.
                 JSONObject jObjectError = new JSONObject(msgErr);
@@ -447,7 +493,7 @@ public class ExperimentApi {
             }
 
         } catch (Exception e) {
-            UserActionLogging.LogAction("Run workflow", "An exception occurred: " + e.getMessage());
+            UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run workflow", "An exception occurred: " + e.getMessage());
             experiment.setHasError(true);
             experiment.setHasServerError(true);
             experiment.setResult(e.getMessage());
@@ -457,75 +503,75 @@ public class ExperimentApi {
         // Start the process of fetching the status
         updateWorkflowExperiment(experiment);
 
-        UserActionLogging.LogAction("Run workflow", "Run workflow completed!");
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run workflow", "Run workflow completed!");
 
         return new ResponseEntity(gsonOnlyExposed.toJson(experiment.jsonify()), HttpStatus.OK);
     }
 
 
     /**
-     *  This method creates a thread that will fetch the workflow result when it is ready
+     * This method creates a thread that will fetch the workflow result when it is ready
      *
-     * @param experiment    will be used to fetch it's workflow status, it should have the workflowHistoryId initialized
-     *                      and the result should not already be fetched
-     * @return              nothing, just updates the experiment
+     * @param experiment will be used to fetch it's workflow status, it should have the workflowHistoryId initialized
+     *                   and the result should not already be fetched
+     * @return nothing, just updates the experiment
      */
     public void updateWorkflowExperiment(Experiment experiment) {
 
         if (experiment == null) {
-            UserActionLogging.LogAction("Update workflow experiment", "The experiment does not exist.");
+            UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Update workflow experiment", "The experiment does not exist.");
             return;
         }
 
-        UserActionLogging.LogAction("Update workflow experiment",
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Update workflow experiment",
                 " Experiment id : " + experiment.getUuid());
 
         if (experiment.getWorkflowHistoryId() == null) {
-            UserActionLogging.LogAction("Update workflow experiment", "History Id does not exist.");
+            UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Update workflow experiment", "History Id does not exist.");
             return;
         }
 
-        UserActionLogging.LogAction("Update workflow experiment", "Starting Thread..." );
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Update workflow experiment", "Starting Thread...");
         new Thread(() -> {
-            while(true) {
-                // ATTENTION: Inside the Thread only LogThreadAction should be used, not LogAction!
-                UserActionLogging.LogThreadAction("Update workflow experiment", "Thread is running...");
+            while (true) {
+                // ATTENTION: Inside the Thread only LogAction should be used, not LogAction!
+                UserActionLogging.LogAction("Update workflow experiment", "Thread is running...");
 
                 try {
                     sleep(2000);
                 } catch (InterruptedException e) {
-                    UserActionLogging.LogThreadAction("Update workflow experiment",
+                    UserActionLogging.LogAction("Update workflow experiment",
                             "Sleep was disrupted: " + e.getMessage());
                 }
 
-                UserActionLogging.LogThreadAction("Update workflow experiment",
+                UserActionLogging.LogAction("Update workflow experiment",
                         "Fetching status for experiment Id: " + experiment.getUuid());
 
                 String state = getWorkflowStatus(experiment.getWorkflowHistoryId());
-                UserActionLogging.LogThreadAction("Update workflow experiment", "State is: " + state);
+                UserActionLogging.LogAction("Update workflow experiment", "State is: " + state);
 
                 switch (state) {
                     case "running":
                         // Do nothing, when the experiment is created the status is set to running
-                        UserActionLogging.LogThreadAction("Update workflow experiment",
+                        UserActionLogging.LogAction("Update workflow experiment",
                                 "Workflow is still running.");
                         break;
 
                     case "completed":
                         // Get only the job result that is visible
                         List<GalaxyWorkflowResult> workflowJobsResults = getWorkflowResults(experiment.getWorkflowHistoryId());
-                        UserActionLogging.LogThreadAction("Update workflow experiment",
+                        UserActionLogging.LogAction("Update workflow experiment",
                                 "Results are: " + workflowJobsResults.toString());
 
                         boolean resultFound = false;
                         for (GalaxyWorkflowResult jobResult : workflowJobsResults) {
                             if (jobResult.getVisible()) {
-                                UserActionLogging.LogThreadAction("Update workflow experiment",
+                                UserActionLogging.LogAction("Update workflow experiment",
                                         "Visible result are: " + jobResult.getId());
 
                                 String result = getWorkflowResultBody(experiment.getWorkflowHistoryId(), jobResult.getId());
 
-                                UserActionLogging.LogThreadAction("Update workflow experiment", "Result: " + result);
+                                UserActionLogging.LogAction("Update workflow experiment", "Result: " + result);
                                 if (result == null) {
                                     experiment.setHasError(true);
                                     experiment.setHasServerError(true);
@@ -537,7 +583,7 @@ public class ExperimentApi {
                         }
 
                         if (!resultFound) {      // If there is no visible result
-                            UserActionLogging.LogThreadAction("Update workflow experiment", "No visible result");
+                            UserActionLogging.LogAction("Update workflow experiment", "No visible result");
                             experiment.setResult("[" + new ErrorResponse("The workflow has no visible result.").toString() + "]");
                             experiment.setHasError(true);
                             experiment.setHasServerError(true);
@@ -549,18 +595,18 @@ public class ExperimentApi {
                     case "error":
                         // Get the job result that failed
                         workflowJobsResults = getWorkflowResults(experiment.getWorkflowHistoryId());
-                        UserActionLogging.LogThreadAction("Update workflow experiment",
+                        UserActionLogging.LogAction("Update workflow experiment",
                                 "Error results are: " + workflowJobsResults.toString());
 
                         boolean failedJobFound = false;
                         for (GalaxyWorkflowResult jobResult : workflowJobsResults) {
                             if (jobResult.getState().equals("error")) {
-                                UserActionLogging.LogThreadAction("Update workflow experiment",
+                                UserActionLogging.LogAction("Update workflow experiment",
                                         "Failed job is: " + jobResult.getId());
 
                                 String result = getWorkflowJobError(jobResult.getId());
 
-                                UserActionLogging.LogThreadAction("Update workflow experiment", "Job result: " + result);
+                                UserActionLogging.LogAction("Update workflow experiment", "Job result: " + result);
                                 if (result == null) {
                                     experiment.setHasError(true);
                                     experiment.setHasServerError(true);
@@ -572,7 +618,7 @@ public class ExperimentApi {
                         }
 
                         if (!failedJobFound) {      // If there is no visible failed job
-                            UserActionLogging.LogThreadAction("Update workflow experiment", "No failed result");
+                            UserActionLogging.LogAction("Update workflow experiment", "No failed result");
                             experiment.setResult("[" + new ErrorResponse("The workflow has no failed result.").toString() + "]");
                             experiment.setHasError(true);
                             experiment.setHasServerError(true);
@@ -590,7 +636,7 @@ public class ExperimentApi {
 
                 // If result exists return
                 if (experiment.getResult() != null) {
-                    UserActionLogging.LogThreadAction("Update workflow experiment",
+                    UserActionLogging.LogAction("Update workflow experiment",
                             "Result exists: " + experiment.getResult());
                     return;
                 }
@@ -607,8 +653,8 @@ public class ExperimentApi {
      * "completed"         ->      When the workflow completed successfully
      */
     public String getWorkflowStatus(String historyId) {
-        // ATTENTION: This function is used from a Thread. Only LogThreadAction should be used, not LogAction!
-        UserActionLogging.LogThreadAction("Get workflow status", " History Id : " + historyId);
+        // ATTENTION: This function is used from a Thread. Only LogAction should be used, not LogAction!
+        UserActionLogging.LogAction("Get workflow status", " History Id : " + historyId);
 
         // Create the request client
         RetroFitGalaxyClients service = RetrofitClientInstance.getRetrofitInstance().create(RetroFitGalaxyClients.class);
@@ -618,15 +664,15 @@ public class ExperimentApi {
         try {
             Response<Object> response = call.execute();
             if (response.code() >= 400) {
-                UserActionLogging.LogThreadAction("Get workflow status", " Response code: "
+                UserActionLogging.LogAction("Get workflow status", " Response code: "
                         + response.code() + "" + " with body: " + (response.errorBody() != null ? response.errorBody().string() : " "));
                 return "internalError";
             }
             result = new Gson().toJson(response.body());
-            UserActionLogging.LogThreadAction("Get workflow status", " Result: " + result);
+            UserActionLogging.LogAction("Get workflow status", " Result: " + result);
 
         } catch (IOException e) {
-            UserActionLogging.LogThreadAction("Get workflow status"
+            UserActionLogging.LogAction("Get workflow status"
                     , " An exception happened: " + e.getMessage());
             return "internalError";
         }
@@ -636,12 +682,12 @@ public class ExperimentApi {
             JSONObject resultJson = new JSONObject(result);
             state = resultJson.getString("state");
         } catch (JSONException e) {
-            UserActionLogging.LogThreadAction("Get workflow status"
+            UserActionLogging.LogAction("Get workflow status"
                     , " An exception happened: " + e.getMessage());
             return "internalError";
         }
 
-        UserActionLogging.LogThreadAction("Get workflow status", " Completed!");
+        UserActionLogging.LogAction("Get workflow status", " Completed!");
         switch (state) {
             case "ok":
                 return "completed";
@@ -662,7 +708,7 @@ public class ExperimentApi {
      * @return a List<GalaxyWorkflowResult>   or null when an error occurred
      */
     public List<GalaxyWorkflowResult> getWorkflowResults(String historyId) {
-        UserActionLogging.LogThreadAction("Get workflow results", " historyId : " + historyId);
+        UserActionLogging.LogAction("Get workflow results", " historyId : " + historyId);
 
         RetroFitGalaxyClients service = RetrofitClientInstance.getRetrofitInstance().create(RetroFitGalaxyClients.class);
         Call<List<GalaxyWorkflowResult>> call = service.getWorkflowResultsFromGalaxy(historyId, galaxyApiKey);
@@ -671,20 +717,20 @@ public class ExperimentApi {
         try {
             Response<List<GalaxyWorkflowResult>> response = call.execute();
             if (response.code() >= 400) {
-                UserActionLogging.LogThreadAction("Get workflow results", " Response code: "
+                UserActionLogging.LogAction("Get workflow results", " Response code: "
                         + response.code() + "" + " with body: " + (response.errorBody() != null ? response.errorBody().string() : " "));
                 return null;
             }
             getGalaxyWorkflowResultList = response.body();
-            UserActionLogging.LogThreadAction("Get workflow results", " Result: " + response.body());
+            UserActionLogging.LogAction("Get workflow results", " Result: " + response.body());
 
         } catch (IOException e) {
-            UserActionLogging.LogThreadAction("Get workflow results"
+            UserActionLogging.LogAction("Get workflow results"
                     , " An exception happened: " + e.getMessage());
             return null;
         }
 
-        UserActionLogging.LogThreadAction("Get workflow results", " Completed!");
+        UserActionLogging.LogAction("Get workflow results", " Completed!");
         return getGalaxyWorkflowResultList;
 
     }
@@ -695,7 +741,7 @@ public class ExperimentApi {
      * @return the result of the specific workflow job, null if there was an error
      */
     public String getWorkflowResultBody(String historyId, String contentId) {
-        UserActionLogging.LogThreadAction("Get workflow results Body", " historyId : " + historyId);
+        UserActionLogging.LogAction("Get workflow results Body", " historyId : " + historyId);
 
         RetroFitGalaxyClients service = RetrofitClientInstance.getRetrofitInstance().create(RetroFitGalaxyClients.class);
         Call<Object> call =
@@ -705,20 +751,20 @@ public class ExperimentApi {
         try {
             Response<Object> response = call.execute();
             if (response.code() >= 400) {
-                UserActionLogging.LogThreadAction("Get workflow results Body", " Response code: "
+                UserActionLogging.LogAction("Get workflow results Body", " Response code: "
                         + response.code() + "" + " with body: " + (response.errorBody() != null ? response.errorBody().string() : " "));
                 return null;
             }
             resultJson = new Gson().toJson(response.body());
-            UserActionLogging.LogThreadAction("Get workflow results Body", " Result: " + resultJson);
+            UserActionLogging.LogAction("Get workflow results Body", " Result: " + resultJson);
 
         } catch (IOException e) {
-            UserActionLogging.LogThreadAction("Get workflow results Body",
+            UserActionLogging.LogAction("Get workflow results Body",
                     " An exception happened: " + e.getMessage());
             return null;
         }
 
-        UserActionLogging.LogThreadAction("Get workflow results Body", " Completed!");
+        UserActionLogging.LogAction("Get workflow results Body", " Completed!");
         return resultJson;
     }
 
@@ -728,7 +774,7 @@ public class ExperimentApi {
      * @return the error that was produced or null if an error occurred
      */
     public String getWorkflowJobError(String jobId) {
-        UserActionLogging.LogThreadAction("Get workflow job error", " jobId : " + jobId);
+        UserActionLogging.LogAction("Get workflow job error", " jobId : " + jobId);
 
         RetroFitGalaxyClients service = RetrofitClientInstance.getRetrofitInstance().create(RetroFitGalaxyClients.class);
         Call<Object> callError = service.getErrorMessageOfWorkflowFromGalaxy(jobId, galaxyApiKey);
@@ -738,7 +784,7 @@ public class ExperimentApi {
         try {
             Response<Object> response = callError.execute();
             if (response.code() >= 400) {
-                UserActionLogging.LogThreadAction("Get workflow job error", "Response code: "
+                UserActionLogging.LogAction("Get workflow job error", "Response code: "
                         + response.code() + " with body: " + (response.errorBody() != null ? response.errorBody().string() : " "));
                 return null;
             }
@@ -748,19 +794,19 @@ public class ExperimentApi {
             JsonElement jsonElement = new JsonParser().parse(jsonString);
             JsonObject rootObject = jsonElement.getAsJsonObject();
             fullError = rootObject.get("stderr").getAsString();
-            UserActionLogging.LogThreadAction("Get workflow job error", "Error: " + fullError);
+            UserActionLogging.LogAction("Get workflow job error", "Error: " + fullError);
 
             String[] arrOfStr = fullError.split("ValueError", 0);
             String specError = arrOfStr[arrOfStr.length - 1];
             returnError = specError.substring(1);
-            UserActionLogging.LogThreadAction("Get workflow job error", "Parsed Error: " + returnError);
+            UserActionLogging.LogAction("Get workflow job error", "Parsed Error: " + returnError);
 
         } catch (IOException e) {
-            UserActionLogging.LogThreadAction("Get workflow job error", "Exception: " + e.getMessage());
+            UserActionLogging.LogAction("Get workflow job error", "Exception: " + e.getMessage());
             return null;
         }
 
-        UserActionLogging.LogThreadAction("Get workflow job error", "Completed successfully!");
+        UserActionLogging.LogAction("Get workflow job error", "Completed successfully!");
 
         return returnError;
     }

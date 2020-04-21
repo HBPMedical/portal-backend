@@ -5,20 +5,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import eu.hbp.mip.configuration.SecurityConfiguration;
-import org.springframework.beans.factory.annotation.Value;
 import eu.hbp.mip.model.User;
 import eu.hbp.mip.model.UserInfo;
 import eu.hbp.mip.repositories.UserRepository;
+import eu.hbp.mip.utils.UserActionLogging;
 import io.swagger.annotations.ApiParam;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
-import eu.hbp.mip.utils.UserActionLogging;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
@@ -45,8 +44,8 @@ public class SecurityApi {
     @RequestMapping(path = "/user", method = RequestMethod.GET)
     public Object user(Principal principal, HttpServletResponse response) {
         ObjectMapper mapper = new ObjectMapper();
-		
-		UserActionLogging.LogAction("get user from /user","");
+
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "get user from /user", "");
         try {
             String userJSON = mapper.writeValueAsString(userInfo.getUser());
             Cookie cookie = new Cookie("user", URLEncoder.encode(userJSON, "UTF-8"));
@@ -77,9 +76,9 @@ public class SecurityApi {
             user.setAgreeNDA(agreeNDA);
             userRepository.save(user);
         }
-		
-		UserActionLogging.LogAction("user agreeNDA","");
-		
+
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "user agreeNDA", "");
+
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
@@ -106,16 +105,15 @@ public class SecurityApi {
      */
 
     @RequestMapping(path = "/galaxy", method = RequestMethod.GET, produces = "application/json")
-	@PreAuthorize("hasRole('Data Manager')")
+    @PreAuthorize("hasRole('Data Manager')")
     @ResponseStatus(value = HttpStatus.OK)
-    public ResponseEntity getGalaxyConfiguration(){
+    public ResponseEntity getGalaxyConfiguration() {
         String stringEncoded = Base64.getEncoder().encodeToString((galaxyUsername + ":" + galaxyPassword).getBytes());
         JsonObject object = new JsonObject();
         object.addProperty("authorization", stringEncoded);
         object.addProperty("context", galaxyContext);
-		UserActionLogging.LogAction("get galaxy information","");
-		
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "get galaxy information", "");
+
         return ResponseEntity.ok(gson.toJson(object));
     }
-
 }

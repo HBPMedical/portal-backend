@@ -100,7 +100,7 @@ public class User {
         Pattern p;
         Matcher m;
 
-        p = Pattern.compile("preferred_username=([\\w ]+)");
+        p = Pattern.compile("preferred_username=([\\w- ]+)");
         m = p.matcher(userInfo);
         if (m.find()) {
             this.username = m.group(1);

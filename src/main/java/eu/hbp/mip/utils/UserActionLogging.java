@@ -11,7 +11,7 @@ public class UserActionLogging {
         LOGGER.info(" User : "
                 + userName
                 + " called endpoint: " + actionName
-                + " info: " + actionInfo);
+                + ", info: " + actionInfo);
     }
 
     // Usually, used from Threads because threads can't get userName.

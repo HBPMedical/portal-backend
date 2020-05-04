@@ -76,9 +76,9 @@ public class ClaimUtils {
                     userPathologyDatasets.add(dataset);
                 }else{
                     UserActionLogging.LogUserAction(username, "Load pathologies",
-                            "Dataset not added: '" + dataset.getCode());
+                            "Dataset not added: " + dataset.getCode());
                     UserActionLogging.LogUserAction(username, "Load pathologies",
-                            "Claim did not exist: '" + ClaimUtils.getDatasetClaim(dataset.getCode()));
+                            "Claim did not exist: " + ClaimUtils.getDatasetClaim(dataset.getCode()));
                 }
             }
 

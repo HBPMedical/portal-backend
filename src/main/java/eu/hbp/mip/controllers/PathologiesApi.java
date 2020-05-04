@@ -48,7 +48,7 @@ public class PathologiesApi {
 
     @RequestMapping(name = "/pathologies", method = RequestMethod.GET)
     public ResponseEntity<String> getPathologies(Authentication authentication) {
-        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Load all the pathologies", "");
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Load pathologies", "Running ...");
 
         // Load pathologies from file
         Resource resource = resourceLoader.getResource("file:/opt/portal/api/pathologies.json");

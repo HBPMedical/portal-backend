@@ -50,13 +50,13 @@ public class ClaimUtils {
                                                   List<PathologyDTO> allPathologies) {
         // --- Providing only the allowed pathologies/datasets to the user  ---
         UserActionLogging.LogUserAction(username,
-                "Load all the pathologies", "Filter out the unauthorised datasets.");
+                "Load pathologies", "Filter out the unauthorised datasets.");
 
         List<String> userClaims = Arrays.asList(authorities.toString().toLowerCase()
                 .replaceAll("[\\s+\\]\\[]", "").split(","));
 
         UserActionLogging.LogUserAction(username,
-                "Load all the pathologies", "User Claims: " + userClaims);
+                "Load pathologies", "User Claims: " + userClaims);
 
         // If the "dataset_all" claim exists then return everything
         if (userClaims.contains(ClaimUtils.allDatasetsAllowedClaim())) {
@@ -66,18 +66,26 @@ public class ClaimUtils {
         List<PathologyDTO> userPathologies = new ArrayList<>();
         for (PathologyDTO curPathology : allPathologies) {
             UserActionLogging.LogUserAction(username,
-                    "Load all the pathologies", "Pathology: " + curPathology.getCode());
+                    "Load pathologies", "Pathology: " + curPathology.getCode());
 
             List<PathologyDTO.PathologyDatasetDTO> userPathologyDatasets = new ArrayList<PathologyDTO.PathologyDatasetDTO>();
             for (PathologyDTO.PathologyDatasetDTO dataset : curPathology.getDatasets()) {
                 if (userClaims.contains(ClaimUtils.getDatasetClaim(dataset.getCode()))) {
+                    UserActionLogging.LogUserAction(username, "Load pathologies",
+                            "Added dataset: " + dataset.getCode());
                     userPathologyDatasets.add(dataset);
+                }else{
+                    UserActionLogging.LogUserAction(username, "Load pathologies",
+                            "Dataset not added: '" + dataset.getCode());
+                    UserActionLogging.LogUserAction(username, "Load pathologies",
+                            "Claim did not exist: '" + ClaimUtils.getDatasetClaim(dataset.getCode()));
                 }
             }
 
             if (userPathologyDatasets.size() > 0) {
-                UserActionLogging.LogUserAction(username, "Load all the pathologies",
-                        "Added pathology '" + curPathology.getLabel() + " with datasets: '" + userPathologyDatasets + "'");
+                UserActionLogging.LogUserAction(username, "Load pathologies",
+                        "Added pathology '" + curPathology.getLabel()
+                                + " with datasets: '" + userPathologyDatasets + "'");
 
                 PathologyDTO userPathology = new PathologyDTO();
                 userPathology.setCode(curPathology.getCode());

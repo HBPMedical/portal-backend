@@ -66,7 +66,7 @@ public class ClaimUtils {
         List<PathologyDTO> userPathologies = new ArrayList<>();
         for (PathologyDTO curPathology : allPathologies) {
             UserActionLogging.LogUserAction(username,
-                    "Load pathologies", "Pathology: " + curPathology.getCode());
+                    "Load pathologies", "Checking pathology: " + curPathology.getCode());
 
             List<PathologyDTO.PathologyDatasetDTO> userPathologyDatasets = new ArrayList<PathologyDTO.PathologyDatasetDTO>();
             for (PathologyDTO.PathologyDatasetDTO dataset : curPathology.getDatasets()) {
@@ -85,7 +85,7 @@ public class ClaimUtils {
             if (userPathologyDatasets.size() > 0) {
                 UserActionLogging.LogUserAction(username, "Load pathologies",
                         "Added pathology '" + curPathology.getLabel()
-                                + " with datasets: '" + userPathologyDatasets + "'");
+                                + "' with datasets: '" + userPathologyDatasets + "'");
 
                 PathologyDTO userPathology = new PathologyDTO();
                 userPathology.setCode(curPathology.getCode());

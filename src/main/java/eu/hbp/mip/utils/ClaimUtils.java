@@ -19,7 +19,7 @@ public class ClaimUtils {
     }
 
     public static String getDatasetClaim(String datasetCode) {
-        return "dataset_" + datasetCode;
+        return "dataset_" + datasetCode.toLowerCase();
     }
 
     public static boolean userHasDatasetsAuthorization(String username, Collection<? extends GrantedAuthority> authorities,

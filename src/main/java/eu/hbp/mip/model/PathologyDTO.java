@@ -72,6 +72,12 @@ public class PathologyDTO {
         public void setLabel(String label) {
             this.label = label;
         }
+
+        public String toString(){ return code;}
+    }
+
+    public String toString(){
+        return code;
     }
 
 }

@@ -115,39 +115,25 @@ public class ExperimentApi {
         UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run algorithm", "Running the algorithm...");
 
         if(authenticationIsEnabled) {
-            // --- Validating proper access rights on the datasets  ---
-            List<String> userClaims = Arrays.asList(authentication.getAuthorities().toString().toLowerCase()
-                    .replaceAll("[\\s+\\]\\[]", "").split(","));
-            UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "User Claims", userClaims.toString());
-
-            // Don't check for dataset claims if "super" claim exists allowing everything
-            if (!userClaims.contains(ClaimUtils.allDatasetsAllowedClaim())) {
-                // Getting the dataset from the experiment parameters
-                String experimentDatasets = null;
-                for (AlgorithmExecutionParamDTO parameter : experimentExecutionDTO.getAlgorithms().get(0).getParameters()) {
-                    if (parameter.getName().equals("dataset")) {
-                        experimentDatasets = parameter.getValue();
-                        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run algorithm", "Found the dataset parameter!");
-                        break;
-                    }
+            // Getting the dataset from the experiment parameters
+            String experimentDatasets = null;
+            for (ExperimentExecutionDTO.AlgorithmExecutionDTO.AlgorithmExecutionParamDTO parameter : experimentExecutionDTO.getAlgorithms().get(0).getParameters()) {
+                if (parameter.getName().equals("dataset")) {
+                    experimentDatasets = parameter.getValue();
+                    UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run algorithm", "Got the dataset parameter!");
+                    break;
                 }
+            }
 
-                if (experimentDatasets == null || experimentDatasets.equals("")) {
-                    UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run algorithm",
-                            "A dataset should be specified when running an algorithm.");
-                    return ResponseEntity.badRequest().body("A dataset should be specified when running an algorithm.");
-                }
-
-                for (String dataset : experimentDatasets.split(",")) {
-                    String datasetRole = ClaimUtils.getDatasetClaim(dataset);
-                    if (!userClaims.contains(datasetRole.toLowerCase())) {
-                        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run algorithm",
-                                "You are not allowed to use dataset: " + dataset);
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not allowed to use dataset: " + dataset);
-                    }
-                }
+            if (experimentDatasets == null || experimentDatasets.equals("")) {
                 UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run algorithm",
-                        "User is authorized to use the datasets: " + experimentDatasets);
+                        "A dataset should be specified to run an algorithm.");
+                return ResponseEntity.badRequest().body("Please provide at least one dataset to run the algorithm.");
+            }
+
+            // --- Validating proper access rights on the datasets  ---
+            if (!ClaimUtils.userHasDatasetsAuthorization(userInfo.getUser().getUsername(), authentication.getAuthorities(), experimentDatasets)){
+                return ResponseEntity.badRequest().body("You are not authorized to use these datasets.");
             }
         }
 

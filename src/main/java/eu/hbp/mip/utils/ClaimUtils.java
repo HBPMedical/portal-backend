@@ -65,20 +65,12 @@ public class ClaimUtils {
 
         List<PathologyDTO> userPathologies = new ArrayList<>();
         for (PathologyDTO curPathology : allPathologies) {
-            UserActionLogging.LogUserAction(username,
-                    "Load pathologies", "Checking pathology: " + curPathology.getCode());
-
             List<PathologyDTO.PathologyDatasetDTO> userPathologyDatasets = new ArrayList<PathologyDTO.PathologyDatasetDTO>();
             for (PathologyDTO.PathologyDatasetDTO dataset : curPathology.getDatasets()) {
                 if (userClaims.contains(ClaimUtils.getDatasetClaim(dataset.getCode()))) {
                     UserActionLogging.LogUserAction(username, "Load pathologies",
                             "Added dataset: " + dataset.getCode());
                     userPathologyDatasets.add(dataset);
-                }else{
-                    UserActionLogging.LogUserAction(username, "Load pathologies",
-                            "Dataset not added: " + dataset.getCode());
-                    UserActionLogging.LogUserAction(username, "Load pathologies",
-                            "Claim did not exist: " + ClaimUtils.getDatasetClaim(dataset.getCode()));
                 }
             }
 

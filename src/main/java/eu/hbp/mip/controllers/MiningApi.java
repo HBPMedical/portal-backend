@@ -84,6 +84,24 @@ public class MiningApi {
         }
     }
 
+    @ApiOperation(value = "Create a descriptive statistic on Exareme", response = String.class)
+    @RequestMapping(value = "/descriptive_stats_v2", method = RequestMethod.POST)
+    public ResponseEntity runExaremeDescriptiveStatsV2(@RequestBody List<HashMap<String, String>> queryList) {
+        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run descriptive stats v2", "");
+
+        String query = gson.toJson(queryList);
+        String url = queryExaremeUrl + "/" + "DESCRIPTIVE_STATS_v2";
+
+        try {
+            StringBuilder results = new StringBuilder();
+            int code = HTTPUtil.sendPost(url, query, results);
+
+            return ResponseEntity.ok(gson.toJson(results.toString()));
+        } catch (IOException e) {
+            return new ResponseEntity<>("Not found", HttpStatus.BAD_REQUEST);
+        }
+    }
+
     @ApiOperation(value = "Check if a formula is valid", response = String.class)
     @RequestMapping(value = "/checkFormula", method = RequestMethod.POST)
     public ResponseEntity checkFormulaValidity(String formula) {

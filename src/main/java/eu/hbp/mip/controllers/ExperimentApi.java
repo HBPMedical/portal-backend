@@ -118,7 +118,7 @@ public class ExperimentApi {
             // Getting the dataset from the experiment parameters
             String experimentDatasets = null;
             for (ExperimentExecutionDTO.AlgorithmExecutionDTO.AlgorithmExecutionParamDTO parameter : experimentExecutionDTO.getAlgorithms().get(0).getParameters()) {
-                if (parameter.getName().equals("dataset")) {
+                if (parameter.getLabel().equals("dataset")) {
                     experimentDatasets = parameter.getValue();
                     UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run algorithm", "Got the dataset parameter!");
                     break;

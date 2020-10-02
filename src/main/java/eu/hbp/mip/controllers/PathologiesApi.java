@@ -10,9 +10,11 @@ import eu.hbp.mip.model.PathologyDTO;
 import eu.hbp.mip.model.UserInfo;
 import eu.hbp.mip.utils.ClaimUtils;
 import eu.hbp.mip.utils.CustomResourceLoader;
+import eu.hbp.mip.utils.InputStreamConverter;
 import eu.hbp.mip.utils.UserActionLogging;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
@@ -21,12 +23,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import static eu.hbp.mip.utils.ErrorMessages.pathologiesCouldNotBeLoaded;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
@@ -54,10 +54,10 @@ public class PathologiesApi {
         Resource resource = resourceLoader.getResource("file:/opt/portal/api/pathologies.json");
         List<PathologyDTO> allPathologies;
         try {
-            allPathologies = gson.fromJson(convertInputStreamToString(resource.getInputStream()), new TypeToken<List<PathologyDTO>>() {
+            allPathologies = gson.fromJson(InputStreamConverter.convertInputStreamToString(resource.getInputStream()), new TypeToken<List<PathologyDTO>>() {
             }.getType());
         } catch (IOException e) {
-            return ResponseEntity.badRequest().body("The pathologies.json file could not be read.");
+            return ResponseEntity.badRequest().body(pathologiesCouldNotBeLoaded);
         }
 
         // If authentication is disabled return everything
@@ -67,19 +67,5 @@ public class PathologiesApi {
 
         return ResponseEntity.ok().body(ClaimUtils.getAuthorizedPathologies(
                 userInfo.getUser().getUsername(), authentication.getAuthorities(), allPathologies));
-    }
-
-    // Pure Java
-    private static String convertInputStreamToString(InputStream inputStream) throws IOException {
-
-        ByteArrayOutputStream result = new ByteArrayOutputStream();
-        byte[] buffer = new byte[1024];
-        int length;
-        while ((length = inputStream.read(buffer)) != -1) {
-            result.write(buffer, 0, length);
-        }
-
-        return result.toString(StandardCharsets.UTF_8.name());
-
     }
 }

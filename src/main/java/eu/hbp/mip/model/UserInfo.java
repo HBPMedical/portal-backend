@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 import javax.inject.Named;
 
 @Component
-@Scope(value = "session", proxyMode=ScopedProxyMode.TARGET_CLASS)
+@Scope(value = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
 @Named("userInfo")
 public class UserInfo {
 

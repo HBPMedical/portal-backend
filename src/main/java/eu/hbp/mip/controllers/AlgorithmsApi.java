@@ -5,17 +5,20 @@ import com.github.jmchilton.blend4j.galaxy.GalaxyInstanceFactory;
 import com.github.jmchilton.blend4j.galaxy.WorkflowsClient;
 import com.github.jmchilton.blend4j.galaxy.beans.Workflow;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import eu.hbp.mip.controllers.galaxy.retrofit.RetroFitGalaxyClients;
 import eu.hbp.mip.controllers.galaxy.retrofit.RetrofitClientInstance;
 import eu.hbp.mip.model.AlgorithmDTO;
 import eu.hbp.mip.model.UserInfo;
 import eu.hbp.mip.model.galaxy.WorkflowDTO;
+import eu.hbp.mip.utils.CustomResourceLoader;
 import eu.hbp.mip.utils.HTTPUtil;
 import eu.hbp.mip.utils.UserActionLogging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -28,6 +31,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import static eu.hbp.mip.utils.ErrorMessages.disabledAlgorithmsCouldNotBeLoaded;
+import static eu.hbp.mip.utils.InputStreamConverter.convertInputStreamToString;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
@@ -54,10 +59,10 @@ public class AlgorithmsApi {
     public ResponseEntity<List<AlgorithmDTO>> getAlgorithms() {
         UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "List all algorithms", "");
 
-        List<AlgorithmDTO> exaremeAlgorithms = getExaremeAlgorithms();
-        List<AlgorithmDTO> galaxyAlgorithms = getGalaxyWorkflows();
+        LinkedList<AlgorithmDTO> exaremeAlgorithms = getExaremeAlgorithms();
+        LinkedList<AlgorithmDTO> galaxyAlgorithms = getGalaxyWorkflows();
 
-        List<AlgorithmDTO> algorithms = new LinkedList<>();
+        LinkedList<AlgorithmDTO> algorithms = new LinkedList<>();
         if (exaremeAlgorithms != null) {
             algorithms.addAll(exaremeAlgorithms);
         } else {
@@ -71,7 +76,23 @@ public class AlgorithmsApi {
                     "Getting galaxy workflows failed and returned null");
         }
 
-        return ResponseEntity.ok(algorithms);
+        List<String> disabledAlgorithms = new ArrayList<>();
+        try {
+            disabledAlgorithms = getDisabledAlgorithms();
+        } catch (IOException e) {
+            UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "List all algorithms",
+                    disabledAlgorithmsCouldNotBeLoaded);
+        }
+
+        // Remove any disabled algorithm
+        LinkedList<AlgorithmDTO> allowedAlgorithms = new LinkedList<>();
+        for (AlgorithmDTO algorithm : algorithms) {
+            if (!disabledAlgorithms.contains(algorithm.getName())) {
+                allowedAlgorithms.add(algorithm);
+            }
+        }
+
+        return ResponseEntity.ok(allowedAlgorithms);
     }
 
     /**
@@ -79,16 +100,20 @@ public class AlgorithmsApi {
      *
      * @return a list of AlgorithmDTOs or null if something fails
      */
-    public List<AlgorithmDTO> getExaremeAlgorithms() {
+    public LinkedList<AlgorithmDTO> getExaremeAlgorithms() {
         UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "List exareme algorithms", "");
 
-        List<AlgorithmDTO> algorithms = new LinkedList<>();
+        LinkedList<AlgorithmDTO> algorithms = new LinkedList<>();
         // Get exareme algorithms
         try {
             StringBuilder response = new StringBuilder();
             HTTPUtil.sendGet(exaremeAlgorithmsUrl, response);
 
-            algorithms = gson.fromJson(response.toString(), algorithms.getClass());
+            algorithms = gson.fromJson(
+                    response.toString(),
+                    new TypeToken<LinkedList<AlgorithmDTO>>() {
+                    }.getType()
+            );
         } catch (IOException e) {
             UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "List exareme algorithms", "An exception occurred: " + e.getMessage());
             return null;
@@ -104,10 +129,10 @@ public class AlgorithmsApi {
      *
      * @return a list of AlgorithmDTOs or null if something fails
      */
-    public List<AlgorithmDTO> getGalaxyWorkflows() {
+    public LinkedList<AlgorithmDTO> getGalaxyWorkflows() {
         UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "List Galaxy workflows", "");
 
-        List<Workflow> workflowList = null;
+        List<Workflow> workflowList;
         try {
             // Get all the workflows with the galaxy client
             final GalaxyInstance instance = GalaxyInstanceFactory.get(galaxyUrl, galaxyApiKey);
@@ -146,7 +171,7 @@ public class AlgorithmsApi {
         UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "List Galaxy workflows", "Workflows fetched: " + workflows.size());
 
         // Convert the workflows to algorithms
-        List<AlgorithmDTO> algorithms = new LinkedList<>();
+        LinkedList<AlgorithmDTO> algorithms = new LinkedList<>();
         for (WorkflowDTO workflow : workflows) {
             UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "List Galaxy workflows", "Converting workflow: " + workflow);
 
@@ -158,5 +183,26 @@ public class AlgorithmsApi {
 
         UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "List Galaxy workflows", "Completed!");
         return algorithms;
+    }
+
+    @Autowired
+    private CustomResourceLoader resourceLoader;
+
+    /**
+     * Fetches the disabled algorithms from a .json file
+     *
+     * @return a list with their names
+     * @throws IOException when the file could not be loaded
+     */
+    List<String> getDisabledAlgorithms() throws IOException {
+
+        Resource resource = resourceLoader.getResource("file:/opt/portal/api/disabledAlgorithms.json");
+
+        List<String> response = gson.fromJson(convertInputStreamToString(
+                resource.getInputStream()),
+                new TypeToken<List<String>>() {
+                }.getType()
+        );
+        return response;
     }
 }

@@ -103,6 +103,11 @@ public class ExperimentApi {
             return new ResponseEntity<>("Not found", HttpStatus.NOT_FOUND);
         }
 
+        if (!experiment.isShared() && experiment.getCreatedBy().getUsername().compareTo(userInfo.getUser().getUsername()) != 0) {
+
+            return new ResponseEntity<>("You have no access to the experiment", HttpStatus.UNAUTHORIZED);
+        }
+
         UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Get an experiment ", " uuid : " + uuid);
 
         return new ResponseEntity<>(gsonOnlyExposed.toJson(experiment.jsonify()), HttpStatus.OK);

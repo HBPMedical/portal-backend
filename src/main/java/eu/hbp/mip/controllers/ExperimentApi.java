@@ -100,7 +100,13 @@ public class ExperimentApi {
         experiment = experimentRepository.findOne(experimentUuid);
 
         if (experiment == null) {
+            UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Get Experiment", "Experiment Not found.");
             return new ResponseEntity<>("Not found", HttpStatus.NOT_FOUND);
+        }
+
+        if (!experiment.isShared() && experiment.getCreatedBy().getUsername().compareTo(userInfo.getUser().getUsername()) != 0) {
+            UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Get Experiment", "Accessing Experiment is unauthorized.");
+            return new ResponseEntity<>("You don't have access to the experiment.", HttpStatus.UNAUTHORIZED);
         }
 
         UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Get an experiment ", " uuid : " + uuid);
@@ -114,7 +120,7 @@ public class ExperimentApi {
     public ResponseEntity<String> runExperiment(Authentication authentication, @RequestBody ExperimentExecutionDTO experimentExecutionDTO) {
         UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Run algorithm", "Running the algorithm...");
 
-        if(authenticationIsEnabled) {
+        if (authenticationIsEnabled) {
             // Getting the dataset from the experiment parameters
             String experimentDatasets = null;
             for (ExperimentExecutionDTO.AlgorithmExecutionDTO.AlgorithmExecutionParamDTO parameter : experimentExecutionDTO.getAlgorithms().get(0).getParameters()) {
@@ -132,7 +138,7 @@ public class ExperimentApi {
             }
 
             // --- Validating proper access rights on the datasets  ---
-            if (!ClaimUtils.userHasDatasetsAuthorization(userInfo.getUser().getUsername(), authentication.getAuthorities(), experimentDatasets)){
+            if (!ClaimUtils.userHasDatasetsAuthorization(userInfo.getUser().getUsername(), authentication.getAuthorities(), experimentDatasets)) {
                 return ResponseEntity.badRequest().body("You are not authorized to use these datasets.");
             }
         }

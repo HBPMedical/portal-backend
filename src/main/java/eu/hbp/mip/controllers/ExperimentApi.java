@@ -104,7 +104,6 @@ public class ExperimentApi {
         }
 
         if (!experiment.isShared() && experiment.getCreatedBy().getUsername().compareTo(userInfo.getUser().getUsername()) != 0) {
-
             return new ResponseEntity<>("You have no access to the experiment", HttpStatus.UNAUTHORIZED);
         }
 

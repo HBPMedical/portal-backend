@@ -3,11 +3,9 @@ package eu.hbp.mip.utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.UUID;
+public class Logging {
 
-public class ActionLogging {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(ActionLogging.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Logging.class);
     private static Integer maxEndpointLen = 5;
     private static Integer maxInfoLen = 5;
 

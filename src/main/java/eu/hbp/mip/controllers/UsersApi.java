@@ -7,7 +7,7 @@ package eu.hbp.mip.controllers;
 import eu.hbp.mip.model.User;
 import eu.hbp.mip.model.UserInfo;
 import eu.hbp.mip.repositories.UserRepository;
-import eu.hbp.mip.utils.ActionLogging;
+import eu.hbp.mip.utils.Logging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -36,7 +36,7 @@ public class UsersApi {
     public ResponseEntity<User> getAUser(
             @ApiParam(value = "username", required = true) @PathVariable("username") String username
     ) {
-        ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /users/{username}", "Loaded a user with username : " + userInfo.getUser().getUsername());
+        Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /users/{username}", "Loaded a user with username : " + userInfo.getUser().getUsername());
 
         return ResponseEntity.ok(userRepository.findOne(username));
     }

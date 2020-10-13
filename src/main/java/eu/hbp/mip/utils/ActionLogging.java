@@ -12,8 +12,8 @@ public class ActionLogging {
     private static Integer maxInfoLen = 5;
 
     public static void LogUserAction(String userName, String endpoint, String actionInfo) {
-        maxEndpointLen = (maxEndpointLen <  userName.length() ? userName.length() : maxEndpointLen);
-        maxInfoLen = (maxInfoLen <  endpoint.length() ? endpoint.length() :  maxInfoLen);
+        maxEndpointLen = (maxEndpointLen < userName.length() ? userName.length() : maxEndpointLen);
+        maxInfoLen = (maxInfoLen < endpoint.length() ? endpoint.length() : maxInfoLen);
         String endpointSpacing = String.format("%" + (maxEndpointLen - userName.length() + 2) + "s", "");
         String infoSpacing = String.format("%" + (maxInfoLen - endpoint.length() + 2) + "s", "");
         LOGGER.info(" User -> " + userName
@@ -25,7 +25,7 @@ public class ActionLogging {
 
     // Used from Threads because threads can't get userName.
     public static void LogExperimentAction(String experimentName, String actionInfo) {
-        LOGGER.info(" Experiment -> "+ experimentName
+        LOGGER.info(" Experiment -> " + experimentName
                 + "  ,  Info -> " + actionInfo);
     }
 

@@ -28,20 +28,20 @@ import java.time.LocalDateTime;
 @Api(value = "/protected", description = "the protected files API")
 public class FilesAPI {
 
-    
+
     @Autowired
     private UserInfo userInfo;
 
     @ApiOperation(value = "Get protected files")
-    @RequestMapping(value = "/{filename:.+}" , method = RequestMethod.GET)
+    @RequestMapping(value = "/{filename:.+}", method = RequestMethod.GET)
     public ResponseEntity<Void> getProtectedFile(
             @ApiParam(value = "filename", required = true) @PathVariable("filename") String filename
     ) {
         User user = userInfo.getUser();
-        ActionLogging.LogUserAction(user.getUsername() , "(GET) /protected/{filename:.+}", "Loading protected file with filename : " + filename);
+        ActionLogging.LogUserAction(user.getUsername(), "(GET) /protected/{filename:.+}", "Loading protected file with filename : " + filename);
 
         String filepath = "/protected/" + filename;
-        ActionLogging.LogUserAction(user.getUsername() , "(GET) /protected/{filename:.+}" + filepath, "Downloaded protected file");
+        ActionLogging.LogUserAction(user.getUsername(), "(GET) /protected/{filename:.+}" + filepath, "Downloaded protected file");
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Accel-Redirect", filepath);

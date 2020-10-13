@@ -58,8 +58,8 @@ public class Article {
 
     public Article() {
         /*
-        *  Empty constructor is needed by Hibernate
-        */
+         *  Empty constructor is needed by Hibernate
+         */
         title = "";
     }
 

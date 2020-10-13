@@ -68,14 +68,14 @@ public class ClaimUtils {
             List<PathologyDTO.PathologyDatasetDTO> userPathologyDatasets = new ArrayList<PathologyDTO.PathologyDatasetDTO>();
             for (PathologyDTO.PathologyDatasetDTO dataset : curPathology.getDatasets()) {
                 if (userClaims.contains(ClaimUtils.getDatasetClaim(dataset.getCode()))) {
-                    ActionLogging.LogUserAction(username , "(GET) /pathologies",
+                    ActionLogging.LogUserAction(username, "(GET) /pathologies",
                             "Added dataset: " + dataset.getCode());
                     userPathologyDatasets.add(dataset);
                 }
             }
 
             if (userPathologyDatasets.size() > 0) {
-                ActionLogging.LogUserAction(username , "(GET) /pathologies",
+                ActionLogging.LogUserAction(username, "(GET) /pathologies",
                         "Added pathology '" + curPathology.getLabel()
                                 + "' with datasets: '" + userPathologyDatasets + "'");
 

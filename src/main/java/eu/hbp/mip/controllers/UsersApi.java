@@ -36,7 +36,7 @@ public class UsersApi {
     public ResponseEntity<User> getAUser(
             @ApiParam(value = "username", required = true) @PathVariable("username") String username
     ) {
-        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /users/{username}", "Loaded a user with username : " + userInfo.getUser().getUsername());
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /users/{username}", "Loaded a user with username : " + userInfo.getUser().getUsername());
 
         return ResponseEntity.ok(userRepository.findOne(username));
     }

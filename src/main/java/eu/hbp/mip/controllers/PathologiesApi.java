@@ -48,7 +48,7 @@ public class PathologiesApi {
 
     @RequestMapping(name = "/pathologies", method = RequestMethod.GET)
     public ResponseEntity<String> getPathologies(Authentication authentication) {
-        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /pathologies", "Loading pathologies ...");
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /pathologies", "Loading pathologies ...");
 
         // Load pathologies from file
         Resource resource = resourceLoader.getResource("file:/opt/portal/api/pathologies.json");
@@ -57,17 +57,17 @@ public class PathologiesApi {
             allPathologies = gson.fromJson(InputStreamConverter.convertInputStreamToString(resource.getInputStream()), new TypeToken<List<PathologyDTO>>() {
             }.getType());
         } catch (IOException e) {
-            ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /pathologies", "Unable to load pathologies");
+            ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /pathologies", "Unable to load pathologies");
             return ResponseEntity.badRequest().body(pathologiesCouldNotBeLoaded);
         }
 
         // If authentication is disabled return everything
         if (!authenticationIsEnabled) {
-            ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /pathologies", "Successfully loaded "+ allPathologies.size() +" pathologies");
+            ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /pathologies", "Successfully loaded " + allPathologies.size() + " pathologies");
             return ResponseEntity.ok().body(gson.toJson(allPathologies));
         }
 
-        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /pathologies", "Successfully loaded all authorized pathologies");
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /pathologies", "Successfully loaded all authorized pathologies");
         return ResponseEntity.ok().body(ClaimUtils.getAuthorizedPathologies(
                 userInfo.getUser().getUsername(), authentication.getAuthorities(), allPathologies));
     }

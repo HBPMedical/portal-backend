@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 @Table(name = "`user`")
 @ApiModel
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(value = { "appsVotes" })
+@JsonIgnoreProperties(value = {"appsVotes"})
 public class User {
 
     @Id
@@ -86,13 +86,14 @@ public class User {
 
     public User() {
         /*
-        *  Empty constructor is needed by Hibernate
-        */
+         *  Empty constructor is needed by Hibernate
+         */
     }
 
 
     /**
      * Create a user using OpenID user profile
+     *
      * @param userInfo info from OpenID UserInfo endpoint
      */
     public User(String userInfo) {

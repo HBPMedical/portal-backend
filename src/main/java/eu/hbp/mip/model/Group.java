@@ -15,7 +15,7 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "`group`")
 @ApiModel
-@JsonIgnoreProperties(value = { "parent" })
+@JsonIgnoreProperties(value = {"parent"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Group {
 
@@ -25,8 +25,8 @@ public class Group {
 
     public Group() {
         /*
-        *  Empty constructor is needed by Hibernate
-        */
+         *  Empty constructor is needed by Hibernate
+         */
     }
 
 

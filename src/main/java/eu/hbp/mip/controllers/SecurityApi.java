@@ -45,7 +45,7 @@ public class SecurityApi {
     public Object user(Principal principal, HttpServletResponse response) {
         ObjectMapper mapper = new ObjectMapper();
 
-        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /user", "Loading user : " + userInfo.getUser().getUsername());
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /user", "Loading user : " + userInfo.getUser().getUsername());
         try {
             String userJSON = mapper.writeValueAsString(userInfo.getUser());
             Cookie cookie = new Cookie("user", URLEncoder.encode(userJSON, "UTF-8"));
@@ -77,7 +77,7 @@ public class SecurityApi {
             userRepository.save(user);
         }
 
-        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(POST) /user", "User has agreed on the NDA");
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(POST) /user", "User has agreed on the NDA");
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -86,7 +86,7 @@ public class SecurityApi {
     @ConditionalOnExpression("${hbp.authentication.enabled:0}")
     public void noLogin(HttpServletResponse httpServletResponse) throws IOException {
         userInfo.setFakeAuth(true);
-        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /user/login/hbp", "Unathorized login.");
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /user/login/hbp", "Unathorized login.");
 
         httpServletResponse.sendRedirect(securityConfiguration.getFrontendRedirectAfterLogin());
     }
@@ -114,7 +114,7 @@ public class SecurityApi {
         JsonObject object = new JsonObject();
         object.addProperty("authorization", stringEncoded);
         object.addProperty("context", galaxyContext);
-        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /user/galaxy", "Successfully Loaded galaxy information.");
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /user/galaxy", "Successfully Loaded galaxy information.");
 
         return ResponseEntity.ok(gson.toJson(object));
     }

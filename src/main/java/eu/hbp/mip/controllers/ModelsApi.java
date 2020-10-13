@@ -53,28 +53,22 @@ public class ModelsApi {
     public ResponseEntity<List> getModels(
             @ApiParam(value = "Only ask own models") @RequestParam(value = "own", required = false) Boolean own,
             @ApiParam(value = "Only ask published models") @RequestParam(value = "valid", required = false) Boolean valid
-    )  {
-        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /models","Loading models ...");
+    ) {
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /models", "Loading models ...");
 
         User user = userInfo.getUser();
 
         Iterable<Model> models;
-        if(own != null && own)
-        {
+        if (own != null && own) {
             models = modelRepository.findByCreatedByOrderByCreatedAt(user);
-        }
-        else
-        {
+        } else {
             models = modelRepository.findByValidOrCreatedByOrderByCreatedAt(true, user);
         }
 
-        if(valid != null && models != null)
-        {
-            for (Iterator<Model> i = models.iterator(); i.hasNext(); )
-            {
+        if (valid != null && models != null) {
+            for (Iterator<Model> i = models.iterator(); i.hasNext(); ) {
                 Model m = i.next();
-                if(valid != m.getValid())
-                {
+                if (valid != m.getValid()) {
                     i.remove();
                 }
             }
@@ -86,27 +80,26 @@ public class ModelsApi {
             m.setDataset(datasetRepository.findOne(m.getDataset().getCode()));
             modelsList.add(m);
         }
-        
-        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /models","Successfully loaded " + modelsList.size() + " models.");
+
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /models", "Successfully loaded " + modelsList.size() + " models.");
 
         return ResponseEntity.ok(modelsList);
     }
 
 
     @ApiOperation(value = "Create a model", response = Model.class)
-    @ApiResponses(value = { @ApiResponse(code = 201, message = "Model created") })
+    @ApiResponses(value = {@ApiResponse(code = 201, message = "Model created")})
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<Model> addAModel(
             @RequestBody @ApiParam(value = "Model to create", required = true) Model model
-    )  {
+    ) {
         User user = userInfo.getUser();
-        ActionLogging.LogUserAction(user.getUsername() , "(POST) /models","Creating a model");
+        ActionLogging.LogUserAction(user.getUsername(), "(POST) /models", "Creating a model");
 
         model.setTitle(model.getConfig().getTitle().get("text"));
         model.setCreatedBy(user);
         model.setCreatedAt(new Date());
-        if(model.getValid() == null)
-        {
+        if (model.getValid() == null) {
             model.setValid(false);
         }
 
@@ -120,7 +113,7 @@ public class ModelsApi {
         saveVariables(model.getQuery().getVariables());
         saveVariables(model.getQuery().getCovariables());
         saveVariables(model.getQuery().getGrouping());
-	saveVariables(model.getQuery().getTrainingDatasets());
+        saveVariables(model.getQuery().getTrainingDatasets());
 
         configRepository.save(model.getConfig());
         queryRepository.save(model.getQuery());
@@ -129,14 +122,13 @@ public class ModelsApi {
         }
         modelRepository.save(model);
 
-        ActionLogging.LogUserAction(user.getUsername() , "(POST) /models","Created model with id : " + model.getSlug()+ ", model.config and model.query");
+        ActionLogging.LogUserAction(user.getUsername(), "(POST) /models", "Created model with id : " + model.getSlug() + ", model.config and model.query");
 
         return ResponseEntity.status(HttpStatus.CREATED).body(model);
     }
 
     private void saveVariables(@RequestBody @ApiParam(value = "Model to create", required = true) List<Variable> variables) {
-        for (Variable var : variables)
-        {
+        for (Variable var : variables) {
             variableRepository.save(var);
         }
     }
@@ -144,16 +136,13 @@ public class ModelsApi {
     private void ensureSlugUniqueness(@RequestBody @ApiParam(value = "Model to create", required = true) Model model) {
         String slug = createSlug(model.getTitle());
         boolean slugExists = true;
-        for(int i = 1; slugExists; i++)
-        {
+        for (int i = 1; slugExists; i++) {
             slugExists = modelRepository.exists(slug);
-            if(slugExists)
-            {
-                if(i > 1)
-                {
-                    slug = slug.substring(0, slug.length()-2);
+            if (slugExists) {
+                if (i > 1) {
+                    slug = slug.substring(0, slug.length() - 2);
                 }
-                slug += "-"+i;
+                slug += "-" + i;
             }
             model.setSlug(slug);
         }
@@ -172,15 +161,12 @@ public class ModelsApi {
 
     private void ensureTitleUniqueness(@RequestBody @ApiParam(value = "Model to create", required = true) Model model) {
         boolean titleExists = true;
-        for(int i = 1; titleExists; i++)
-        {
+        for (int i = 1; titleExists; i++) {
             String title = model.getTitle();
             titleExists = modelRepository.countByTitle(title) > 0;
-            if(titleExists)
-            {
-                if(i > 1)
-                {
-                    title = title.substring(0, title.length()-4);
+            if (titleExists) {
+                if (i > 1) {
+                    title = title.substring(0, title.length() - 4);
                 }
                 model.setTitle(title + " (" + i + ")");
             }
@@ -191,23 +177,21 @@ public class ModelsApi {
     @RequestMapping(value = "/{slug}", method = RequestMethod.GET)
     public ResponseEntity<Model> getAModel(
             @ApiParam(value = "slug", required = true) @PathVariable("slug") String slug
-    )  {
+    ) {
 
         User user = userInfo.getUser();
 
-        ActionLogging.LogUserAction(user.getUsername() , "(GET) /models/{slug}", "Loading model with id : " + slug);
+        ActionLogging.LogUserAction(user.getUsername(), "(GET) /models/{slug}", "Loading model with id : " + slug);
 
         Model model = modelRepository.findOne(slug);
-        if(model == null)
-        {
+        if (model == null) {
             //LOGGER.warn("Cannot find model : " + slug);
-            ActionLogging.LogUserAction(user.getUsername() , "(GET) /models/{slug}", "Model was not found");
+            ActionLogging.LogUserAction(user.getUsername(), "(GET) /models/{slug}", "Model was not found");
             return ResponseEntity.badRequest().body(null);
         }
 
-        if (!model.getValid() && !model.getCreatedBy().getUsername().equals(user.getUsername()))
-        {
-            ActionLogging.LogUserAction(user.getUsername() , "(GET) /models/{slug}", "You are not authorized to retrieve models. ");
+        if (!model.getValid() && !model.getCreatedBy().getUsername().equals(user.getUsername())) {
+            ActionLogging.LogUserAction(user.getUsername(), "(GET) /models/{slug}", "You are not authorized to retrieve models. ");
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
@@ -215,24 +199,23 @@ public class ModelsApi {
         Collection<String> yAxisVarsColl = new LinkedHashSet<>(yAxisVars);
         model.getConfig().setyAxisVariables(new LinkedList<>(yAxisVarsColl));
 
-        ActionLogging.LogUserAction(user.getUsername() , "(GET) /models/{slug}", "Loaded model with id : " + slug);
+        ActionLogging.LogUserAction(user.getUsername(), "(GET) /models/{slug}", "Loaded model with id : " + slug);
         return ResponseEntity.ok(model);
     }
 
 
     @ApiOperation(value = "Update a model", response = Void.class)
-    @ApiResponses(value = { @ApiResponse(code = 204, message = "Model updated") })
+    @ApiResponses(value = {@ApiResponse(code = 204, message = "Model updated")})
     @RequestMapping(value = "/{slug}", method = RequestMethod.PUT)
     public ResponseEntity<Void> updateAModel(
             @ApiParam(value = "slug", required = true) @PathVariable("slug") String slug,
             @RequestBody @ApiParam(value = "Model to update", required = true) Model model
-    )  {
+    ) {
         User user = userInfo.getUser();
-        ActionLogging.LogUserAction(user.getUsername() , "(PUT) /models/{slug}", "Updating model with id : "+ slug);
+        ActionLogging.LogUserAction(user.getUsername(), "(PUT) /models/{slug}", "Updating model with id : " + slug);
         Model oldModel = modelRepository.findOne(slug);
 
-        if(!user.getUsername().equals(oldModel.getCreatedBy().getUsername()))
-        {
+        if (!user.getUsername().equals(oldModel.getCreatedBy().getUsername())) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
@@ -242,10 +225,9 @@ public class ModelsApi {
         String newTitle = model.getTitle();
 
         // If title has been updated, ensure it is unique
-        if(!newTitle.equals(oldTitle)) {
+        if (!newTitle.equals(oldTitle)) {
             boolean newTitleExists = true;
-            for(int i = 1; newTitleExists && !newTitle.equals(oldTitle); i++)
-            {
+            for (int i = 1; newTitleExists && !newTitle.equals(oldTitle); i++) {
                 newTitle = model.getTitle();
                 newTitleExists = modelRepository.countByTitle(newTitle) > 0;
                 if (newTitleExists && !newTitle.equals(oldTitle)) {
@@ -271,7 +253,7 @@ public class ModelsApi {
         datasetRepository.save(model.getDataset());
         modelRepository.save(model);
 
-        ActionLogging.LogUserAction(user.getUsername() , "(PUT) /models/{slug}", "Updated model and saved/updated model.config and model.query");
+        ActionLogging.LogUserAction(user.getUsername(), "(PUT) /models/{slug}", "Updated model and saved/updated model.config and model.query");
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }

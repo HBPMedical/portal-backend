@@ -13,13 +13,11 @@ import org.slf4j.LoggerFactory;
 @SpringBootApplication
 public class MIPApplication {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(MIPApplication.class);
-	
+    private static final Logger LOGGER = LoggerFactory.getLogger(MIPApplication.class);
+
     public static void main(String[] args) {
         SpringApplication.run(MIPApplication.class, args);
     }
 
 
-
-	
 }

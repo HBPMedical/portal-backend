@@ -57,24 +57,24 @@ public class AlgorithmsApi {
     @ApiOperation(value = "List all algorithms", response = String.class)
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<AlgorithmDTO>> getAlgorithms() {
-        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /algorithms", "Executing...");
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms", "Executing...");
 
         LinkedList<AlgorithmDTO> exaremeAlgorithms = getExaremeAlgorithms();
-        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /algorithms", "Loaded "+ exaremeAlgorithms.size() +" exareme algorithms");
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms", "Loaded " + exaremeAlgorithms.size() + " exareme algorithms");
         LinkedList<AlgorithmDTO> galaxyAlgorithms = getGalaxyWorkflows();
-        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /algorithms", "Loaded "+ galaxyAlgorithms.size() +" galaxy algorithms");
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms", "Loaded " + galaxyAlgorithms.size() + " galaxy algorithms");
 
         LinkedList<AlgorithmDTO> algorithms = new LinkedList<>();
         if (exaremeAlgorithms != null) {
             algorithms.addAll(exaremeAlgorithms);
         } else {
-            ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /algorithms",
+            ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms",
                     "Getting exareme algorithms failed and returned null");
         }
         if (galaxyAlgorithms != null) {
             algorithms.addAll(galaxyAlgorithms);
         } else {
-            ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /algorithms",
+            ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms",
                     "Getting galaxy workflows failed and returned null");
         }
 
@@ -82,7 +82,7 @@ public class AlgorithmsApi {
         try {
             disabledAlgorithms = getDisabledAlgorithms();
         } catch (IOException e) {
-            ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /algorithms",
+            ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms",
                     disabledAlgorithmsCouldNotBeLoaded);
         }
 
@@ -93,8 +93,8 @@ public class AlgorithmsApi {
                 allowedAlgorithms.add(algorithm);
             }
         }
-        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /algorithms",
-                "Successfully listed "+ allowedAlgorithms.size() +" algorithms");
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms",
+                "Successfully listed " + allowedAlgorithms.size() + " algorithms");
         return ResponseEntity.ok(allowedAlgorithms);
     }
 
@@ -116,11 +116,11 @@ public class AlgorithmsApi {
                     }.getType()
             );
         } catch (IOException e) {
-            ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /algorithms", "An exception occurred: " + e.getMessage());
+            ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms", "An exception occurred: " + e.getMessage());
             return null;
         }
 
-        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /algorithms",
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms",
                 "Completed, returned " + algorithms.size() + " algorithms.");
         return algorithms;
     }
@@ -140,7 +140,7 @@ public class AlgorithmsApi {
 
             workflowList = new ArrayList<>(workflowsClient.getWorkflows());
         } catch (Exception e) {
-            ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /algorithms", "Error when calling list galaxy workflows: " + e.getMessage());
+            ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms", "Error when calling list galaxy workflows: " + e.getMessage());
 
             return null;
         }
@@ -160,28 +160,28 @@ public class AlgorithmsApi {
 
                 } else {     // Something unexpected happened
                     String msgErr = gson.toJson(response.errorBody());
-                    ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /algorithms", "Error Response: " + msgErr);
+                    ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms", "Error Response: " + msgErr);
                     return null;
                 }
             } catch (Exception e) {
-                ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /algorithms", "An exception occurred: " + e.getMessage());
+                ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms", "An exception occurred: " + e.getMessage());
                 return null;
             }
         }
-        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /algorithms", "Workflows fetched: " + workflows.size());
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms", "Workflows fetched: " + workflows.size());
 
         // Convert the workflows to algorithms
         LinkedList<AlgorithmDTO> algorithms = new LinkedList<>();
         for (WorkflowDTO workflow : workflows) {
-            ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /algorithms", "Converting workflow: " + workflow);
+            ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms", "Converting workflow: " + workflow);
 
             algorithms.add(workflow.convertToAlgorithmDTO());
 
-            ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /algorithms",
+            ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms",
                     "Converted algorithm: " + algorithms.get(algorithms.size() - 1));
         }
 
-        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /algorithms", "Completed!");
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms", "Completed!");
         return algorithms;
     }
 

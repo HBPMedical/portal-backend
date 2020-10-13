@@ -1,4 +1,5 @@
 package eu.hbp.mip.controllers;
+
 import eu.hbp.mip.utils.HTTPUtil;
 
 import com.google.gson.Gson;
@@ -36,7 +37,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
  * Created by mirco on 06.01.17.
  */
 @RestController
-@RequestMapping(value = "/mining", produces = { APPLICATION_JSON_VALUE })
+@RequestMapping(value = "/mining", produces = {APPLICATION_JSON_VALUE})
 @Api(value = "/mining", description = "the mining API")
 public class MiningApi {
 
@@ -51,7 +52,7 @@ public class MiningApi {
     @ApiOperation(value = "Create a histogram on Exareme", response = String.class)
     @RequestMapping(value = "/histograms", method = RequestMethod.POST)
     public ResponseEntity runExaremeHistograms(@RequestBody List<HashMap<String, String>> queryList) {
-        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(POST) /mining/histogram", "Executing histogram...");
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(POST) /mining/histogram", "Executing histogram...");
 
         String query = gson.toJson(queryList);
         String url = queryExaremeUrl + "/" + "MULTIPLE_HISTOGRAMS";
@@ -60,10 +61,10 @@ public class MiningApi {
             StringBuilder results = new StringBuilder();
             int code = HTTPUtil.sendPost(url, query, results);
 
-            ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(POST) /mining/histogram", "Executed histogram with result :" + results.toString());
+            ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(POST) /mining/histogram", "Executed histogram with result :" + results.toString());
             return ResponseEntity.ok(gson.toJson(results.toString()));
-        } catch (IOException e) {            
-            ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(POST) /mining/histogram", "Histogram algorithm was not found");
+        } catch (IOException e) {
+            ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(POST) /mining/histogram", "Histogram algorithm was not found");
             return new ResponseEntity<>("Not found", HttpStatus.NOT_FOUND);
         }
     }

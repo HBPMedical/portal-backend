@@ -36,14 +36,14 @@ public class StatsApi {
     @ApiOperation(value = "Get general statistics", response = GeneralStats.class)
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<GeneralStats> getGeneralStatistics() {
-        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /stats", "Loading general statistics");
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /stats", "Loading general statistics");
 
         GeneralStats stats = new GeneralStats();
 
         stats.setUsers(userRepository.count());
         stats.setArticles(articleRepository.count());
 
-        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /stats", "Loaded " + userRepository.count() + " user statistics and " + articleRepository.count() + " artcle statistics.");
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /stats", "Loaded " + userRepository.count() + " user statistics and " + articleRepository.count() + " artcle statistics.");
         return ResponseEntity.ok(stats);
     }
 

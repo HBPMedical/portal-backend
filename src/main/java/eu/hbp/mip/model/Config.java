@@ -16,7 +16,7 @@ import java.util.Map;
 @Entity
 @Table(name = "`config`")
 @ApiModel
-@JsonIgnoreProperties(value = { "id" })
+@JsonIgnoreProperties(value = {"id"})
 public class Config {
 
     @Id
@@ -42,8 +42,8 @@ public class Config {
 
     public Config() {
         /*
-        *  Empty constructor is needed by Hibernate
-        */
+         *  Empty constructor is needed by Hibernate
+         */
     }
 
 

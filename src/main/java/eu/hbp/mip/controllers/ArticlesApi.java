@@ -10,7 +10,7 @@ import eu.hbp.mip.model.Article;
 import eu.hbp.mip.model.User;
 import eu.hbp.mip.model.UserInfo;
 import eu.hbp.mip.repositories.ArticleRepository;
-import eu.hbp.mip.utils.UserActionLogging;
+import eu.hbp.mip.utils.ActionLogging;
 import io.swagger.annotations.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +45,7 @@ public class ArticlesApi {
     ) {
         User user = userInfo.getUser();
         Iterable<Article> articles;
+        ActionLogging.LogUserAction(user.getUsername() , "(GET) /articles", "Loading articles...");
 
         if(own != null && own)
         {
@@ -54,7 +55,7 @@ public class ArticlesApi {
         {
             articles = articleRepository.findByStatusOrCreatedBy("published", user);
         }
-
+        int articlesSize = 0;
         if(status != null)
         {
             for(Iterator<Article> i = articles.iterator(); i.hasNext();)
@@ -64,9 +65,10 @@ public class ArticlesApi {
                 {
                     i.remove();
                 }
+                articlesSize++;
             }
         }
-		UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Get articles", "id : Get All articles");
+		ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /articles", "Successfully Loaded "+ articlesSize +" articles");
         
         return ResponseEntity.ok(articles);
     }
@@ -78,8 +80,8 @@ public class ArticlesApi {
     public ResponseEntity<Void> addAnArticle(
             @RequestBody @ApiParam(value = "Article to create", required = true) @Valid Article article
     ) {
-        
         User user = userInfo.getUser();
+        ActionLogging.LogUserAction(user.getUsername() , "(POST) /articles", "Creating article...");
 
         article.setCreatedAt(new Date());
         if ("published".equals(article.getStatus())) {
@@ -127,7 +129,7 @@ public class ArticlesApi {
         }
         articleRepository.save(article);
 
-		UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Created article", "id : " + article.getSlug());
+		ActionLogging.LogUserAction(user.getUsername() , "(POST) /articles", "Successfully created article with id : " + article.getSlug());
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
@@ -137,7 +139,7 @@ public class ArticlesApi {
     public ResponseEntity<Article> getAnArticle(
             @ApiParam(value = "slug", required = true) @PathVariable("slug") String slug
     ) {
-		UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Getting an article", "id : " + slug);
+		ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /articles/{slug}", "Loading article with id : " + slug);
 
         User user = userInfo.getUser();
         Article article;
@@ -146,6 +148,7 @@ public class ArticlesApi {
         if(article == null)
         {
             //LOGGER.warn("Cannot find article : " + slug);
+            ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /articles/{slug}", "Article not found");
             return ResponseEntity.badRequest().body(null);
         }
 
@@ -153,6 +156,8 @@ public class ArticlesApi {
         {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
+
+        ActionLogging.LogUserAction(user.getUsername() , "(GET) /articles/{slug}", "Successfully Loaded article with id : " + slug);
 
         return ResponseEntity.ok(article);
     }
@@ -165,7 +170,7 @@ public class ArticlesApi {
             @ApiParam(value = "slug", required = true) @PathVariable("slug") String slug,
             @RequestBody @ApiParam(value = "Article to update", required = true) @Valid Article article
     ) {
-        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Update an article", "id : " + slug);
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(PUT) /articles/{slug}", "Updating article with id : " + slug);
 
         User user = userInfo.getUser();
 
@@ -197,7 +202,8 @@ public class ArticlesApi {
 
         articleRepository.save(article);
 
-        
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(PUT) /articles/{slug}", "Successfully pdated article with id : " + slug);
+
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 

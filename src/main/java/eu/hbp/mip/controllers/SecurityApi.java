@@ -8,7 +8,7 @@ import eu.hbp.mip.configuration.SecurityConfiguration;
 import eu.hbp.mip.model.User;
 import eu.hbp.mip.model.UserInfo;
 import eu.hbp.mip.repositories.UserRepository;
-import eu.hbp.mip.utils.UserActionLogging;
+import eu.hbp.mip.utils.ActionLogging;
 import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,7 +45,7 @@ public class SecurityApi {
     public Object user(Principal principal, HttpServletResponse response) {
         ObjectMapper mapper = new ObjectMapper();
 
-        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "get user from /user", "");
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /user", "Loading user : " + userInfo.getUser().getUsername());
         try {
             String userJSON = mapper.writeValueAsString(userInfo.getUser());
             Cookie cookie = new Cookie("user", URLEncoder.encode(userJSON, "UTF-8"));
@@ -77,7 +77,7 @@ public class SecurityApi {
             userRepository.save(user);
         }
 
-        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "user agreeNDA", "");
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(POST) /user", "User has agreed on the NDA");
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -86,6 +86,8 @@ public class SecurityApi {
     @ConditionalOnExpression("${hbp.authentication.enabled:0}")
     public void noLogin(HttpServletResponse httpServletResponse) throws IOException {
         userInfo.setFakeAuth(true);
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /user/login/hbp", "Unathorized login.");
+
         httpServletResponse.sendRedirect(securityConfiguration.getFrontendRedirectAfterLogin());
     }
 
@@ -112,7 +114,7 @@ public class SecurityApi {
         JsonObject object = new JsonObject();
         object.addProperty("authorization", stringEncoded);
         object.addProperty("context", galaxyContext);
-        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "get galaxy information", "");
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /user/galaxy", "Successfully Loaded galaxy information.");
 
         return ResponseEntity.ok(gson.toJson(object));
     }

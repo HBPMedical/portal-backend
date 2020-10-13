@@ -27,7 +27,7 @@ public class ClaimUtils {
 
         List<String> userClaims = Arrays.asList(authorities.toString().toLowerCase()
                 .replaceAll("[\\s+\\]\\[]", "").split(","));
-        UserActionLogging.LogUserAction(username, "User Claims", userClaims.toString());
+        ActionLogging.LogUserAction(username, "(POST) /experiments/runAlgorithm", userClaims.toString());
 
         // Don't check for dataset claims if "super" claim exists allowing everything
         if (!userClaims.contains(ClaimUtils.allDatasetsAllowedClaim())) {
@@ -35,12 +35,12 @@ public class ClaimUtils {
             for (String dataset : experimentDatasets.split(",")) {
                 String datasetRole = ClaimUtils.getDatasetClaim(dataset);
                 if (!userClaims.contains(datasetRole.toLowerCase())) {
-                    UserActionLogging.LogUserAction(username, "Run algorithm",
+                    ActionLogging.LogUserAction(username, "(POST) /experiments/runAlgorithm",
                             "You are not allowed to use dataset: " + dataset);
                     return false;
                 }
             }
-            UserActionLogging.LogUserAction(username, "Run algorithm",
+            ActionLogging.LogUserAction(username, "(POST) /experiments/runAlgorithm",
                     "User is authorized to use the datasets: " + experimentDatasets);
         }
         return true;
@@ -49,14 +49,14 @@ public class ClaimUtils {
     public static String getAuthorizedPathologies(String username, Collection<? extends GrantedAuthority> authorities,
                                                   List<PathologyDTO> allPathologies) {
         // --- Providing only the allowed pathologies/datasets to the user  ---
-        UserActionLogging.LogUserAction(username,
-                "Load pathologies", "Filter out the unauthorised datasets.");
+        ActionLogging.LogUserAction(username,
+                "(GET) /pathologies", "Filter out the unauthorised datasets.");
 
         List<String> userClaims = Arrays.asList(authorities.toString().toLowerCase()
                 .replaceAll("[\\s+\\]\\[]", "").split(","));
 
-        UserActionLogging.LogUserAction(username,
-                "Load pathologies", "User Claims: " + userClaims);
+        ActionLogging.LogUserAction(username,
+                "(GET) /pathologies", "User Claims: " + userClaims);
 
         // If the "dataset_all" claim exists then return everything
         if (userClaims.contains(ClaimUtils.allDatasetsAllowedClaim())) {
@@ -68,14 +68,14 @@ public class ClaimUtils {
             List<PathologyDTO.PathologyDatasetDTO> userPathologyDatasets = new ArrayList<PathologyDTO.PathologyDatasetDTO>();
             for (PathologyDTO.PathologyDatasetDTO dataset : curPathology.getDatasets()) {
                 if (userClaims.contains(ClaimUtils.getDatasetClaim(dataset.getCode()))) {
-                    UserActionLogging.LogUserAction(username, "Load pathologies",
+                    ActionLogging.LogUserAction(username , "(GET) /pathologies",
                             "Added dataset: " + dataset.getCode());
                     userPathologyDatasets.add(dataset);
                 }
             }
 
             if (userPathologyDatasets.size() > 0) {
-                UserActionLogging.LogUserAction(username, "Load pathologies",
+                ActionLogging.LogUserAction(username , "(GET) /pathologies",
                         "Added pathology '" + curPathology.getLabel()
                                 + "' with datasets: '" + userPathologyDatasets + "'");
 

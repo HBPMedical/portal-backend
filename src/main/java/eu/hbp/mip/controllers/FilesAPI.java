@@ -1,5 +1,6 @@
 package eu.hbp.mip.controllers;
 
+import eu.hbp.mip.model.User;
 import eu.hbp.mip.model.UserInfo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -14,7 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-import eu.hbp.mip.utils.UserActionLogging;
+import eu.hbp.mip.utils.ActionLogging;
 
 import java.time.LocalDateTime;
 
@@ -36,12 +37,11 @@ public class FilesAPI {
     public ResponseEntity<Void> getProtectedFile(
             @ApiParam(value = "filename", required = true) @PathVariable("filename") String filename
     ) {
-        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Get protected file", " filename : " + filename);
+        User user = userInfo.getUser();
+        ActionLogging.LogUserAction(user.getUsername() , "(GET) /protected/{filename:.+}", "Loading protected file with filename : " + filename);
 
         String filepath = "/protected/" + filename;
-        String user = userInfo.getUser().getUsername();
-        String time = LocalDateTime.now().toString();
-        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Downloaded " + filepath, "");
+        ActionLogging.LogUserAction(user.getUsername() , "(GET) /protected/{filename:.+}" + filepath, "Downloaded protected file");
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Accel-Redirect", filepath);

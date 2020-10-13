@@ -8,7 +8,7 @@ import eu.hbp.mip.model.GeneralStats;
 import eu.hbp.mip.model.UserInfo;
 import eu.hbp.mip.repositories.ArticleRepository;
 import eu.hbp.mip.repositories.UserRepository;
-import eu.hbp.mip.utils.UserActionLogging;
+import eu.hbp.mip.utils.ActionLogging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,13 +36,14 @@ public class StatsApi {
     @ApiOperation(value = "Get general statistics", response = GeneralStats.class)
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<GeneralStats> getGeneralStatistics() {
-        UserActionLogging.LogUserAction(userInfo.getUser().getUsername(), "Get statistics (count on users, articles and variables)", "");
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /stats", "Loading general statistics");
 
         GeneralStats stats = new GeneralStats();
 
         stats.setUsers(userRepository.count());
         stats.setArticles(articleRepository.count());
 
+        ActionLogging.LogUserAction(userInfo.getUser().getUsername() , "(GET) /stats", "Loaded " + userRepository.count() + " user statistics and " + articleRepository.count() + " artcle statistics.");
         return ResponseEntity.ok(stats);
     }
 

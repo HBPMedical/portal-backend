@@ -27,7 +27,7 @@ public class HTTPUtil {
     }
 
     public static int sendAuthorizedHTTP(String url, String query, StringBuilder resp, String httpVerb,
-            String authorization) throws IOException {
+                                         String authorization) throws IOException {
         return sendHTTP(url, query, resp, httpVerb, authorization);
     }
 

@@ -16,7 +16,7 @@ import java.util.List;
 @Entity
 @ApiModel
 @Table(name = "`query`")
-@JsonIgnoreProperties(value = { "id" })
+@JsonIgnoreProperties(value = {"id"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Query {
 
@@ -26,44 +26,44 @@ public class Query {
 
     @ManyToMany
     @JoinTable(name = "query_variable", joinColumns = {
-            @JoinColumn(name = "id", nullable = false, updatable = false) },
-            inverseJoinColumns = { @JoinColumn(name = "code",
-                    nullable = false, updatable = false) })
+            @JoinColumn(name = "id", nullable = false, updatable = false)},
+            inverseJoinColumns = {@JoinColumn(name = "code",
+                    nullable = false, updatable = false)})
     private List<Variable> variables = new LinkedList<>();
 
     @ManyToMany
     @JoinTable(name = "query_covariable", joinColumns = {
-            @JoinColumn(name = "id", nullable = false, updatable = false) },
-            inverseJoinColumns = { @JoinColumn(name = "code",
-                    nullable = false, updatable = false) })
+            @JoinColumn(name = "id", nullable = false, updatable = false)},
+            inverseJoinColumns = {@JoinColumn(name = "code",
+                    nullable = false, updatable = false)})
     private List<Variable> covariables = new LinkedList<>();
 
     @ManyToMany
     @JoinTable(name = "query_grouping", joinColumns = {
-            @JoinColumn(name = "id", nullable = false, updatable = false) },
-            inverseJoinColumns = { @JoinColumn(name = "code",
-                    nullable = false, updatable = false) })
+            @JoinColumn(name = "id", nullable = false, updatable = false)},
+            inverseJoinColumns = {@JoinColumn(name = "code",
+                    nullable = false, updatable = false)})
     private List<Variable> grouping = new LinkedList<>();
 
     @ManyToMany
     @JoinTable(name = "query_training_datasets", joinColumns = {
-            @JoinColumn(name = "id", nullable = false, updatable = false) },
-            inverseJoinColumns = { @JoinColumn(name = "code",
-                    nullable = false, updatable = false) })
+            @JoinColumn(name = "id", nullable = false, updatable = false)},
+            inverseJoinColumns = {@JoinColumn(name = "code",
+                    nullable = false, updatable = false)})
     private List<Variable> trainingDatasets = new LinkedList<>();
 
     @ManyToMany
     @JoinTable(name = "query_testing_datasets", joinColumns = {
-            @JoinColumn(name = "id", nullable = false, updatable = false) },
-            inverseJoinColumns = { @JoinColumn(name = "code",
-                    nullable = false, updatable = false) })
+            @JoinColumn(name = "id", nullable = false, updatable = false)},
+            inverseJoinColumns = {@JoinColumn(name = "code",
+                    nullable = false, updatable = false)})
     private List<Variable> testingDatasets = new LinkedList<>();
 
     @ManyToMany
     @JoinTable(name = "query_validation_datasets", joinColumns = {
-            @JoinColumn(name = "id", nullable = false, updatable = false) },
-            inverseJoinColumns = { @JoinColumn(name = "code",
-                    nullable = false, updatable = false) })
+            @JoinColumn(name = "id", nullable = false, updatable = false)},
+            inverseJoinColumns = {@JoinColumn(name = "code",
+                    nullable = false, updatable = false)})
     private List<Variable> validationDatasets = new LinkedList<>();
 
     @Column(columnDefinition = "text")
@@ -75,8 +75,8 @@ public class Query {
 
     public Query() {
         /*
-        *  Empty constructor is needed by Hibernate
-        */
+         *  Empty constructor is needed by Hibernate
+         */
     }
 
 

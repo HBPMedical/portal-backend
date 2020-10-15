@@ -20,7 +20,7 @@ public class PortalErrorAttributes extends DefaultErrorAttributes {
 
         Throwable throwable = getError(requestAttributes);
         StringBuilder sb = new StringBuilder("[");
-        for (String attr: requestAttributes.getAttributeNames(RequestAttributes.SCOPE_REQUEST)) {
+        for (String attr : requestAttributes.getAttributeNames(RequestAttributes.SCOPE_REQUEST)) {
             Object v = requestAttributes.getAttribute(attr, RequestAttributes.SCOPE_REQUEST);
             sb.append(attr).append(" = ").append(v).append('\n');
         }

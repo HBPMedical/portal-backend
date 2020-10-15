@@ -103,7 +103,7 @@ public class WorkflowDTO {
         }
     }
 
-    public AlgorithmDTO convertToAlgorithmDTO(){
+    public AlgorithmDTO convertToAlgorithmDTO() {
 
         AlgorithmDTO algorithmDTO = new AlgorithmDTO();
 
@@ -120,10 +120,10 @@ public class WorkflowDTO {
 
             // Convert the annotation to algorithm Parameter
             AlgorithmDTO.AlgorithmParamDTO algorithmParam;
-            if(steps.get(workflowInput.getKey()).getAnnotation() != null) {
+            if (steps.get(workflowInput.getKey()).getAnnotation() != null) {
                 algorithmParam = gson.fromJson(steps.get(workflowInput.getKey()).getAnnotation(),
-                                AlgorithmDTO.AlgorithmParamDTO.class);
-            }else{
+                        AlgorithmDTO.AlgorithmParamDTO.class);
+            } else {
                 // If annotation is not provided, auto-fill some information
                 algorithmParam = new AlgorithmDTO.AlgorithmParamDTO();
                 // When the constraints are not known, set the most relaxed constraints
@@ -134,17 +134,17 @@ public class WorkflowDTO {
                 algorithmParam.setDefaultValue("");
                 algorithmParam.setDefaultValue("true");
                 // If label is dataset/pathology/filter/formula the type should be the same
-                if(workflowInput.getValue().getLabel().equals("dataset") ||
-                        workflowInput.getValue().getLabel().equals("pathology")||
-                        workflowInput.getValue().getLabel().equals("filter")||
-                        workflowInput.getValue().getLabel().equals("formula")){
+                if (workflowInput.getValue().getLabel().equals("dataset") ||
+                        workflowInput.getValue().getLabel().equals("pathology") ||
+                        workflowInput.getValue().getLabel().equals("filter") ||
+                        workflowInput.getValue().getLabel().equals("formula")) {
                     algorithmParam.setType(workflowInput.getValue().getLabel());
-                }else if(workflowInput.getValue().getLabel().equals("x") ||
-                        workflowInput.getValue().getLabel().equals("y")){
+                } else if (workflowInput.getValue().getLabel().equals("x") ||
+                        workflowInput.getValue().getLabel().equals("y")) {
                     algorithmParam.setType("column");
                     algorithmParam.setColumnValuesSQLType("text,real,integer");
                     algorithmParam.setColumnValuesIsCategorical("");
-                }else{
+                } else {
                     algorithmParam.setType("other");
                 }
             }

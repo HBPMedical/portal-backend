@@ -274,7 +274,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     public void logout() {
         // POSTするリクエストパラメーターを作成
-        UserActionLogging.LogAction("refresh token ", this.oauth2ClientContext.getAccessToken().getRefreshToken().getValue());
+        Logging.LogAction("refresh token ", this.oauth2ClientContext.getAccessToken().getRefreshToken().getValue());
         RestTemplate restTemplate = new RestTemplate();
         MultiValueMap<String, String> formParams = new LinkedMultiValueMap<>();
         formParams.add("client_id", hbp().getClientId());
@@ -284,7 +284,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE);
         // リクエストを作成
-        UserActionLogging.LogAction("logoutUri is ", logoutUri);
+        Logging.LogAction("logoutUri is ", logoutUri);
         RequestEntity<MultiValueMap<String, String>> requestEntity =
                 new RequestEntity<>(formParams, httpHeaders, HttpMethod.POST,
                         URI.create(logoutUri));

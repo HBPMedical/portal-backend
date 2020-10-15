@@ -20,11 +20,11 @@ public class Experiment {
 
     @Id
     @Column(columnDefinition = "uuid")
-    @org.hibernate.annotations.Type(type="pg-uuid")
+    @org.hibernate.annotations.Type(type = "pg-uuid")
     @Expose
     private UUID uuid;
 
-    @Column(columnDefinition="TEXT")
+    @Column(columnDefinition = "TEXT")
     @Expose
     private String name;
 
@@ -38,22 +38,22 @@ public class Experiment {
     @Expose
     private Model model;
 
-    @Column(columnDefinition="TEXT")
+    @Column(columnDefinition = "TEXT")
     @Expose
     private String algorithms;
 
-    @Column(columnDefinition="TEXT")
+    @Column(columnDefinition = "TEXT")
     private String validations;
 
-    @Column(columnDefinition="TEXT")
+    @Column(columnDefinition = "TEXT")
     @Expose
     private String workflowHistoryId;
 
-    @Column(columnDefinition="TEXT")
+    @Column(columnDefinition = "TEXT")
     @Expose
     private String workflowStatus;
 
-    @Column(columnDefinition="TEXT")
+    @Column(columnDefinition = "TEXT")
     @Expose
     private String result;
 
@@ -78,8 +78,8 @@ public class Experiment {
 
     public Experiment() {
         /*
-        *  Empty constructor is needed by Hibernate
-        */
+         *  Empty constructor is needed by Hibernate
+         */
     }
 
 
@@ -87,15 +87,13 @@ public class Experiment {
         JsonObject exp = gson.toJsonTree(this).getAsJsonObject();
         JsonParser parser = new JsonParser();
 
-        if (this.algorithms != null)
-        {
+        if (this.algorithms != null) {
             exp.remove("algorithms");
             JsonArray jsonAlgorithms = parser.parse(this.algorithms).getAsJsonArray();
             exp.add("algorithms", jsonAlgorithms);
         }
 
-        if (this.validations != null)
-        {
+        if (this.validations != null) {
             exp.remove("validations");
             JsonArray jsonValidations = parser.parse(this.validations).getAsJsonArray();
             exp.add("validations", jsonValidations);

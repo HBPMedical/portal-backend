@@ -12,5 +12,6 @@ import java.util.UUID;
 
 public interface ExperimentRepository extends CrudRepository<Experiment, UUID> {
     Iterable<Experiment> findByCreatedBy(User user);
+
     Iterable<Experiment> findByShared(Boolean shared);
 }

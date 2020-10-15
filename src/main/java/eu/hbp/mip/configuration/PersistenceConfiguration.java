@@ -23,7 +23,7 @@ public class PersistenceConfiguration {
 
     @Primary
     @Bean(name = "portalDatasource")
-    @ConfigurationProperties(prefix="spring.portalDatasource")
+    @ConfigurationProperties(prefix = "spring.portalDatasource")
     public DataSource portalDataSource() {
         return DataSourceBuilder.create().build();
     }

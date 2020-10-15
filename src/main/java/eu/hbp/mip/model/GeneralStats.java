@@ -17,8 +17,8 @@ public class GeneralStats {
 
     public GeneralStats() {
         /*
-        *  Empty constructor is needed by Hibernate
-        */
+         *  Empty constructor is needed by Hibernate
+         */
     }
 
 

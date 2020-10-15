@@ -17,7 +17,7 @@ import java.util.List;
 @Entity
 @Table(name = "`variable`")
 @ApiModel
-@JsonIgnoreProperties(value = { "queries" })
+@JsonIgnoreProperties(value = {"queries"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Variable {
 
@@ -26,7 +26,7 @@ public class Variable {
     private String code = null;
 
     /**
-     *  Empty constructor is needed by Hibernate
+     * Empty constructor is needed by Hibernate
      */
     public Variable() {
     }

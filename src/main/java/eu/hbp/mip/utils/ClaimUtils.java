@@ -1,7 +1,7 @@
 package eu.hbp.mip.utils;
 
 import com.google.gson.Gson;
-import eu.hbp.mip.model.PathologyDTO;
+import eu.hbp.mip.model.DTOs.PathologyDTO;
 import org.springframework.security.core.GrantedAuthority;
 
 import java.util.ArrayList;

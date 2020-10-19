@@ -1,4 +1,4 @@
-package eu.hbp.mip.model;
+package eu.hbp.mip.model.DTOs;
 
 import com.google.gson.annotations.SerializedName;
 

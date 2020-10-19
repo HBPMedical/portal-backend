@@ -6,7 +6,7 @@ package eu.hbp.mip.controllers;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import eu.hbp.mip.model.PathologyDTO;
+import eu.hbp.mip.model.DTOs.PathologyDTO;
 import eu.hbp.mip.model.UserInfo;
 import eu.hbp.mip.utils.ClaimUtils;
 import eu.hbp.mip.utils.CustomResourceLoader;

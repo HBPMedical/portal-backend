@@ -52,10 +52,6 @@ public class Article {
     @JoinColumn(name = "updatedby_username")
     private User updatedBy = null;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
-    private List<Tag> tags = new LinkedList<>();
-
-
     public Article() {
         /*
          *  Empty constructor is needed by Hibernate
@@ -152,15 +148,6 @@ public class Article {
 
     public void setUpdatedBy(User updatedBy) {
         this.updatedBy = updatedBy;
-    }
-
-
-    public List<Tag> getTags() {
-        return tags;
-    }
-
-    public void setTags(List<Tag> tags) {
-        this.tags = tags;
     }
 
 }

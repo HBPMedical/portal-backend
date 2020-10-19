@@ -10,8 +10,7 @@
 	<logger name="eu.hbp.mip">
 		<appender-ref ref="FILE1" />
 	</logger>
-    <include resource="org/springframework/boot/logging/logback/base.xml"/>
-    <logger name="org.springframework.web" level="ERROR">
+    <logger name="org.springframework.web" level="INFO">
 		<appender-ref ref="FILE1" />
 	</logger>
     <logger name="eu.hbp.mip.utils" level="INFO" additivity="false">

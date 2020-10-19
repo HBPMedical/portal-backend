@@ -2,7 +2,7 @@ package eu.hbp.mip.model.galaxy;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
-import eu.hbp.mip.model.AlgorithmDTO;
+import eu.hbp.mip.model.DTOs.AlgorithmDTO;
 
 import java.util.*;
 

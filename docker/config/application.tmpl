@@ -53,10 +53,10 @@ logging:
     root: {{ default .Env.LOG_LEVEL "INFO" }}
     org:
       springframework:
-        security: INFO
-        web: {{ default .Env.LOGGING_LEVEL_WEB "WARN" }}
-        web.servlet.handler.BeanNameUrlHandlerMapping: WARN
-      hibernate: {{ default .Env.LOGGING_LEVEL_HIBERNATE "WARN" }}
+        security: ERROR
+        web: {{ default .Env.LOGGING_LEVEL_WEB "ERROR" }}
+        web.servlet.handler.BeanNameUrlHandlerMapping: ERROR
+      hibernate: {{ default .Env.LOGGING_LEVEL_HIBERNATE "ERROR" }}
     eu:
       hbp: {{ default .Env.LOGGING_LEVEL_MIP "INFO" }}
 

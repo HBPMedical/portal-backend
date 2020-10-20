@@ -53,7 +53,7 @@ logging:
     root: {{ default .Env.LOG_LEVEL "INFO" }}
     org:
       springframework:
-        security: DEBUG
+        security: INFO
         web: {{ default .Env.LOGGING_LEVEL_WEB "WARN" }}
         web.servlet.handler.BeanNameUrlHandlerMapping: WARN
       hibernate: {{ default .Env.LOGGING_LEVEL_HIBERNATE "WARN" }}

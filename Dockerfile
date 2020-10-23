@@ -14,8 +14,7 @@ RUN cp /usr/share/maven/ref/settings-docker.xml /root/.m2/settings.xml \
 
 FROM hbpmip/java-base:11.0.1-1
 
-RUN apt-get update && apt-get install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/* /tmp/*
+RUN rm -rf /var/lib/apt/lists/* /tmp/*
 
 COPY docker/config/application.tmpl /opt/portal/config/application.tmpl
 COPY docker/README.md docker/run.sh /opt/portal/

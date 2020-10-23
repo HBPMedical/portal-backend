@@ -46,8 +46,8 @@ To use this image, you need a running instance of PostgreSQL and to configure th
 
 ### LOGGING
 
-* LOGGING_LEVEL_WEB: log level for the web layer of the application. Default to "WARN".
-* LOGGING_LEVEL_HIBERNATE: log level for the Hibernate layer of the application. Default to "WARN".
+* LOG_LEVEL: log level for the developer added logs. Default is "ERROR".
+* LOG_LEVEL_FRAMEWORK: log level for all the framework logs. Default is "ERROR".
 
 
 ### ENDPOINTS

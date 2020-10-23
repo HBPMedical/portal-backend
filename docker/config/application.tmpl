@@ -50,7 +50,7 @@ frontend:
   
 logging:
   level:
-    root: {{ default .Env.LOG_LEVEL "INFO" }}
+    root: {{ default .Env.LOG_LEVEL "ERROR" }}
     org:
       springframework:
         security: ERROR

@@ -585,7 +585,7 @@ public class ExperimentApi {
                                     experiment.setHasError(true);
                                     experiment.setHasServerError(true);
                                 }
-                                experiment.setResult("[" + result + "]");
+                                experiment.setResult(result);
                                 experiment.setWorkflowStatus("completed");
                                 resultFound = true;
                             }

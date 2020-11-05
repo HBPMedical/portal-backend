@@ -16,14 +16,27 @@ public class ExperimentDTO {
     private ExperimentDTO.ResultDTO result;
     private ExperimentDAO.Status status;
 
-    private AlgorithmDTO algorithm;
+    private String algorithm;
+    private AlgorithmDTO algorithmDetails;
 
-    public AlgorithmDTO getAlgorithm() {
+    public ExperimentDTO() {
+    }
+
+    public String getAlgorithm() {
         return algorithm;
     }
 
-    public void setAlgorithm(AlgorithmDTO algorithm) {
+    public void setAlgorithm(String algorithm) {
         this.algorithm = algorithm;
+    }
+
+    public AlgorithmDTO getAlgorithmDetails() {
+        return algorithmDetails;
+    }
+
+    public void setAlgorithmDetails(AlgorithmDTO algorithmDetails) {
+        this.algorithmDetails = algorithmDetails;
+        this.algorithm = algorithmDetails.getName();
     }
 
     public String getUuid() {

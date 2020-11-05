@@ -2,7 +2,7 @@
  * Created by mirco on 04.12.15.
  */
 
-package eu.hbp.mip.model;
+package eu.hbp.mip.model.DAOs;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -13,15 +13,13 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
 
 @Entity
 @Table(name = "`article`")
 @ApiModel
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Validated
-public class Article {
+public class ArticleDAO {
 
     @Id
     private String slug = null;
@@ -46,13 +44,13 @@ public class Article {
 
     @ManyToOne
     @JoinColumn(name = "createdby_username")
-    private User createdBy = null;
+    private UserDAO createdBy = null;
 
     @ManyToOne
     @JoinColumn(name = "updatedby_username")
-    private User updatedBy = null;
+    private UserDAO updatedBy = null;
 
-    public Article() {
+    public ArticleDAO() {
         /*
          *  Empty constructor is needed by Hibernate
          */
@@ -133,20 +131,20 @@ public class Article {
     }
 
 
-    public User getCreatedBy() {
+    public UserDAO getCreatedBy() {
         return createdBy;
     }
 
-    public void setCreatedBy(User createdBy) {
+    public void setCreatedBy(UserDAO createdBy) {
         this.createdBy = createdBy;
     }
 
 
-    public User getUpdatedBy() {
+    public UserDAO getUpdatedBy() {
         return updatedBy;
     }
 
-    public void setUpdatedBy(User updatedBy) {
+    public void setUpdatedBy(UserDAO updatedBy) {
         this.updatedBy = updatedBy;
     }
 

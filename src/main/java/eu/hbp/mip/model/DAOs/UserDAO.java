@@ -2,7 +2,7 @@
  * Created by mirco on 04.12.15.
  */
 
-package eu.hbp.mip.model;
+package eu.hbp.mip.model.DAOs;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 @ApiModel
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(value = {"appsVotes"})
-public class User {
+public class UserDAO {
 
     @Id
     @Expose
@@ -35,7 +35,7 @@ public class User {
     private Boolean agreeNDA = null;
 
 
-    public User() {
+    public UserDAO() {
         /*
          *  Empty constructor is needed by Hibernate
          */
@@ -47,7 +47,7 @@ public class User {
      *
      * @param userInfo info from OpenID UserInfo endpoint
      */
-    public User(String userInfo) {
+    public UserDAO(String userInfo) {
 
         Pattern p;
         Matcher m;

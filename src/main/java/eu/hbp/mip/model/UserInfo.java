@@ -1,5 +1,6 @@
 package eu.hbp.mip.model;
 
+import eu.hbp.mip.model.DAOs.UserDAO;
 import eu.hbp.mip.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +27,7 @@ public class UserInfo {
     @Value("#{'${hbp.authentication.enabled:1}'}")
     private boolean authentication;
 
-    private User user;
+    private UserDAO user;
 
     /**
      * Set to true if using no-auth mode and user has clicked on the login button
@@ -45,18 +46,18 @@ public class UserInfo {
      *
      * @return the user for the current session
      */
-    public User getUser() {
+    public UserDAO getUser() {
         if (user == null) {
 
             if (!authentication) {
-                user = new User();
+                user = new UserDAO();
                 user.setUsername("anonymous");
                 user.setFullname("anonymous");
                 user.setEmail("anonymous@anonymous.com");
             } else {
-                user = new User(getUserInfos());
+                user = new UserDAO(getUserInfos());
             }
-            User foundUser = userRepository.findOne(user.getUsername());
+            UserDAO foundUser = userRepository.findByUsername(user.getUsername());
             if (foundUser != null) {
                 user.setAgreeNDA(foundUser.getAgreeNDA());
             }

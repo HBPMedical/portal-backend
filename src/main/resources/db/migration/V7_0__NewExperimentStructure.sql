@@ -5,7 +5,7 @@ DROP COLUMN validations,
 DROP COLUMN model_slug;
 
 ALTER TABLE experiment
-RENAME algorithms TO algorithm;
+RENAME algorithms TO algorithmDetails;
 ALTER TABLE experiment
 RENAME createdby_username TO created_by_username;
 ALTER TABLE experiment
@@ -14,6 +14,9 @@ ALTER TABLE experiment
 RENAME resultsviewed TO viewed;
 ALTER TABLE experiment
 RENAME workflowstatus TO status;
+
+ALTER TABLE experiment
+ADD COLUMN algorithm text;
 
 ALTER TABLE "user"
 DROP COLUMN birthday,

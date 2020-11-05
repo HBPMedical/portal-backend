@@ -4,7 +4,7 @@
 
 package eu.hbp.mip.controllers;
 
-import eu.hbp.mip.model.User;
+import eu.hbp.mip.model.DAOs.UserDAO;
 import eu.hbp.mip.model.UserInfo;
 import eu.hbp.mip.repositories.UserRepository;
 import eu.hbp.mip.utils.Logging;
@@ -31,13 +31,13 @@ public class UsersApi {
     @Autowired
     private UserInfo userInfo;
 
-    @ApiOperation(value = "Get a user", response = User.class)
+    @ApiOperation(value = "Get a user", response = UserDAO.class)
     @RequestMapping(value = "/{username}", method = RequestMethod.GET)
-    public ResponseEntity<User> getAUser(
+    public ResponseEntity<UserDAO> getAUser(
             @ApiParam(value = "username", required = true) @PathVariable("username") String username
     ) {
         Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /users/{username}", "Loaded a user with username : " + userInfo.getUser().getUsername());
 
-        return ResponseEntity.ok(userRepository.findOne(username));
+        return ResponseEntity.ok(userRepository.findByUsername(username));
     }
 }

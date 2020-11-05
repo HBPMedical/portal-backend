@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import eu.hbp.mip.configuration.SecurityConfiguration;
-import eu.hbp.mip.model.User;
+import eu.hbp.mip.model.DAOs.UserDAO;
 import eu.hbp.mip.model.UserInfo;
 import eu.hbp.mip.repositories.UserRepository;
 import eu.hbp.mip.utils.Logging;
@@ -70,7 +70,7 @@ public class SecurityApi {
     @RequestMapping(path = "/user", method = RequestMethod.POST)
     public ResponseEntity<Void> postUser(
             @ApiParam(value = "Has the user agreed on the NDA") @RequestParam(value = "agreeNDA") Boolean agreeNDA) {
-        User user = userInfo.getUser();
+        UserDAO user = userInfo.getUser();
         if (user != null) {
             user.setAgreeNDA(agreeNDA);
             userRepository.save(user);

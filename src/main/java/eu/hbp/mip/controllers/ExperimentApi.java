@@ -1,6 +1,5 @@
 package eu.hbp.mip.controllers;
 
-import com.google.gson.Gson;
 import eu.hbp.mip.model.DTOs.ExperimentDTO;
 import eu.hbp.mip.model.UserInfo;
 import eu.hbp.mip.services.ExperimentService;
@@ -8,12 +7,9 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -35,8 +31,13 @@ public class ExperimentApi {
 
     @ApiOperation(value = "Get experiments", response = ExperimentDTO.class, responseContainer = "List")
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<String> getExperiments() {
-        return experimentService.getExperiments("(GET) /experiments");
+    public ResponseEntity<String> getExperiments(
+            @RequestParam(name = "name", required = false) String name,
+            @RequestParam(name = "algorithm", required = false) String algorithm,
+            @RequestParam(name = "shared", required = false) Boolean shared,
+            @RequestParam(name = "viewed", required = false) Boolean viewed
+    ) {
+        return experimentService.getExperiments(name, algorithm, shared, viewed, "(GET) /experiments");
     }
 
     @ApiOperation(value = "Get an experiment", response = ExperimentDTO.class)

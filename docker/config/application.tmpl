@@ -2,7 +2,7 @@
 
 # See http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
 spring:
-  portalDatasource:
+  portal-datasource:
     url: {{ default .Env.PORTAL_DB_URL "jdbc:postgresql://172.22.0.1:5432/portal" }}
     schema: {{ default .Env.PORTAL_DB_SCHEMA "public" }}
     username: {{ default .Env.PORTAL_DB_USER "postgres" }}
@@ -16,6 +16,8 @@ spring:
   jpa:
     hibernate:
       dialect: org.hibernate.dialect.PostgreSQL9Dialect
+      ddl-auto: validate
+
   # SPRING RESOURCES HANDLING
   resources:
     chain:

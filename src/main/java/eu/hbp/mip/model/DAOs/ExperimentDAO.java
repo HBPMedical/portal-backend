@@ -1,11 +1,12 @@
 package eu.hbp.mip.model.DAOs;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
 import eu.hbp.mip.model.DTOs.AlgorithmDTO;
 import eu.hbp.mip.model.DTOs.ExperimentDTO;
-import eu.hbp.mip.model.User;
 import eu.hbp.mip.utils.JsonConverters;
+import io.swagger.annotations.ApiModel;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -16,51 +17,62 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "`experiment`")
+@ApiModel
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ExperimentDAO {
 
     private static final Gson gson = new Gson();
 
+    @Expose
     @Id
     @Column(columnDefinition = "uuid", updatable = false)
     @org.hibernate.annotations.Type(type = "pg-uuid")
-    @Expose
     private UUID uuid;
 
-    @Column(columnDefinition = "TEXT")
     @Expose
+    @Column(columnDefinition = "TEXT")
     private String name;
 
     @Expose
     @ManyToOne
-    @JoinColumn(name = "created_by_username")
-    private User createdBy;
+    @JoinColumn(name = "created_by_username",columnDefinition = "CHARACTER VARYING")
+    private UserDAO createdBy;
 
-    @Column(name="workflow_history_id", columnDefinition = "TEXT")
     @Expose
+    @Column(name="workflow_history_id", columnDefinition = "TEXT")
     private String workflowHistoryId;
 
-    @Column(columnDefinition = "TEXT")
     @Expose
+    @Column(columnDefinition = "TEXT")
     private Status status;
 
-    @Column(columnDefinition = "TEXT")
     @Expose
+    @Column(columnDefinition = "TEXT")
     private String result;
 
     @Expose
+    @Column(columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
     private Date finished;
 
     @Expose
+    @Column(columnDefinition = "TEXT")
+    private String algorithmDetails;
+
+    @Expose
+    @Column(columnDefinition = "TEXT")
     private String algorithm;
 
     @Expose
+    @Column(columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
     private Date created = new Date();
 
     @Expose
+    @Column(columnDefinition = "BOOLEAN")
     private boolean shared = false;
 
     // whether or not the experiment's result have been viewed by its owner
     @Expose
+    @Column(columnDefinition = "BOOLEAN")
     private boolean viewed = false;
 
     public enum Status {
@@ -102,7 +114,7 @@ public class ExperimentDAO {
     public ExperimentDTO convertToDTO()
     {
         ExperimentDTO experimentDTO = new ExperimentDTO();
-        experimentDTO.setAlgorithm(JsonConverters.convertJsonStringToObject(this.algorithm, AlgorithmDTO.class));
+        experimentDTO.setAlgorithmDetails(JsonConverters.convertJsonStringToObject(this.algorithmDetails, AlgorithmDTO.class));
         experimentDTO.setCreated(this.created);
         experimentDTO.setCreatedBy(this.createdBy.getUsername());
         experimentDTO.setName(this.name);
@@ -111,6 +123,14 @@ public class ExperimentDAO {
         experimentDTO.setUuid(this.uuid.toString());
         experimentDTO.setViewed(this.viewed);
         return experimentDTO;
+    }
+
+    public String getAlgorithmDetails() {
+        return algorithmDetails;
+    }
+
+    public void setAlgorithmDetails(String algorithmDetails) {
+        this.algorithmDetails = algorithmDetails;
     }
 
     public String getAlgorithm() {
@@ -177,11 +197,11 @@ public class ExperimentDAO {
         this.name = name;
     }
 
-    public User getCreatedBy() {
+    public UserDAO getCreatedBy() {
         return createdBy;
     }
 
-    public void setCreatedBy(User createdBy) {
+    public void setCreatedBy(UserDAO createdBy) {
         this.createdBy = createdBy;
     }
 

@@ -25,7 +25,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.IOException;
 import java.util.List;
 
-import static eu.hbp.mip.utils.ErrorMessages.pathologiesCouldNotBeLoaded;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
@@ -57,7 +56,7 @@ public class PathologiesApi {
             }.getType());
         } catch (IOException e) {
             Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /pathologies", "Unable to load pathologies");
-            return ResponseEntity.badRequest().body(pathologiesCouldNotBeLoaded);
+            return ResponseEntity.badRequest().body("The pathologies could not be loaded.");
         }
 
         // If authentication is disabled return everything

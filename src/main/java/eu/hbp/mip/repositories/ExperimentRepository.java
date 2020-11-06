@@ -4,6 +4,7 @@ import eu.hbp.mip.model.DAOs.ExperimentDAO;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.CrudRepository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -12,5 +13,5 @@ import java.util.UUID;
 
 public interface ExperimentRepository extends CrudRepository<ExperimentDAO, UUID>, JpaSpecificationExecutor<ExperimentDAO>
 {
-    ExperimentDAO findByUuid(UUID experimentUuid);
+    Optional<ExperimentDAO> findByUuid(UUID experimentUuid);
 }

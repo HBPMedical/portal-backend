@@ -35,9 +35,11 @@ public class ExperimentApi {
             @RequestParam(name = "name", required = false) String name,
             @RequestParam(name = "algorithm", required = false) String algorithm,
             @RequestParam(name = "shared", required = false) Boolean shared,
-            @RequestParam(name = "viewed", required = false) Boolean viewed
+            @RequestParam(name = "viewed", required = false) Boolean viewed,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "3") int size
     ) {
-        return experimentService.getExperiments(name, algorithm, shared, viewed, "(GET) /experiments");
+        return experimentService.getExperiments(name, algorithm, shared, viewed, page, size, "(GET) /experiments");
     }
 
     @ApiOperation(value = "Get an experiment", response = ExperimentDTO.class)

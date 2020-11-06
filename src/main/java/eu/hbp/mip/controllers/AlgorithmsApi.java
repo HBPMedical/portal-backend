@@ -31,7 +31,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import static eu.hbp.mip.utils.ErrorMessages.disabledAlgorithmsCouldNotBeLoaded;
 import static eu.hbp.mip.utils.InputStreamConverter.convertInputStreamToString;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -83,7 +82,7 @@ public class AlgorithmsApi {
             disabledAlgorithms = getDisabledAlgorithms();
         } catch (IOException e) {
             Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms",
-                    disabledAlgorithmsCouldNotBeLoaded);
+                    "The disabled algorithms could not be loaded.");
         }
 
         // Remove any disabled algorithm

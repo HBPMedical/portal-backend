@@ -6,9 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Named;
@@ -24,7 +21,7 @@ public class UserInfo {
     /**
      * Enable HBP collab authentication (1) or disable it (0). Default is 1
      */
-    @Value("#{'${hbp.authentication.enabled:1}'}")
+    @Value("#{'${hbp.authentication.enabled}'}")
     private boolean authentication;
 
     private UserDAO user;
@@ -55,7 +52,7 @@ public class UserInfo {
                 user.setFullname("anonymous");
                 user.setEmail("anonymous@anonymous.com");
             } else {
-                user = new UserDAO(getUserInfos());
+                user = new UserDAO(getUserInformation());
             }
             UserDAO foundUser = userRepository.findByUsername(user.getUsername());
             if (foundUser != null) {
@@ -67,7 +64,7 @@ public class UserInfo {
         return user;
     }
 
-    public boolean isFakeAuth() {
+    public boolean getFakeAuth() {
         return fakeAuth;
     }
 
@@ -75,10 +72,13 @@ public class UserInfo {
         this.fakeAuth = fakeAuth;
     }
 
-    private String getUserInfos() {
-        OAuth2Authentication oAuth2Authentication = (OAuth2Authentication) SecurityContextHolder.getContext().getAuthentication();
-        Authentication userAuthentication = oAuth2Authentication.getUserAuthentication();
-        return userAuthentication.getDetails().toString();
+    private String getUserInformation() {
+        // TODO
+        return "";
+        // get details from keycloak configuration
+//        OAuth2Authentication oAuth2Authentication = (OAuth2Authentication) SecurityContextHolder.getContext().getAuthentication();
+//        Authentication userAuthentication = oAuth2Authentication.getUserAuthentication();
+//        return userAuthentication.getDetails().toString();
     }
 
 }

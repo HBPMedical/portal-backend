@@ -72,4 +72,6 @@ To use this image, you need a running instance of PostgreSQL and to configure th
 
 * RELEASE_STAGE: Release stage used when reporting errors to Bugsnag. Values are dev, staging, production
 * DATA_CENTER_LOCATION: Location of the datacenter, used when reporting errors to Bugsnag
-* CONTAINER_ORCHESTRATION: Container orchestration system used to execute the Docker containers. Values are mesos, docker-compose, kubernetes
+
+
+# TODO Refactor variables

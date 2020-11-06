@@ -19,7 +19,6 @@ import java.util.regex.Pattern;
 @Table(name = "`user`")
 @ApiModel
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(value = {"appsVotes"})
 public class UserDAO {
 
     @Id
@@ -49,26 +48,33 @@ public class UserDAO {
      */
     public UserDAO(String userInfo) {
 
-        Pattern p;
-        Matcher m;
 
-        p = Pattern.compile("preferred_username=([\\w- ]+)");
-        m = p.matcher(userInfo);
-        if (m.find()) {
-            this.username = m.group(1);
-        }
+        // TODO fix
+        this.username = "test";
+        this.fullname = "test";
+        this.email = "test";
 
-        p = Pattern.compile("name=([\\w ]+)");
-        m = p.matcher(userInfo);
-        if (m.find()) {
-            this.fullname = m.group(1);
-        }
-
-        p = Pattern.compile("email=([\\w.]+@[\\w.]+)");
-        m = p.matcher(userInfo);
-        if (m.find()) {
-            this.email = m.group(1);
-        }
+        //
+//        Pattern p;
+//        Matcher m;
+//
+//        p = Pattern.compile("preferred_username=([\\w- ]+)");
+//        m = p.matcher(userInfo);
+//        if (m.find()) {
+//            this.username = m.group(1);
+//        }
+//
+//        p = Pattern.compile("name=([\\w ]+)");
+//        m = p.matcher(userInfo);
+//        if (m.find()) {
+//            this.fullname = m.group(1);
+//        }
+//
+//        p = Pattern.compile("email=([\\w.]+@[\\w.]+)");
+//        m = p.matcher(userInfo);
+//        if (m.find()) {
+//            this.email = m.group(1);
+//        }
 
 
     }

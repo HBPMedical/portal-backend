@@ -1,4 +1,4 @@
-package eu.hbp.mip.utils;
+package eu.hbp.mip.configuration.SecurityUtils;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletResponse;
@@ -18,15 +18,5 @@ public class CORSFilter implements Filter {
         response.setHeader("Access-Control-Allow-Headers", "*");
         response.setHeader("Access-Control-Request-Headers", "*");
         chain.doFilter(req, res);
-    }
-
-    @Override
-    public void init(FilterConfig filterConfig) {
-        /* Nothing to do */
-    }
-
-    @Override
-    public void destroy() {
-        /* Nothing to do */
     }
 }

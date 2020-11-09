@@ -55,7 +55,7 @@ public class ExperimentService {
     private String galaxyApiKey;
 
     // Enable HBP collab authentication (1) or disable it (0). Default is 1
-    @Value("#{'${hbp.authentication.enabled:1}'}")
+    @Value("#{'${authentication.enabled:1}'}")
     private boolean authenticationIsEnabled;
 
     @Autowired

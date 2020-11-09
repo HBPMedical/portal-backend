@@ -81,14 +81,14 @@ public class SecurityApi {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @RequestMapping(path = "/login/hbp", method = RequestMethod.GET)
-    @ConditionalOnExpression("${hbp.authentication.enabled:0}")
-    public void noLogin(HttpServletResponse httpServletResponse) throws IOException {
-        userInfo.setFakeAuth(true);
-        Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /user/login/hbp", "Unauthorized login.");
-
-        httpServletResponse.sendRedirect(securityConfiguration.getFrontendRedirectAfterLogin());
-    }
+//    @RequestMapping(path = "/login/hbp", method = RequestMethod.GET)
+//    @ConditionalOnExpression("${authentication.enabled:0}")
+//    public void noLogin(HttpServletResponse httpServletResponse) throws IOException {
+//        userInfo.setFakeAuth(true);
+//        Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /user/login/hbp", "Unauthorized login.");
+//
+//        httpServletResponse.sendRedirect(securityConfiguration.getFrontendRedirectAfterLogin());
+//    }
 
     @Value("#{'${services.galaxy.galaxyUsername:admin}'}")
     private String galaxyUsername;

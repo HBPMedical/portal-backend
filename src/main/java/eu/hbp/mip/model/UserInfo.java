@@ -21,7 +21,7 @@ public class UserInfo {
     /**
      * Enable HBP collab authentication (1) or disable it (0). Default is 1
      */
-    @Value("#{'${hbp.authentication.enabled}'}")
+    @Value("#{'${authentication.enabled}'}")
     private boolean authentication;
 
     private UserDAO user;
@@ -54,6 +54,7 @@ public class UserInfo {
             } else {
                 user = new UserDAO(getUserInformation());
             }
+
             UserDAO foundUser = userRepository.findByUsername(user.getUsername());
             if (foundUser != null) {
                 user.setAgreeNDA(foundUser.getAgreeNDA());

@@ -4,7 +4,6 @@
 
 package eu.hbp.mip.model.DAOs;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.gson.annotations.Expose;
 import io.swagger.annotations.ApiModel;
@@ -12,8 +11,6 @@ import io.swagger.annotations.ApiModel;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Entity
 @Table(name = "`user`")
@@ -88,7 +85,6 @@ public class UserDAO {
         this.fullname = fullname;
     }
 
-
     public String getUsername() {
         return username;
     }
@@ -96,7 +92,6 @@ public class UserDAO {
     public void setUsername(String username) {
         this.username = username;
     }
-
 
     public String getEmail() {
         return email;

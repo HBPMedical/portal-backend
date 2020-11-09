@@ -20,7 +20,7 @@
     <properties>
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <keycloak-spring-boot-starter.version>11.0.2</keycloak-spring-boot-starter.version>
+        <keycloak-spring.version>11.0.2</keycloak-spring.version>
         <springfox-swagger.version>2.5.0</springfox-swagger.version>
         <spring-context.version>5.2.10.RELEASE</spring-context.version>
         <springfox-boot-starter.version>3.0.0</springfox-boot-starter.version>
@@ -44,6 +44,7 @@
         <flyway-core.version>4.2.0</flyway-core.version>
         <hibernate-jpa-2.1-api.version>1.0.0.Final</hibernate-jpa-2.1-api.version>
         <hibernate.version>5.4.10.Final</hibernate.version>
+        <hibernate-validator.version>6.1.0.Final</hibernate-validator.version>
         <aspectjweaver.version>1.8.9</aspectjweaver.version>
         <javax-inject.version>1</javax-inject.version>
         <protobuf-java.version>3.1.0</protobuf-java.version>
@@ -84,9 +85,13 @@
         <dependency>
             <groupId>org.keycloak</groupId>
             <artifactId>keycloak-spring-boot-starter</artifactId>
-            <version>${keycloak-spring-boot-starter.version}</version>
+            <version>${keycloak-spring.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-spring-security-adapter</artifactId>
+            <version>${keycloak-spring.version}</version>
+        </dependency>
 <!--        <dependency>-->
 <!--            <groupId>org.springframework.security</groupId>-->
 <!--            <artifactId>spring-security-oauth2-resource-server</artifactId>-->
@@ -139,6 +144,11 @@
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-core</artifactId>
             <version>${hibernate.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>${hibernate-validator.version}</version>
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>

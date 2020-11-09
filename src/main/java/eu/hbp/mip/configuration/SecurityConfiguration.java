@@ -1,35 +1,40 @@
 package eu.hbp.mip.configuration;
 
-import eu.hbp.mip.utils.CORSFilter;
-import eu.hbp.mip.utils.CustomAccessDeniedHandler;
-import eu.hbp.mip.utils.CustomLoginUrlAuthenticationEntryPoint;
+import eu.hbp.mip.configuration.SecurityUtils.CORSFilter;
+import eu.hbp.mip.configuration.SecurityUtils.CustomAccessDeniedHandler;
+import eu.hbp.mip.configuration.SecurityUtils.CustomLoginUrlAuthenticationEntryPoint;
 import org.keycloak.adapters.KeycloakConfigResolver;
 import org.keycloak.adapters.springboot.KeycloakSpringBootConfigResolver;
 import org.keycloak.adapters.springsecurity.KeycloakConfiguration;
 import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticationProvider;
+import org.keycloak.adapters.springsecurity.authentication.KeycloakLogoutHandler;
 import org.keycloak.adapters.springsecurity.config.KeycloakWebSecurityConfigurerAdapter;
+import org.keycloak.adapters.springsecurity.filter.KeycloakAuthenticationProcessingFilter;
+import org.keycloak.adapters.springsecurity.filter.KeycloakPreAuthActionsFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.web.access.channel.ChannelProcessingFilter;
-import org.springframework.security.web.authentication.session.NullAuthenticatedSessionStrategy;
 import org.springframework.security.web.authentication.session.RegisterSessionAuthenticationStrategy;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.WebUtils;
 
 import javax.net.ssl.*;
-import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
@@ -52,7 +57,7 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
     /**
      * Enable HBP collab authentication (1) or disable it (0). Default is 1
      */
-    @Value("#{'${hbp.authentication.enabled}'}")
+    @Value("#{'${authentication.enabled}'}")
     private boolean authenticationEnabled;
 
     /**
@@ -91,11 +96,10 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
         return new RegisterSessionAuthenticationStrategy(new SessionRegistryImpl());
     }
 
-
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) {
         SimpleAuthorityMapper grantedAuthorityMapper = new SimpleAuthorityMapper();
-        grantedAuthorityMapper.setPrefix("ROLE_");
+        //grantedAuthorityMapper.setPrefix("ROLE_");
         grantedAuthorityMapper.setConvertToUpperCase(true);
 
         KeycloakAuthenticationProvider keycloakAuthenticationProvider = keycloakAuthenticationProvider();
@@ -104,28 +108,40 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
     }
 
     @Override
+    protected KeycloakLogoutHandler keycloakLogoutHandler() throws Exception {
+        return super.keycloakLogoutHandler();
+    }
+
+    @Override
     protected void configure(HttpSecurity http) throws Exception {
-        disableCertificateValidation();  //  TODO needed?
-        // @formatter:off
+        super.configure(http);
+        //disableCertificateValidation();  //  TODO needed?
+
+        // TODO Check if needed.
+        // Check if it works when removing keycloak cors from app properties.
         http.addFilterBefore(new CORSFilter(), ChannelProcessingFilter.class);
 
         if (authenticationEnabled) {
-            http.authorizeRequests()
-                    .antMatchers(
-                            "/", "/login/**", "/health/**", "/info/**", "/metrics/**",
-                            "/trace/**", "/frontend/**", "/webjars/**", "/v2/api-docs",
-                            "/swagger-ui.html", "/swagger-resources/**"
-                    ).permitAll()
-                    .antMatchers("/galaxy*", "/galaxy/*").hasRole("Data Manager")
-                    .anyRequest().hasRole("Researcher")
-                    .and().exceptionHandling().authenticationEntryPoint(new CustomLoginUrlAuthenticationEntryPoint(loginUrl))
-                    .accessDeniedHandler(new CustomAccessDeniedHandler())
-                    // TODO .and().logout().addLogoutHandler(authLogoutHandler()).logoutSuccessUrl(redirectAfterLogoutUrl)
-                    .and().logout().permitAll()
-                    .and().csrf().disable() // TODO Remove
-            //.and().csrf().ignoringAntMatchers("/logout").csrfTokenRepository(csrfTokenRepository())
-                    //.and().addFilterAfter(csrfHeaderFilter(), CsrfFilter.class)
-            ; // TODO ?? .addFilterBefore(ssoFilter(), BasicAuthenticationFilter.class);
+            http.antMatcher("/**")
+                    .authorizeRequests()
+                    .antMatchers("/**").permitAll()
+//                    .antMatchers(
+//                            "/login**", "/health/**", "/info/**", "/metrics/**",
+//                            "/trace/**", "/frontend/**", "/webjars/**", "/v2/api-docs",
+//                            "/swagger-ui.html", "/swagger-resources/**"
+//                    ).permitAll()
+//                    .antMatchers("/galaxy*", "/galaxy/*").hasRole("DATA MANAGER")
+//                    .anyRequest().hasRole("RESEARCHER")
+                   // .and().exceptionHandling().authenticationEntryPoint(new CustomLoginUrlAuthenticationEntryPoint(loginUrl))
+                   // .accessDeniedHandler(new CustomAccessDeniedHandler())
+                    .and().csrf().ignoringAntMatchers("/logout").csrfTokenRepository(csrfTokenRepository())
+                    .and().addFilterAfter(csrfHeaderFilter(), CsrfFilter.class).csrf();
+//                    .and().logout().logoutSuccessUrl("/logout");
+//
+//
+//                    // TODO .and().logout().addLogoutHandler(authLogoutHandler()).logoutSuccessUrl(redirectAfterLogoutUrl)
+//                    .and().logout().permitAll()
+                    // TODO ?? .addFilterBefore(ssoFilter(), BasicAuthenticationFilter.class);
         } else {
             http.antMatcher("/**")
                     .authorizeRequests()
@@ -133,6 +149,22 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
                     .and().csrf().disable();
         }
     }
+
+
+//    @Bean
+//    public FilterRegistrationBean corsFilter() {
+//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+//        CorsConfiguration config = new CorsConfiguration();
+//        config.setAllowCredentials(true);
+//        config.addAllowedOrigin("*");
+//        config.addAllowedHeader("*");
+//        config.addAllowedMethod("*");
+//        source.registerCorsConfiguration("/**", config);
+//
+//        FilterRegistrationBean bean = new FilterRegistrationBean(new CorsFilter(source));
+//        bean.setOrder(-100);
+//        return bean;
+//    }
 
 //    private Filter ssoFilter() {
 //        OAuth2ClientAuthenticationProcessingFilter hbpFilter = new OAuth2ClientAuthenticationProcessingFilter("/login/hbp");
@@ -165,7 +197,7 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
 //    }
 
 
-    private Filter csrfHeaderFilter() {
+    private OncePerRequestFilter csrfHeaderFilter() {
         return new OncePerRequestFilter() {
             @Override
             protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -245,45 +277,45 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
 //        restTemplate.exchange(requestEntity, String.class);
 //    }
 
-// TODO needed?
-    @Value("#{'${keycloak.auth-server-url}'}")
-    private String keycloakUrl;
-
-    public void disableCertificateValidation() {
-
-        //TODO Refactor logging
-
-        LOGGER.info("disabling certificate validation host : " + keycloakUrl);
-
-        // Create a trust manager that does not validate certificate chains
-        TrustManager[] trustAllCerts = new TrustManager[]{
-                new X509TrustManager() {
-                    public X509Certificate[] getAcceptedIssuers() {
-                        return new X509Certificate[0];
-                    }
-
-                    public void checkClientTrusted(X509Certificate[] certs, String authType) {
-                    }
-
-                    public void checkServerTrusted(X509Certificate[] certs, String authType) {
-                    }
-                }};
-
-
-        // Ignore differences between given hostname and certificate hostname
-        HostnameVerifier hv =
-                (hostname, session) -> hostname.equals(keycloakUrl) && session.getPeerHost().equals(keycloakUrl);
-
-        // Install the all-trusting trust manager
-        try {
-            SSLContext sc = SSLContext.getInstance("SSL");
-            sc.init(null, trustAllCerts, new SecureRandom());
-            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-            HttpsURLConnection.setDefaultHostnameVerifier(hv);
-        } catch (Exception e) {
-            // TODO add log message
-        }
-
-    }
+    // TODO needed?
+//    @Value("#{'${keycloak.auth-server-url}'}")
+//    private String keycloakUrl;
+//
+//    public void disableCertificateValidation() {
+//
+//        //TODO Refactor logging
+//
+//        LOGGER.info("disabling certificate validation host : " + keycloakUrl);
+//
+//        // Create a trust manager that does not validate certificate chains
+//        TrustManager[] trustAllCerts = new TrustManager[]{
+//                new X509TrustManager() {
+//                    public X509Certificate[] getAcceptedIssuers() {
+//                        return new X509Certificate[0];
+//                    }
+//
+//                    public void checkClientTrusted(X509Certificate[] certs, String authType) {
+//                    }
+//
+//                    public void checkServerTrusted(X509Certificate[] certs, String authType) {
+//                    }
+//                }};
+//
+//
+//        // Ignore differences between given hostname and certificate hostname
+//        HostnameVerifier hv =
+//                (hostname, session) -> hostname.equals(keycloakUrl) && session.getPeerHost().equals(keycloakUrl);
+//
+//        // Install the all-trusting trust manager
+//        try {
+//            SSLContext sc = SSLContext.getInstance("SSL");
+//            sc.init(null, trustAllCerts, new SecureRandom());
+//            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+//            HttpsURLConnection.setDefaultHostnameVerifier(hv);
+//        } catch (Exception e) {
+//            // TODO add log message
+//        }
+//
+//    }
 
 }

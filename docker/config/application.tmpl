@@ -3,7 +3,7 @@
 # See http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
 spring:
   portal-datasource:
-    url: {{ default .Env.PORTAL_DB_URL "jdbc:postgresql://172.22.0.1:5432/portal" }}
+    url: {{ default .Env.PORTAL_DB_URL "jdbc:postgresql://88.197.53.106:5432/portal" }}
     schema: {{ default .Env.PORTAL_DB_SCHEMA "public" }}
     username: {{ default .Env.PORTAL_DB_USER "postgres" }}
     password: {{ .Env.PORTAL_DB_PASSWORD }}
@@ -22,17 +22,19 @@ spring:
 frontend:
   loginUrl: {{ default .Env.FRONTEND_LOGIN_URL "http://frontend/services/login/hbp" }}
   redirectAfterLoginUrl: {{ default .Env.FRONTEND_AFTER_LOGIN_URL "http://frontend/" }}
-  redirectAfterLogoutUrl: {{ default .Env.FRONTEND_AFTER_LOGOUT_URL (default .Env.LOGIN_URI "http://frontend/services/login/hbp") }}
+  redirectAfterLogoutUrl: {{ default .Env.FRONTEND_AFTER_LOGOUT_URL "http://frontend/services/login/hbp" }}
 
 logging:
   level:
     root: {{ default .Env.LOG_LEVEL_FRAMEWORK "ERROR" }}
+    org: {{ default .Env.LOG_LEVEL_FRAMEWORK "ERROR" }}
     eu:
       hbp: {{ default .Env.LOG_LEVEL "INFO" }}
 
 # EMBEDDED SERVER CONFIGURATION
 server:
-  contextPath: {{ default .Env.CONTEXT_PATH "/services" }}
+  servlet:
+    contextPath: {{ default .Env.CONTEXT_PATH "/services" }}
   port: 8080
   use-forward-headers: true
   session:
@@ -59,17 +61,24 @@ services:
     galaxyUsername:  {{ default .Env.GALAXY_USERNAME "admin" }}
     galaxyPassword:  {{ default .Env.GALAXY_PASSWORD "password" }}
 
-# HBP Authentication
-hbp:
-  authentication:
-    enabled: {{ default .Env.AUTHENTICATION "1" }}
+# Authentication
+authentication:
+  enabled: {{ default .Env.AUTHENTICATION "1" }}
 
 # Keycloak
 keycloak:
-    auth-server-url: {{ .Env.KEYCLOAK_URL }}
-    realm: {{ .Env.KEYCLOAK_REALM }}
-    resource: {{ .Env.CLIENT_ID }}
-    credentials:
-        secret: {{ .Env.CLIENT_SECRET }}
-    principal-attribute: "preferred_username"
-   # logoutUrl: {{ .Env.LOGOUT_URL }}
+  enabled: true
+  auth-server-url: {{ .Env.KEYCLOAK_AUTH_URL }}
+  realm: {{ .Env.KEYCLOAK_REALM }}
+  resource: {{ .Env.CLIENT_ID }}
+  enable-basic-auth: true
+  credentials:
+    secret: {{ .Env.CLIENT_SECRET }}
+  principal-attribute: "preferred_username"
+#  cors: true
+#  cors-max-age: 3600
+#  cors-allowed-methods: "GET, POST, PUT, PATCH, OPTIONS, DELETE"
+#  cors-allowed-headers: "*"
+#  cors-exposed-headers: "*"
+
+  # logoutUrl: {{ .Env.LOGOUT_URL }}

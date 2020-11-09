@@ -71,4 +71,5 @@ keycloak:
     resource: {{ .Env.CLIENT_ID }}
     credentials:
         secret: {{ .Env.CLIENT_SECRET }}
+    principal-attribute: "preferred_username"
    # logoutUrl: {{ .Env.LOGOUT_URL }}

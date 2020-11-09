@@ -122,8 +122,9 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
                     .accessDeniedHandler(new CustomAccessDeniedHandler())
                     // TODO .and().logout().addLogoutHandler(authLogoutHandler()).logoutSuccessUrl(redirectAfterLogoutUrl)
                     .and().logout().permitAll()
-                    .and().csrf().ignoringAntMatchers("/logout").csrfTokenRepository(csrfTokenRepository())
-                    .and().addFilterAfter(csrfHeaderFilter(), CsrfFilter.class)
+                    .and().csrf().disable() // TODO Remove
+            //.and().csrf().ignoringAntMatchers("/logout").csrfTokenRepository(csrfTokenRepository())
+                    //.and().addFilterAfter(csrfHeaderFilter(), CsrfFilter.class)
             ; // TODO ?? .addFilterBefore(ssoFilter(), BasicAuthenticationFilter.class);
         } else {
             http.antMatcher("/**")

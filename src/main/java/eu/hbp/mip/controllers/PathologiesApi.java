@@ -10,6 +10,7 @@ import eu.hbp.mip.model.DTOs.PathologyDTO;
 import eu.hbp.mip.model.UserInfo;
 import eu.hbp.mip.utils.ClaimUtils;
 import eu.hbp.mip.utils.CustomResourceLoader;
+import eu.hbp.mip.utils.Exceptions.BadRequestException;
 import eu.hbp.mip.utils.InputStreamConverter;
 import eu.hbp.mip.utils.Logging;
 import io.swagger.annotations.Api;
@@ -56,7 +57,7 @@ public class PathologiesApi {
             }.getType());
         } catch (IOException e) {
             Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /pathologies", "Unable to load pathologies");
-            return ResponseEntity.badRequest().body("The pathologies could not be loaded.");
+            throw new BadRequestException("The pathologies could not be loaded.");
         }
 
         // If authentication is disabled return everything

@@ -16,7 +16,7 @@ public class ExperimentSpecifications {
 
         public  ExperimentWithName(String name){
             this.name = name;
-            this.regExp = "%"+name+"%";
+            this.regExp = name;
         }
 
         public Predicate toPredicate(Root<ExperimentDAO> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder cb)
@@ -24,8 +24,11 @@ public class ExperimentSpecifications {
             if (name == null) {
                 return cb.isTrue(cb.literal(true));
             }
+            else {
+                regExp = (name.contains("%")?name:name+"%");
+            }
 
-            return cb.like( root.get( "name" ), regExp );
+            return cb.like( root.get( "name" ), this.regExp );
         }
     }
     public static class ExperimentWithAlgorithm implements Specification<ExperimentDAO> {

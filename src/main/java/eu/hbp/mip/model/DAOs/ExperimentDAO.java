@@ -120,7 +120,7 @@ public class ExperimentDAO {
         experimentDTO.setName(this.name);
         experimentDTO.setResult(JsonConverters.convertJsonStringToObject(this.result, ExperimentDTO.ResultDTO.class));
         experimentDTO.setShared(this.shared);
-        experimentDTO.setUuid(this.uuid.toString());
+        experimentDTO.setUuid(this.uuid);
         experimentDTO.setViewed(this.viewed);
         return experimentDTO;
     }

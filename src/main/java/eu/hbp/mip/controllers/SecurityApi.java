@@ -55,7 +55,7 @@ public class SecurityApi {
             //LOGGER.trace("Cannot read user json", e);
         }
 
-        if (!securityConfiguration.isAuthentication()) {
+        if (!securityConfiguration.getAuthenticationEnabled()) {
             if (userInfo.isFakeAuth()) {
                 response.setStatus(401);
             }
@@ -85,7 +85,7 @@ public class SecurityApi {
     @ConditionalOnExpression("${hbp.authentication.enabled:0}")
     public void noLogin(HttpServletResponse httpServletResponse) throws IOException {
         userInfo.setFakeAuth(true);
-        Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /user/login/hbp", "Unathorized login.");
+        Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /user/login/hbp", "Unauthorized login.");
 
         httpServletResponse.sendRedirect(securityConfiguration.getFrontendRedirectAfterLogin());
     }
@@ -104,7 +104,6 @@ public class SecurityApi {
      *
      * @return Return a @{@link ResponseEntity} with the token.
      */
-
     @RequestMapping(path = "/galaxy", method = RequestMethod.GET, produces = "application/json")
     @PreAuthorize("hasRole('Data Manager')")
     @ResponseStatus(value = HttpStatus.OK)

@@ -4,10 +4,11 @@ import eu.hbp.mip.model.DAOs.ExperimentDAO;
 
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 public class ExperimentDTO {
 
-    private String uuid;
+    private UUID uuid;
     private String name;
     private String createdBy;
     private Date created;
@@ -39,11 +40,11 @@ public class ExperimentDTO {
         this.algorithm = algorithmDetails.getName();
     }
 
-    public String getUuid() {
+    public UUID getUuid() {
         return uuid;
     }
 
-    public void setUuid(String uuid) {
+    public void setUuid(UUID uuid) {
         this.uuid = uuid;
     }
 

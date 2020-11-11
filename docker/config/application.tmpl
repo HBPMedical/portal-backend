@@ -41,6 +41,7 @@ frontend:
 logging:
   level:
     root: {{ default .Env.LOG_LEVEL_FRAMEWORK "ERROR" }}
+    org: {{ default .Env.LOG_LEVEL_FRAMEWORK "ERROR" }}
     eu:
       hbp: {{ default .Env.LOG_LEVEL "INFO" }}
 

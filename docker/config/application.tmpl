@@ -46,7 +46,8 @@ logging:
 
 # EMBEDDED SERVER CONFIGURATION
 server:
-  contextPath: {{ default .Env.CONTEXT_PATH "/services" }}
+  servlet:
+    contextPath: {{ default .Env.CONTEXT_PATH "/services" }}
   port: 8080
   use-forward-headers: true
   session:

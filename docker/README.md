@@ -33,7 +33,7 @@ To use this image, you need a running instance of PostgreSQL and to configure th
 * CLIENT_SECRET: required when authentication is turned on, client secret for the [OpenID server of HBP](https://services.humanbrainproject.eu/oidc/).
 * TOKEN_URI: default to "https://services.humanbrainproject.eu/oidc/token".
 * AUTH_URI: default to "https://services.humanbrainproject.eu/oidc/authorize".
-* USER_INFO_URI: default to "https://services.humanbrainproject.eu/oidc/userinfo".
+* USER_INFO_URI: default to "https://services.humanbrainproject.eu/oidc/userInfo".
 * REVOKE_TOKEN_URI "https://services.humanbrainproject.eu/oidc/slo".
 
 

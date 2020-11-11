@@ -99,7 +99,6 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) {
         SimpleAuthorityMapper grantedAuthorityMapper = new SimpleAuthorityMapper();
-        //grantedAuthorityMapper.setPrefix("ROLE_");
         grantedAuthorityMapper.setConvertToUpperCase(true);
 
         KeycloakAuthenticationProvider keycloakAuthenticationProvider = keycloakAuthenticationProvider();
@@ -125,6 +124,7 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
             http.antMatcher("/**")
                     .authorizeRequests()
                     .antMatchers("/**").permitAll()
+                    .and().csrf().disable();
 //                    .antMatchers(
 //                            "/login**", "/health/**", "/info/**", "/metrics/**",
 //                            "/trace/**", "/frontend/**", "/webjars/**", "/v2/api-docs",
@@ -134,8 +134,8 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
 //                    .anyRequest().hasRole("RESEARCHER")
                    // .and().exceptionHandling().authenticationEntryPoint(new CustomLoginUrlAuthenticationEntryPoint(loginUrl))
                    // .accessDeniedHandler(new CustomAccessDeniedHandler())
-                    .and().csrf().ignoringAntMatchers("/logout").csrfTokenRepository(csrfTokenRepository())
-                    .and().addFilterAfter(csrfHeaderFilter(), CsrfFilter.class).csrf();
+//                    .and().csrf().ignoringAntMatchers("/logout").csrfTokenRepository(csrfTokenRepository())
+//                    .and().addFilterAfter(csrfHeaderFilter(), CsrfFilter.class).csrf();
 //                    .and().logout().logoutSuccessUrl("/logout");
 //
 //
@@ -171,7 +171,7 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
 //        OAuth2RestTemplate hbpTemplate = new OAuth2RestTemplate(hbp(), oauth2ClientContext);
 //        hbpFilter.setAuthenticationSuccessHandler(new SimpleUrlAuthenticationSuccessHandler(frontendRedirectAfterLogin));
 //        hbpFilter.setRestTemplate(hbpTemplate);
-//        hbpFilter.setTokenServices(new UserInfoTokenServices(hbpResource().getUserInfoUri(), hbp().getClientId()));
+//        hbpFilter.setTokenServices(new activeUserServiceTokenServices(hbpResource().getactiveUserServiceUri(), hbp().getClientId()));
 //        return hbpFilter;
 //    }
 

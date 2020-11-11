@@ -9,7 +9,7 @@ import com.google.gson.reflect.TypeToken;
 import eu.hbp.mip.controllers.galaxy.retrofit.RetroFitGalaxyClients;
 import eu.hbp.mip.controllers.galaxy.retrofit.RetrofitClientInstance;
 import eu.hbp.mip.model.DTOs.AlgorithmDTO;
-import eu.hbp.mip.model.UserInfo;
+import eu.hbp.mip.services.ActiveUserService;
 import eu.hbp.mip.model.galaxy.WorkflowDTO;
 import eu.hbp.mip.utils.CustomResourceLoader;
 import eu.hbp.mip.utils.HTTPUtil;
@@ -42,7 +42,7 @@ public class AlgorithmsApi {
     private static final Gson gson = new Gson();
 
     @Autowired
-    private UserInfo userInfo;
+    private ActiveUserService activeUserService;
 
     @Value("#{'${services.exareme.algorithmsUrl}'}")
     private String exaremeAlgorithmsUrl;
@@ -56,24 +56,24 @@ public class AlgorithmsApi {
     @ApiOperation(value = "List all algorithms", response = String.class)
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<AlgorithmDTO>> getAlgorithms() {
-        Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms", "Executing...");
+        Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /algorithms", "Executing...");
 
         LinkedList<AlgorithmDTO> exaremeAlgorithms = getExaremeAlgorithms();
-        Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms", "Loaded " + exaremeAlgorithms.size() + " exareme algorithms");
+        Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /algorithms", "Loaded " + exaremeAlgorithms.size() + " exareme algorithms");
         LinkedList<AlgorithmDTO> galaxyAlgorithms = getGalaxyWorkflows();
-        Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms", "Loaded " + galaxyAlgorithms.size() + " galaxy algorithms");
+        Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /algorithms", "Loaded " + galaxyAlgorithms.size() + " galaxy algorithms");
 
         LinkedList<AlgorithmDTO> algorithms = new LinkedList<>();
         if (exaremeAlgorithms != null) {
             algorithms.addAll(exaremeAlgorithms);
         } else {
-            Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms",
+            Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /algorithms",
                     "Getting exareme algorithms failed and returned null");
         }
         if (galaxyAlgorithms != null) {
             algorithms.addAll(galaxyAlgorithms);
         } else {
-            Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms",
+            Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /algorithms",
                     "Getting galaxy workflows failed and returned null");
         }
 
@@ -81,7 +81,7 @@ public class AlgorithmsApi {
         try {
             disabledAlgorithms = getDisabledAlgorithms();
         } catch (IOException e) {
-            Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms",
+            Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /algorithms",
                     "The disabled algorithms could not be loaded.");
         }
 
@@ -92,7 +92,7 @@ public class AlgorithmsApi {
                 allowedAlgorithms.add(algorithm);
             }
         }
-        Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms",
+        Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /algorithms",
                 "Successfully listed " + allowedAlgorithms.size() + " algorithms");
         return ResponseEntity.ok(allowedAlgorithms);
     }
@@ -115,11 +115,11 @@ public class AlgorithmsApi {
                     }.getType()
             );
         } catch (IOException e) {
-            Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms", "An exception occurred: " + e.getMessage());
+            Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /algorithms", "An exception occurred: " + e.getMessage());
             return null;
         }
 
-        Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms",
+        Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /algorithms",
                 "Completed, returned " + algorithms.size() + " algorithms.");
         return algorithms;
     }
@@ -139,7 +139,7 @@ public class AlgorithmsApi {
 
             workflowList = new ArrayList<>(workflowsClient.getWorkflows());
         } catch (Exception e) {
-            Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms", "Error when calling list galaxy workflows: " + e.getMessage());
+            Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /algorithms", "Error when calling list galaxy workflows: " + e.getMessage());
 
             return null;
         }
@@ -159,28 +159,28 @@ public class AlgorithmsApi {
 
                 } else {     // Something unexpected happened
                     String msgErr = gson.toJson(response.errorBody());
-                    Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms", "Error Response: " + msgErr);
+                    Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /algorithms", "Error Response: " + msgErr);
                     return null;
                 }
             } catch (Exception e) {
-                Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms", "An exception occurred: " + e.getMessage());
+                Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /algorithms", "An exception occurred: " + e.getMessage());
                 return null;
             }
         }
-        Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms", "Workflows fetched: " + workflows.size());
+        Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /algorithms", "Workflows fetched: " + workflows.size());
 
         // Convert the workflows to algorithms
         LinkedList<AlgorithmDTO> algorithms = new LinkedList<>();
         for (WorkflowDTO workflow : workflows) {
-            Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms", "Converting workflow: " + workflow);
+            Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /algorithms", "Converting workflow: " + workflow);
 
             algorithms.add(workflow.convertToAlgorithmDTO());
 
-            Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms",
+            Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /algorithms",
                     "Converted algorithm: " + algorithms.get(algorithms.size() - 1));
         }
 
-        Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /algorithms", "Completed!");
+        Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /algorithms", "Completed!");
         return algorithms;
     }
 

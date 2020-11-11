@@ -274,6 +274,7 @@
                     <include>**/*.csv</include>
                     <include>**/*.sql</include>
                     <include>**/*.conf</include>
+                    <include>**/*.yml</include>    <!--  Only for development -->
                 </includes>
                 <filtering>true</filtering>
             </resource>

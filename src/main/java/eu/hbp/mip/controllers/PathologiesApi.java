@@ -7,7 +7,7 @@ package eu.hbp.mip.controllers;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import eu.hbp.mip.model.DTOs.PathologyDTO;
-import eu.hbp.mip.model.UserInfo;
+import eu.hbp.mip.services.ActiveUserService;
 import eu.hbp.mip.utils.ClaimUtils;
 import eu.hbp.mip.utils.CustomResourceLoader;
 import eu.hbp.mip.utils.Exceptions.BadRequestException;
@@ -36,7 +36,7 @@ public class PathologiesApi {
     private static final Gson gson = new Gson();
 
     @Autowired
-    private UserInfo userInfo;
+    private ActiveUserService activeUserService;
 
     // Enable HBP collab authentication (1) or disable it (0). Default is 1
     @Value("#{'${authentication.enabled}'}")
@@ -47,7 +47,7 @@ public class PathologiesApi {
 
     @RequestMapping(name = "/pathologies", method = RequestMethod.GET)
     public ResponseEntity<String> getPathologies(Authentication authentication) {
-        Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /pathologies", "Loading pathologies ...");
+        Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /pathologies", "Loading pathologies ...");
 
         // Load pathologies from file
         Resource resource = resourceLoader.getResource("file:/opt/portal/api/pathologies.json");
@@ -56,18 +56,18 @@ public class PathologiesApi {
             allPathologies = gson.fromJson(InputStreamConverter.convertInputStreamToString(resource.getInputStream()), new TypeToken<List<PathologyDTO>>() {
             }.getType());
         } catch (IOException e) {
-            Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /pathologies", "Unable to load pathologies");
+            Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /pathologies", "Unable to load pathologies");
             throw new BadRequestException("The pathologies could not be loaded.");
         }
 
         // If authentication is disabled return everything
         if (!authenticationIsEnabled) {
-            Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /pathologies", "Successfully loaded " + allPathologies.size() + " pathologies");
+            Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /pathologies", "Successfully loaded " + allPathologies.size() + " pathologies");
             return ResponseEntity.ok().body(gson.toJson(allPathologies));
         }
 
-        Logging.LogUserAction(userInfo.getUser().getUsername(), "(GET) /pathologies", "Successfully loaded all authorized pathologies");
+        Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /pathologies", "Successfully loaded all authorized pathologies");
         return ResponseEntity.ok().body(ClaimUtils.getAuthorizedPathologies(
-                userInfo.getUser().getUsername(), authentication.getAuthorities(), allPathologies));
+                activeUserService.getActiveUser().getUsername(), authentication.getAuthorities(), allPathologies));
     }
 }

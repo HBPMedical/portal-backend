@@ -16,7 +16,6 @@ import eu.hbp.mip.model.DAOs.ExperimentDAO;
 import eu.hbp.mip.model.DAOs.UserDAO;
 import eu.hbp.mip.model.DTOs.AlgorithmDTO;
 import eu.hbp.mip.model.DTOs.ExperimentDTO;
-import eu.hbp.mip.model.UserInfo;
 import eu.hbp.mip.model.galaxy.GalaxyWorkflowResult;
 import eu.hbp.mip.model.galaxy.PostWorkflowToGalaxyDtoResponse;
 import eu.hbp.mip.repositories.ExperimentRepository;
@@ -47,7 +46,7 @@ import static java.lang.Thread.sleep;
 public class ExperimentService {
 
     @Autowired
-    private UserInfo userInfo;
+    private ActiveUserService activeUserService;
 
     @Value("#{'${services.exareme.queryExaremeUrl}'}")
     private String queryExaremeUrl;
@@ -80,7 +79,7 @@ public class ExperimentService {
      * @return a list of mapped experiments
      */
     public Map getExperiments(String name,String algorithm, Boolean shared,Boolean viewed, int page, int size, String endpoint) {
-        UserDAO user = userInfo.getUser();
+        UserDAO user = activeUserService.getActiveUser();
         Logging.LogUserAction(user.getUsername(), endpoint, "Listing my experiments.");
         if(size > 10 )
             throw new BadRequestException("Invalid size input, max size is 10.");
@@ -120,7 +119,7 @@ public class ExperimentService {
     public ExperimentDTO getExperiment(String uuid, String endpoint) {
 
         ExperimentDAO experimentDAO;
-        UserDAO user = userInfo.getUser();
+        UserDAO user = activeUserService.getActiveUser();
 
         Logging.LogUserAction(user.getUsername(), endpoint, "Loading Experiment with uuid : " + uuid);
 
@@ -145,7 +144,7 @@ public class ExperimentService {
      * @return the experiment information which was created
      */
     public ExperimentDTO createExperiment(Authentication authentication, ExperimentDTO experimentDTO, String endpoint) {
-        UserDAO user = userInfo.getUser();
+        UserDAO user = activeUserService.getActiveUser();
 
         //Checking if check (POST) /experiments has proper input.
         if (checkPostExperimentProperInput(experimentDTO)){
@@ -208,7 +207,7 @@ public class ExperimentService {
      * @return the experiment information which was created
      */
     public ExperimentDTO createTransientExperiment(Authentication authentication, ExperimentDTO experimentDTO, String endpoint){
-        UserDAO user = userInfo.getUser();
+        UserDAO user = activeUserService.getActiveUser();
 
         //Checking if check (POST) /experiments has proper input.
         if (checkPostExperimentProperInput(experimentDTO)){
@@ -288,7 +287,7 @@ public class ExperimentService {
     public ExperimentDTO updateExperiment(String uuid, ExperimentDTO experimentDTO, String endpoint)
     {
         ExperimentDAO experimentDAO;
-        UserDAO user = userInfo.getUser();
+        UserDAO user = activeUserService.getActiveUser();
         Logging.LogUserAction(user.getUsername(), endpoint, "Updating experiment with uuid : " + experimentDTO.getUuid() + ".");
         //Checking if check (PUT) /experiments has proper input.
         if (checkPutExperimentProperInput(experimentDTO)){
@@ -347,7 +346,7 @@ public class ExperimentService {
     public void deleteExperiment(String uuid, String endpoint)
     {
         ExperimentDAO experimentDAO;
-        UserDAO user = userInfo.getUser();
+        UserDAO user = activeUserService.getActiveUser();
         Logging.LogUserAction(user.getUsername(), endpoint, "Deleting experiment with uuid : " + uuid + ".");
 
         experimentDAO = loadExperiment(uuid).orElseThrow(() -> new ExperimentNotFoundException("Not found Experimnet with id = " + uuid));
@@ -411,7 +410,7 @@ public class ExperimentService {
      * @return the experiment information that was inserted into the database
      */
     private ExperimentDAO createExperimentInTheDatabase(ExperimentDTO experimentDTO, String endpoint) {
-        UserDAO user = userInfo.getUser();
+        UserDAO user = activeUserService.getActiveUser();
 
         ExperimentDAO experimentDAO = new ExperimentDAO();
         experimentDAO.setUuid(UUID.randomUUID());
@@ -435,7 +434,7 @@ public class ExperimentService {
     }
 
     private void saveExperiment(ExperimentDAO experimentDAO, String endpoint) {
-        UserDAO user = userInfo.getUser();
+        UserDAO user = activeUserService.getActiveUser();
 
         Logging.LogUserAction(user.getUsername(), endpoint, " id : " + experimentDAO.getUuid());
         Logging.LogUserAction(user.getUsername(), endpoint, " algorithms : " + experimentDAO.getAlgorithmDetails());
@@ -460,7 +459,7 @@ public class ExperimentService {
             experimentRepository.save(experimentDAO);
         }
         catch (Exception e){
-            Logging.LogUserAction(userInfo.getUser().getUsername(), endpoint, "Attempted to save changes to database but an error ocurred  : " + e.getMessage() + ".");
+            Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), endpoint, "Attempted to save changes to database but an error ocurred  : " + e.getMessage() + ".");
             throw new InternalServerError(e.getMessage());
         }
     }
@@ -476,7 +475,7 @@ public class ExperimentService {
      */
     public ExperimentDTO createExaremeExperiment(ExperimentDTO experimentDTO, String endpoint) {
 
-        UserDAO user = userInfo.getUser();
+        UserDAO user = activeUserService.getActiveUser();
         Logging.LogUserAction(user.getUsername(), endpoint, "Running the algorithm...");
 
         ExperimentDAO experimentDAO = createExperimentInTheDatabase(experimentDTO, endpoint);
@@ -559,7 +558,7 @@ public class ExperimentService {
      * @return the response to be returned
      */
     public ExperimentDTO runGalaxyWorkflow(ExperimentDTO experimentDTO, String endpoint) {
-        UserDAO user = userInfo.getUser();
+        UserDAO user = activeUserService.getActiveUser();
         Logging.LogUserAction(user.getUsername(), endpoint, "Running a workflow...");
 
         ExperimentDAO experimentDAO = createExperimentInTheDatabase(experimentDTO, endpoint);
@@ -660,7 +659,7 @@ public class ExperimentService {
      * @return nothing, just updates the experiment
      */
     public void updateWorkflowExperiment(ExperimentDAO experimentDAO, String endpoint) {
-        UserDAO user = userInfo.getUser();
+        UserDAO user = activeUserService.getActiveUser();
 
         if (experimentDAO == null) {
             Logging.LogUserAction(user.getUsername(), endpoint, "The experiment does not exist.");

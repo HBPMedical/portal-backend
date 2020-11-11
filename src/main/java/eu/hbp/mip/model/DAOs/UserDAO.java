@@ -20,62 +20,27 @@ public class UserDAO {
 
     @Id
     @Expose
-    private String username = null;
+    private String username;
 
     @Expose
-    private String fullname = null;
+    private String fullname;
 
     @Expose
-    private String email = null;
+    private String email;
 
-    private Boolean agreeNDA = null;
-
+    @Expose
+    private Boolean agreeNDA;
 
     public UserDAO() {
-        /*
-         *  Empty constructor is needed by Hibernate
-         */
+        // Empty constructor is needed by Hibernate
     }
 
-
-    /**
-     * Create a user using OpenID user profile
-     *
-     * @param userInfo info from OpenID UserInfo endpoint
-     */
-    public UserDAO(String userInfo) {
-
-
-        // TODO fix
-        this.username = "test";
-        this.fullname = "test";
-        this.email = "test";
-
-        //
-//        Pattern p;
-//        Matcher m;
-//
-//        p = Pattern.compile("preferred_username=([\\w- ]+)");
-//        m = p.matcher(userInfo);
-//        if (m.find()) {
-//            this.username = m.group(1);
-//        }
-//
-//        p = Pattern.compile("name=([\\w ]+)");
-//        m = p.matcher(userInfo);
-//        if (m.find()) {
-//            this.fullname = m.group(1);
-//        }
-//
-//        p = Pattern.compile("email=([\\w.]+@[\\w.]+)");
-//        m = p.matcher(userInfo);
-//        if (m.find()) {
-//            this.email = m.group(1);
-//        }
-
-
+    public UserDAO(String username, String fullname, String email) {
+        this.username = username;
+        this.fullname = fullname;
+        this.email = email;
+        this.agreeNDA = false;
     }
-
 
     public String getFullname() {
         return fullname;

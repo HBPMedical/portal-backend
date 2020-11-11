@@ -1,7 +1,7 @@
 package eu.hbp.mip.controllers;
 
 import eu.hbp.mip.model.DTOs.ExperimentDTO;
-import eu.hbp.mip.model.UserInfo;
+import eu.hbp.mip.services.ActiveUserService;
 import eu.hbp.mip.services.ExperimentService;
 import eu.hbp.mip.utils.JsonConverters;
 import io.swagger.annotations.Api;
@@ -28,7 +28,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 public class ExperimentApi {
 
     @Autowired
-    private UserInfo userInfo;
+    private ActiveUserService activeUserService;
 
     @Autowired
     private ExperimentService experimentService;

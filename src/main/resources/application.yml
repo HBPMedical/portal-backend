@@ -36,8 +36,8 @@ frontend:
 
 logging:
   level:
-    root: "DEBUG"
-    org: "DEBUG"
+    root: "ERROR"
+    org: "ERROR"
     eu:
       hbp: "DEBUG"
 

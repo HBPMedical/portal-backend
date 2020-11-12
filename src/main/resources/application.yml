@@ -21,7 +21,7 @@ spring:
 # HBP OAUTH2 LOGIN
 hbp:
   authentication:
-    enabled: true
+    enabled: 0
   client:
     clientId: "MIP"
     clientSecret: "dae83a6b-c769-4186-8383-f0984c6edf05"
@@ -71,5 +71,11 @@ services:
     galaxyUsername:  "admin"
     galaxyPassword:  "password"
 
-    keycloak:
-      keycloakUrl: 127.0.0.1
+  keycloak:
+   keycloakUrl: "127.0.0.1"
+
+  pathologies:
+    pathologiesUrl: "classPath:/pathologies.json"
+
+  algorithms:
+    disabledAlgorithmsUrl: "classPath:/disableAlgorithms.json"

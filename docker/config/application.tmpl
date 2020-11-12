@@ -76,3 +76,9 @@ services:
 
   keycloak:
     keycloakUrl: {{ .Env.KEYCLOAK_URL }}
+
+pathologies:
+  pathologiesUrl: "file:/opt/portal/api/pathologies.json"
+
+algorithms:
+  disabledAlgorithmsUrl: "file:/opt/portal/api/disabledAlgorithms.json"

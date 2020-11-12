@@ -268,6 +268,14 @@
                     <include>**/*.yml</include>    <!--  Only for development -->
                 </includes>
                 <filtering>true</filtering>
+
+            </resource>
+            <resource>
+                <directory>config</directory>
+                <includes>
+                    <include>*.json</include>
+                </includes>
+                <filtering>true</filtering>
             </resource>
         </resources>
 

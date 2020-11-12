@@ -6,6 +6,7 @@ import eu.hbp.mip.utils.CustomLoginUrlAuthenticationEntryPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.AuthoritiesExtractor;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.ResourceServerProperties;
@@ -70,6 +71,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SecurityConfiguration.class);
 
+    @Qualifier("oauth2ClientContext")
     @Autowired
     private OAuth2ClientContext oauth2ClientContext;
 

@@ -1,0 +1,75 @@
+# Configuration template for the portal running inside a Docker container
+
+# See http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
+spring:
+  portal-datasource:
+    url: "jdbc:postgresql://127.0.0.1:5433/portal"
+    schema: "public"
+    username: "portal"
+    password: "portalpwd"
+    driver-class-name: org.postgresql.Driver
+
+  data:
+    jpa:
+      repositories:
+        bootstrap-mode: default
+  jpa:
+    hibernate:
+      dialect: org.hibernate.dialect.PostgreSQL9Dialect
+      ddl-auto: validate
+
+# HBP OAUTH2 LOGIN
+hbp:
+  authentication:
+    enabled: true
+  client:
+    clientId: "MIP"
+    clientSecret: "dae83a6b-c769-4186-8383-f0984c6edf05"
+    logoutUri: http://127.0.0.1/auth/realms/MIP/protocol/openid-connect/logout
+
+
+# WEB FRONTEND
+frontend:
+  loginUrl: "http://127.0.0.1/services/login/hbp"
+  redirectAfterLoginUrl: "http://127.0.0.1/"
+  redirectAfterLogoutUrl: "http://127.0.0.1/services/login/hbp"
+
+logging:
+  level:
+    root: "DEBUG"
+    org: "DEBUG"
+    eu:
+      hbp: "DEBUG"
+
+# EMBEDDED SERVER CONFIGURATION
+server:
+  servlet:
+    contextPath: "/services"
+  port: 8080
+  forward-headers-strategy: native
+  session:
+    timeout: "2592000"
+
+# ENDPOINTS
+endpoints:
+  enabled: true
+  health:
+    enabled: true
+    endpoint: "/health"
+    sensitive: false
+
+# External Services
+services:
+  exareme:
+    queryExaremeUrl: "http://127.0.0.1:9090/mining/query"
+    algorithmsUrl: "http://127.0.0.1:9090/mining/algorithms.json"
+
+  galaxy:
+    galaxyUrl: "http://127.0.0.1:8090"
+    galaxyContext:  "nativeGalaxy/workflows/list"
+    galaxyApiKey:   "d14a4cc5eebf805eb2ff261374ed08a2"
+    galaxyUsername:  "admin"
+    galaxyPassword:  "password"
+
+    keycloak:
+      keycloakUrl: 127.0.0.1

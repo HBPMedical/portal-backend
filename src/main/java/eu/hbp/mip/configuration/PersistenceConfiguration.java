@@ -29,7 +29,6 @@ public class PersistenceConfiguration {
         return DataSourceBuilder.create().build();
     }
 
-
     @Bean(name = "entityManagerFactory")
     @DependsOn("flyway")
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {

@@ -50,15 +50,9 @@ frontend:
   
 logging:
   level:
-    root: {{ default .Env.LOG_LEVEL "INFO" }}
-    org:
-      springframework:
-        security: DEBUG
-        web: {{ default .Env.LOGGING_LEVEL_WEB "WARN" }}
-        web.servlet.handler.BeanNameUrlHandlerMapping: WARN
-      hibernate: {{ default .Env.LOGGING_LEVEL_HIBERNATE "WARN" }}
+    root: {{ default .Env.LOG_LEVEL_FRAMEWORK "ERROR" }}
     eu:
-      hbp: {{ default .Env.LOGGING_LEVEL_MIP "INFO" }}
+      hbp: {{ default .Env.LOG_LEVEL "INFO" }}
 
 # EMBEDDED SERVER CONFIGURATION
 server:

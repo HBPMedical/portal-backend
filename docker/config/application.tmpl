@@ -77,8 +77,7 @@ services:
   keycloak:
     keycloakUrl: {{ .Env.KEYCLOAK_URL }}
 
-pathologies:
-  pathologiesUrl: "file:/opt/portal/api/pathologies.json"
-
-algorithms:
-  disabledAlgorithmsUrl: "file:/opt/portal/api/disabledAlgorithms.json"
+# Files are imported when building the docker image
+files:
+  pathologies_json: "file:/opt/portal/api/pathologies.json"
+  disabledAlgorithms_json: "file:/opt/portal/api/disabledAlgorithms.json"

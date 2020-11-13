@@ -96,7 +96,7 @@ public class SecurityApi {
     @Value("#{'${services.galaxy.galaxyPassword:password}'}")
     private String galaxyPassword;
 
-    @Value("#{'${services.galaxy.galaxyContext:nativeGalaxy}'}")
+    @Value("#{'${services.galaxy.galaxpathoyContext:nativeGalaxy}'}")
     private String galaxyContext;
 
     /**

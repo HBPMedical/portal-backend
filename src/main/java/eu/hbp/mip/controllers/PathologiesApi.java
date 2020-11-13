@@ -1,7 +1,3 @@
-/**
- * Created by mirco on 04.12.15.
- */
-
 package eu.hbp.mip.controllers;
 
 import com.google.gson.Gson;
@@ -44,8 +40,8 @@ public class PathologiesApi {
     @Value("#{'${hbp.authentication.enabled:1}'}")
     private boolean authenticationIsEnabled;
 
-    @Value("#{'${services.pathologies.pathologiesUrl}'}")
-    private String pathologiesUrl;
+    @Value("#{'${files.pathologies_json}'}")
+    private String pathologiesFilePath;
 
     @Autowired
     private CustomResourceLoader resourceLoader;
@@ -57,7 +53,7 @@ public class PathologiesApi {
         Logging.LogUserAction(username, endpoint, "Loading pathologies ...");
 
         // Load pathologies from file
-        Resource resource = resourceLoader.getResource(pathologiesUrl);
+        Resource resource = resourceLoader.getResource(pathologiesFilePath);
         List<PathologyDTO> allPathologies;
         try {
             allPathologies = gson.fromJson(InputStreamConverter.convertInputStreamToString(resource.getInputStream()), new TypeToken<List<PathologyDTO>>() {

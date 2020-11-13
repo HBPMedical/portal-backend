@@ -268,8 +268,9 @@
                     <include>**/*.yml</include>    <!--  Only for development -->
                 </includes>
                 <filtering>true</filtering>
-
             </resource>
+
+            <!-- Used for development. Docker/config folder files added as resources -->
             <resource>
                 <directory>config</directory>
                 <includes>

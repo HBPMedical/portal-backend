@@ -55,8 +55,8 @@ public class AlgorithmsApi {
     @Value("#{'${services.galaxy.galaxyApiKey}'}")
     private String galaxyApiKey;
 
-    @Value("#{'${services.algorithms.disabledAlgorithmsUrl}'}")
-    private String disabledAlgorithmsUrl;
+    @Value("#{'${files.disabledAlgorithms_json}'}")
+    private String disabledAlgorithmsFilePath;
 
     @ApiOperation(value = "List all algorithms", response = String.class)
     @RequestMapping(method = RequestMethod.GET)
@@ -200,7 +200,7 @@ public class AlgorithmsApi {
      */
     List<String> getDisabledAlgorithms() throws IOException {
 
-        Resource resource = resourceLoader.getResource(disabledAlgorithmsUrl);
+        Resource resource = resourceLoader.getResource(disabledAlgorithmsFilePath);
 
         List<String> response = gson.fromJson(convertInputStreamToString(
                 resource.getInputStream()),

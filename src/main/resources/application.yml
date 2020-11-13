@@ -74,8 +74,7 @@ services:
   keycloak:
    keycloakUrl: "127.0.0.1"
 
-  pathologies:
-    pathologiesUrl: "classPath:/pathologies.json"
-
-  algorithms:
-    disabledAlgorithmsUrl: "classPath:/disableAlgorithms.json"
+# Files are loaded from the resources
+files:
+  pathologies_json: "classPath:/pathologies.json"
+  disabledAlgorithms_json: "classPath:/disabledAlgorithms.json"

@@ -1,7 +1,3 @@
-/**
- * Created by mirco on 04.12.15.
- */
-
 package eu.hbp.mip.controllers;
 
 import com.google.gson.Gson;
@@ -42,32 +38,37 @@ public class PathologiesApi {
     @Value("#{'${authentication.enabled}'}")
     private boolean authenticationIsEnabled;
 
+    @Value("#{'${files.pathologies_json}'}")
+    private String pathologiesFilePath;
+
     @Autowired
     private CustomResourceLoader resourceLoader;
 
     @RequestMapping(name = "/pathologies", method = RequestMethod.GET)
     public ResponseEntity<String> getPathologies(Authentication authentication) {
-        Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /pathologies", "Loading pathologies ...");
+        String endpoint = "(GET) /pathologies";
+        String username = activeUserService.getActiveUser().getUsername();
+        Logging.LogUserAction(username, endpoint, "Loading pathologies ...");
 
         // Load pathologies from file
-        Resource resource = resourceLoader.getResource("file:/opt/portal/api/pathologies.json");
+        Resource resource = resourceLoader.getResource(pathologiesFilePath);
         List<PathologyDTO> allPathologies;
         try {
             allPathologies = gson.fromJson(InputStreamConverter.convertInputStreamToString(resource.getInputStream()), new TypeToken<List<PathologyDTO>>() {
             }.getType());
         } catch (IOException e) {
-            Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /pathologies", "Unable to load pathologies");
+            Logging.LogUserAction(username, endpoint, "Unable to load pathologies");
             throw new BadRequestException("The pathologies could not be loaded.");
         }
 
         // If authentication is disabled return everything
         if (!authenticationIsEnabled) {
-            Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /pathologies", "Successfully loaded " + allPathologies.size() + " pathologies");
+            Logging.LogUserAction(username, endpoint, "Successfully loaded " + allPathologies.size() + " pathologies");
             return ResponseEntity.ok().body(gson.toJson(allPathologies));
         }
 
-        Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /pathologies", "Successfully loaded all authorized pathologies");
+        Logging.LogUserAction(username, endpoint, "Successfully loaded all authorized pathologies");
         return ResponseEntity.ok().body(ClaimUtils.getAuthorizedPathologies(
-                activeUserService.getActiveUser().getUsername(), authentication.getAuthorities(), allPathologies));
+                username, authentication.getAuthorities(), allPathologies));
     }
 }

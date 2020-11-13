@@ -474,8 +474,8 @@ public class ExperimentService {
      * @return the experiment information that was retrieved from exareme
      */
     public ExperimentDTO createExaremeExperiment(ExperimentDTO experimentDTO, String endpoint) {
-
         UserDAO user = activeUserService.getActiveUser();
+
         Logging.LogUserAction(user.getUsername(), endpoint, "Running the algorithm...");
 
         ExperimentDAO experimentDAO = createExperimentInTheDatabase(experimentDTO, endpoint);

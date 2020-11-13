@@ -1,21 +1,16 @@
 package eu.hbp.mip.configuration;
 
 import eu.hbp.mip.configuration.SecurityUtils.CORSFilter;
-import eu.hbp.mip.configuration.SecurityUtils.CustomAccessDeniedHandler;
-import eu.hbp.mip.configuration.SecurityUtils.CustomLoginUrlAuthenticationEntryPoint;
 import org.keycloak.adapters.KeycloakConfigResolver;
 import org.keycloak.adapters.springboot.KeycloakSpringBootConfigResolver;
 import org.keycloak.adapters.springsecurity.KeycloakConfiguration;
 import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticationProvider;
 import org.keycloak.adapters.springsecurity.authentication.KeycloakLogoutHandler;
 import org.keycloak.adapters.springsecurity.config.KeycloakWebSecurityConfigurerAdapter;
-import org.keycloak.adapters.springsecurity.filter.KeycloakAuthenticationProcessingFilter;
-import org.keycloak.adapters.springsecurity.filter.KeycloakPreAuthActionsFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -24,25 +19,18 @@ import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.web.access.channel.ChannelProcessingFilter;
 import org.springframework.security.web.authentication.session.RegisterSessionAuthenticationStrategy;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
-import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.WebUtils;
 
-import javax.net.ssl.*;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.security.SecureRandom;
-import java.security.cert.X509Certificate;
 
 
 // Reference for OAuth2 login: https://spring.io/guides/tutorials/spring-boot-oauth2/
@@ -132,8 +120,8 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
 //                    ).permitAll()
 //                    .antMatchers("/galaxy*", "/galaxy/*").hasRole("DATA MANAGER")
 //                    .anyRequest().hasRole("RESEARCHER")
-                   // .and().exceptionHandling().authenticationEntryPoint(new CustomLoginUrlAuthenticationEntryPoint(loginUrl))
-                   // .accessDeniedHandler(new CustomAccessDeniedHandler())
+            // .and().exceptionHandling().authenticationEntryPoint(new CustomLoginUrlAuthenticationEntryPoint(loginUrl))
+            // .accessDeniedHandler(new CustomAccessDeniedHandler())
 //                    .and().csrf().ignoringAntMatchers("/logout").csrfTokenRepository(csrfTokenRepository())
 //                    .and().addFilterAfter(csrfHeaderFilter(), CsrfFilter.class).csrf();
 //                    .and().logout().logoutSuccessUrl("/logout");
@@ -141,7 +129,7 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
 //
 //                    // TODO .and().logout().addLogoutHandler(authLogoutHandler()).logoutSuccessUrl(redirectAfterLogoutUrl)
 //                    .and().logout().permitAll()
-                    // TODO ?? .addFilterBefore(ssoFilter(), BasicAuthenticationFilter.class);
+            // TODO ?? .addFilterBefore(ssoFilter(), BasicAuthenticationFilter.class);
         } else {
             http.antMatcher("/**")
                     .authorizeRequests()
@@ -149,7 +137,6 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
                     .and().csrf().disable();
         }
     }
-
 
 //    @Bean
 //    public FilterRegistrationBean corsFilter() {
@@ -222,7 +209,6 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
         repository.setHeaderName("X-XSRF-TOKEN");
         return repository;
     }
-
 
 //    @Bean
 //    public AuthoritiesExtractor keycloakAuthoritiesExtractor() {

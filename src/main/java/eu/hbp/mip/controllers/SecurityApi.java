@@ -31,13 +31,11 @@ public class SecurityApi {
     @Autowired
     private SecurityConfiguration securityConfiguration;
 
-
     // TODO How to redirect? keycloak off?
     @RequestMapping(path = "/login/hbp", method = RequestMethod.GET)
     @ConditionalOnExpression("${authentication.enabled:0}")
     public void noLogin(HttpServletResponse httpServletResponse) throws IOException {
         Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /user/login/hbp", "Unauthorized login.");
-
         httpServletResponse.sendRedirect(securityConfiguration.getFrontendRedirectAfterLogin());
     }
 
@@ -47,7 +45,7 @@ public class SecurityApi {
     @Value("#{'${services.galaxy.galaxyPassword:password}'}")
     private String galaxyPassword;
 
-    @Value("#{'${services.galaxy.galaxyContext:nativeGalaxy}'}")
+    @Value("#{'${services.galaxy.galaxpathoyContext:nativeGalaxy}'}")
     private String galaxyContext;
 
     /**

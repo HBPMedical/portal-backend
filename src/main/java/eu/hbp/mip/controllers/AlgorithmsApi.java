@@ -17,6 +17,7 @@ import eu.hbp.mip.utils.Logging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
@@ -52,6 +53,9 @@ public class AlgorithmsApi {
 
     @Value("#{'${services.galaxy.galaxyApiKey}'}")
     private String galaxyApiKey;
+
+    @Value("#{'${files.disabledAlgorithms_json}'}")
+    private String disabledAlgorithmsFilePath;
 
     @ApiOperation(value = "List all algorithms", response = String.class)
     @RequestMapping(method = RequestMethod.GET)
@@ -195,7 +199,7 @@ public class AlgorithmsApi {
      */
     List<String> getDisabledAlgorithms() throws IOException {
 
-        Resource resource = resourceLoader.getResource("file:/opt/portal/api/disabledAlgorithms.json");
+        Resource resource = resourceLoader.getResource(disabledAlgorithmsFilePath);
 
         List<String> response = gson.fromJson(convertInputStreamToString(
                 resource.getInputStream()),

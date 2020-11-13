@@ -82,3 +82,8 @@ keycloak:
 #  cors-exposed-headers: "*"
 
   # logoutUrl: {{ .Env.LOGOUT_URL }}
+
+# Files are imported when building the docker image
+files:
+  pathologies_json: "file:/opt/portal/api/pathologies.json"
+  disabledAlgorithms_json: "file:/opt/portal/api/disabledAlgorithms.json"

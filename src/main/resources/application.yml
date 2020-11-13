@@ -82,3 +82,8 @@ keycloak:
   #  cors-exposed-headers: "*"
 
   # logoutUrl: {{ .Env.LOGOUT_URL }}
+
+# Files are loaded from the resources
+files:
+  pathologies_json: "classPath:/pathologies.json"
+  disabledAlgorithms_json: "classPath:/disabledAlgorithms.json"

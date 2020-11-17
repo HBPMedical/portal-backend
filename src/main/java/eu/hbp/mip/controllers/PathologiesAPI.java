@@ -27,7 +27,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RestController
 @RequestMapping(value = "/pathologies", produces = {APPLICATION_JSON_VALUE})
 @Api(value = "/pathologies")
-public class PathologiesApi {
+public class PathologiesAPI {
 
     private static final Gson gson = new Gson();
 

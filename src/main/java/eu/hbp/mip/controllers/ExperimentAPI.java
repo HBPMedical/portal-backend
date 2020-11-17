@@ -25,7 +25,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RestController
 @RequestMapping(value = "/experiments", produces = {APPLICATION_JSON_VALUE})
 @Api(value = "/experiments")
-public class ExperimentApi {
+public class ExperimentAPI {
 
     @Autowired
     private ActiveUserService activeUserService;

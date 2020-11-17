@@ -31,7 +31,7 @@ public class SecurityApi {
     @Autowired
     private SecurityConfiguration securityConfiguration;
 
-    // TODO How to redirect? keycloak off?
+    // TODO Fix no authentication instance
     @RequestMapping(path = "/login/hbp", method = RequestMethod.GET)
     @ConditionalOnExpression("${authentication.enabled:0}")
     public void noLogin(HttpServletResponse httpServletResponse) throws IOException {

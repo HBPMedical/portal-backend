@@ -37,8 +37,6 @@ server:
     contextPath: "/services"
   port: 8080
   forward-headers-strategy: native
-  session:
-    timeout: "2592000"
 
 # ENDPOINTS
 endpoints:
@@ -75,11 +73,6 @@ keycloak:
   credentials:
     secret: "dae83a6b-c769-4186-8383-f0984c6edf05"
   principal-attribute: "preferred_username"
-  #  cors: true
-  #  cors-max-age: 3600
-  #  cors-allowed-methods: "GET, POST, PUT, PATCH, OPTIONS, DELETE"
-  #  cors-allowed-headers: "*"
-  #  cors-exposed-headers: "*"
 
   # logoutUrl: {{ .Env.LOGOUT_URL }}
 

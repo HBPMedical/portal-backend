@@ -22,6 +22,9 @@ import org.springframework.security.web.authentication.session.SessionAuthentica
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.WebUtils;
 
@@ -31,6 +34,8 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 
 
 // Reference for OAuth2 login: https://spring.io/guides/tutorials/spring-boot-oauth2/
@@ -104,9 +109,9 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
         super.configure(http);
         //disableCertificateValidation();  //  TODO needed?
 
-        // TODO Check if needed.
-        // Check if it works when removing keycloak cors from app properties.
-        http.addFilterBefore(new CORSFilter(), ChannelProcessingFilter.class);
+        // TODO Is that needed for development? On Galaxy?
+//        http.addFilterBefore(new CORSFilter(), ChannelProcessingFilter.class);
+//        http.cors();
 
         if (authenticationEnabled) {
             http.antMatcher("/**")
@@ -137,6 +142,7 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
                     .and().csrf().disable();
         }
     }
+
 
 //    @Bean
 //    public FilterRegistrationBean corsFilter() {

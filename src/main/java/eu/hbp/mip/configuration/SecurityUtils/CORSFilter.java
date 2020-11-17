@@ -8,6 +8,7 @@ import java.io.IOException;
  * Created by mirco on 12.02.16.
  */
 public class CORSFilter implements Filter {
+    // TODO needed?
 
     @Override
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {

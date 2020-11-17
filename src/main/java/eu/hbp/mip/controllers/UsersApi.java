@@ -21,32 +21,17 @@ import java.net.URLEncoder;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
-@RequestMapping(value = "/users", produces = {APPLICATION_JSON_VALUE})
-@Api(value = "/users")
+@RequestMapping(value = "/activeUser", produces = {APPLICATION_JSON_VALUE})
+@Api(value = "/activeUser")
 public class UsersApi {
 
     @Autowired
     private ActiveUserService activeUserService;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @ApiOperation(value = "Get a user", response = UserDAO.class)
-    @RequestMapping(value = "/{username}", method = RequestMethod.GET)
-    public ResponseEntity<UserDAO> getAUser(
-            @ApiParam(value = "username", required = true) @PathVariable("username") String username
-    ) {
-        Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /users/{username}",
-                "Loaded a user with username : " + username);
-
-        // TODO Error handling?
-        return ResponseEntity.ok(userRepository.findByUsername(username));
-    }
-
     @ApiOperation(value = "Get the active user", response = UserDAO.class)
-    @RequestMapping(value = "/activeUser", method = RequestMethod.GET)
+    @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<UserDAO> getTheActiveUser(HttpServletResponse response) {
-        Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /users/activeUser",
+        Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /activeUser",
                 "Loading the details of the activeUser");
 
         UserDAO activeUser = activeUserService.getActiveUser();
@@ -62,7 +47,7 @@ public class UsersApi {
             response.addCookie(cookie);
         } catch (JsonProcessingException | UnsupportedEncodingException e) {
             Logging.LogUserAction(activeUser.getUsername(),
-                    "(GET) /users/activeUser", "Failed to add Cookie. Exception: " + e.getMessage());
+                    "(GET) /activeUser", "Failed to add Cookie. Exception: " + e.getMessage());
         }
 
         return ResponseEntity.ok(activeUserService.getActiveUser());
@@ -70,9 +55,9 @@ public class UsersApi {
 
     // TODO Kostas, why not working?
     @ApiOperation(value = "The active user agrees to the NDA", response = UserDAO.class)
-    @RequestMapping(value = "/activeUser/agreeNDA", method = RequestMethod.POST)
+    @RequestMapping(value = "/agreeNDA", method = RequestMethod.POST)
     public ResponseEntity<UserDAO> activeUserServiceAgreesToNDA(@RequestBody(required = false) UserDAO userDAO) {
-        Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /users/activeUser/agreeNDA",
+        Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /activeUser/agreeNDA",
                 "The user agreed to the NDA");
 
         return ResponseEntity.ok(activeUserService.agreeToNDA());

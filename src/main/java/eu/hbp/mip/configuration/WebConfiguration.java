@@ -18,11 +18,6 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @EnableSwagger2
 public class WebConfiguration {
 
-//    @Bean
-//    public String[] swaggerUiConfig() {
-//        return UiConfiguration.Constants.DEFAULT_SUBMIT_METHODS;
-//    }
-
     @Bean
     public Docket swaggerDocumentation() {
         return new Docket(DocumentationType.SWAGGER_2)

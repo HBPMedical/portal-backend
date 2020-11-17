@@ -15,11 +15,11 @@ public class ClaimUtils {
     private static final Gson gson = new Gson();
 
     public static String allDatasetsAllowedClaim() {
-        return "dataset_all";
+        return "role_dataset_all";
     }
 
     public static String getDatasetClaim(String datasetCode) {
-        return "dataset_" + datasetCode.toLowerCase();
+        return "role_dataset_" + datasetCode.toLowerCase();
     }
 
     public static boolean userHasDatasetsAuthorization(String username, Collection<? extends GrantedAuthority> authorities,

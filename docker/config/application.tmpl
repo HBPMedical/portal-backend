@@ -1,6 +1,6 @@
 # Configuration template for the portal running inside a Docker container
 
-# See http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
+### DATABASE CONFIGURATION ###
 spring:
   portal-datasource:
     url: {{ default .Env.PORTAL_DB_URL "jdbc:postgresql://88.197.53.106:5432/portal" }}
@@ -8,7 +8,6 @@ spring:
     username: {{ default .Env.PORTAL_DB_USER "postgres" }}
     password: {{ .Env.PORTAL_DB_PASSWORD }}
     driver-class-name: org.postgresql.Driver
-
   data:
     jpa:
       repositories:
@@ -18,12 +17,7 @@ spring:
       dialect: org.hibernate.dialect.PostgreSQL9Dialect
       ddl-auto: validate
 
-# WEB FRONTEND
-frontend:
-  loginUrl: {{ default .Env.FRONTEND_LOGIN_URL "http://frontend/services/login/hbp" }}
-  redirectAfterLoginUrl: {{ default .Env.FRONTEND_AFTER_LOGIN_URL "http://frontend/" }}
-  redirectAfterLogoutUrl: {{ default .Env.FRONTEND_AFTER_LOGOUT_URL "http://frontend/services/login/hbp" }}
-
+### LOG LEVELS ###
 logging:
   level:
     root: {{ default .Env.LOG_LEVEL_FRAMEWORK "ERROR" }}
@@ -31,16 +25,14 @@ logging:
     eu:
       hbp: {{ default .Env.LOG_LEVEL "INFO" }}
 
-# EMBEDDED SERVER CONFIGURATION
+### EMBEDDED SERVER CONFIGURATION ###
 server:
   servlet:
-    contextPath: {{ default .Env.CONTEXT_PATH "/services" }}
+    contextPath: "/services"
   port: 8080
-  use-forward-headers: true
-  session:
-    timeout: {{ default .Env.SESSION_TIMEOUT "2592000" }}
+  forward-headers-strategy: native
 
-# ENDPOINTS
+### ENDPOINTS ###
 endpoints:
   enabled: true
   health:
@@ -48,7 +40,7 @@ endpoints:
     endpoint: /health
     sensitive: false
 
-# External Services
+### EXTERNAL SERVICES ###
 services:
   exareme:
     queryExaremeUrl: {{ default .Env.EXAREME_URL "http://localhost:9090" }}/mining/query
@@ -61,11 +53,11 @@ services:
     galaxyUsername:  {{ default .Env.GALAXY_USERNAME "admin" }}
     galaxyPassword:  {{ default .Env.GALAXY_PASSWORD "password" }}
 
-# Authentication
+### Authentication ###
 authentication:
   enabled: {{ default .Env.AUTHENTICATION "1" }}
 
-# Keycloak
+### Keycloak ###
 keycloak:
   enabled: true
   auth-server-url: {{ .Env.KEYCLOAK_AUTH_URL }}
@@ -75,14 +67,8 @@ keycloak:
   credentials:
     secret: {{ .Env.CLIENT_SECRET }}
   principal-attribute: "preferred_username"
-#  cors: true
-#  cors-max-age: 3600
-#  cors-allowed-methods: "GET, POST, PUT, PATCH, OPTIONS, DELETE"
-#  cors-allowed-headers: "*"
-#  cors-exposed-headers: "*"
 
-  # logoutUrl: {{ .Env.LOGOUT_URL }}
-
+### EXTERNAL FILES ###
 # Files are imported when building the docker image
 files:
   pathologies_json: "file:/opt/portal/api/pathologies.json"

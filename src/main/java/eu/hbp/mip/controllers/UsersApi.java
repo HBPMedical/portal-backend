@@ -36,7 +36,7 @@ public class UsersApi {
 
         UserDAO activeUser = activeUserService.getActiveUser();
 
-        // Add the active user to a cookie
+        // Add the active user object to a cookie
         try {
             // TODO needed? Ask Manuel
             ObjectMapper mapper = new ObjectMapper();
@@ -53,7 +53,6 @@ public class UsersApi {
         return ResponseEntity.ok(activeUserService.getActiveUser());
     }
 
-    // TODO Kostas, why not working?
     @ApiOperation(value = "The active user agrees to the NDA", response = UserDAO.class)
     @RequestMapping(value = "/agreeNDA", method = RequestMethod.POST)
     public ResponseEntity<UserDAO> activeUserServiceAgreesToNDA(@RequestBody(required = false) UserDAO userDAO) {

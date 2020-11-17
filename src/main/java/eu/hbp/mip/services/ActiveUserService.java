@@ -18,13 +18,13 @@ import javax.inject.Named;
 @Scope(value = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class ActiveUserService {
 
-    @Autowired
-    private UserRepository userRepository;
-
     @Value("#{'${authentication.enabled}'}")
     private boolean authentication;
 
     private UserDAO user;
+
+    @Autowired
+    private UserRepository userRepository;
 
     /**
      * Fetches the details of the active user.
@@ -46,7 +46,7 @@ public class ActiveUserService {
             return user;
         }
 
-        // If authentication is ON
+        // If authentication is ON get user info from Token
         KeycloakPrincipal keycloakPrincipal =
                 (KeycloakPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         IDToken idToken = keycloakPrincipal.getKeycloakSecurityContext().getIdToken();

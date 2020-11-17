@@ -1,4 +1,4 @@
-package eu.hbp.mip.controllers;
+package eu.hbp.mip.configuration;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -21,23 +21,10 @@ import java.io.IOException;
 import java.util.Base64;
 
 @RestController
-public class SecurityApi {
-
-    private static final Gson gson = new Gson();
+public class GalaxyAuthentication {
 
     @Autowired
     private ActiveUserService activeUserService;
-
-    @Autowired
-    private SecurityConfiguration securityConfiguration;
-
-    // TODO Fix no authentication instance
-    @RequestMapping(path = "/login/hbp", method = RequestMethod.GET)
-    @ConditionalOnExpression("${authentication.enabled:0}")
-    public void noLogin(HttpServletResponse httpServletResponse) throws IOException {
-        Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /user/login/hbp", "Unauthorized login.");
-        httpServletResponse.sendRedirect(securityConfiguration.getFrontendRedirectAfterLogin());
-    }
 
     @Value("#{'${services.galaxy.galaxyUsername:admin}'}")
     private String galaxyUsername;
@@ -63,6 +50,6 @@ public class SecurityApi {
         object.addProperty("context", galaxyContext);
         Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), "(GET) /user/galaxy", "Successfully Loaded galaxy information.");
 
-        return ResponseEntity.ok(gson.toJson(object));
+        return ResponseEntity.ok(new Gson().toJson(object));
     }
 }

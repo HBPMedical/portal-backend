@@ -1,13 +1,11 @@
-package eu.hbp.mip.configuration;
+package eu.hbp.mip.configurations;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import eu.hbp.mip.configuration.SecurityConfiguration;
 import eu.hbp.mip.services.ActiveUserService;
 import eu.hbp.mip.utils.Logging;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,8 +14,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.Base64;
 
 @RestController

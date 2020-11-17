@@ -1,8 +1,8 @@
-package eu.hbp.mip.model.galaxy;
+package eu.hbp.mip.models.galaxy;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
-import eu.hbp.mip.model.DTOs.AlgorithmDTO;
+import eu.hbp.mip.models.DTOs.AlgorithmDTO;
 
 import java.util.*;
 

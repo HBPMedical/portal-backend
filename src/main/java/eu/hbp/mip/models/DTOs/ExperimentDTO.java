@@ -1,6 +1,6 @@
-package eu.hbp.mip.model.DTOs;
+package eu.hbp.mip.models.DTOs;
 
-import eu.hbp.mip.model.DAOs.ExperimentDAO;
+import eu.hbp.mip.models.DAOs.ExperimentDAO;
 
 import java.util.Date;
 import java.util.List;

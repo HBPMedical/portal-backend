@@ -1,4 +1,4 @@
-package eu.hbp.mip.configuration;
+package eu.hbp.mip.configurations;
 
 import org.keycloak.adapters.KeycloakConfigResolver;
 import org.keycloak.adapters.springboot.KeycloakSpringBootConfigResolver;
@@ -20,8 +20,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
-
-// Keycloak security with keycloak-spring-boot-starter
 
 @Controller
 @KeycloakConfiguration
@@ -59,7 +57,7 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
     @GetMapping(value = "/logout")
     public String logout() throws ServletException {
         request.logout();
-        return "redirect:" + logoutRedirectURL;
+        return String.format("redirect:%s", logoutRedirectURL);
     }
 
     @Bean

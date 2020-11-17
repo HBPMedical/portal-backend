@@ -1,6 +1,6 @@
 package eu.hbp.mip.repositories;
 
-import eu.hbp.mip.model.DAOs.UserDAO;
+import eu.hbp.mip.models.DAOs.UserDAO;
 import org.springframework.data.repository.CrudRepository;
 
 /**

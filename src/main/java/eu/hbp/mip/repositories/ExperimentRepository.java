@@ -1,6 +1,6 @@
 package eu.hbp.mip.repositories;
 
-import eu.hbp.mip.model.DAOs.ExperimentDAO;
+import eu.hbp.mip.models.DAOs.ExperimentDAO;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.CrudRepository;
 

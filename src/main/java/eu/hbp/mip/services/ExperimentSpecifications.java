@@ -1,6 +1,6 @@
 package eu.hbp.mip.services;
 
-import eu.hbp.mip.model.DAOs.ExperimentDAO;
+import eu.hbp.mip.models.DAOs.ExperimentDAO;
 import org.springframework.data.jpa.domain.Specification;
 
 import javax.persistence.criteria.CriteriaBuilder;

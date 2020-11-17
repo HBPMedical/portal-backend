@@ -2,13 +2,11 @@ package eu.hbp.mip.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.hbp.mip.model.DAOs.UserDAO;
-import eu.hbp.mip.repositories.UserRepository;
+import eu.hbp.mip.models.DAOs.UserDAO;
 import eu.hbp.mip.services.ActiveUserService;
 import eu.hbp.mip.utils.Logging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

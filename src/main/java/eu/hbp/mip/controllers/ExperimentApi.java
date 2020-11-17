@@ -1,6 +1,6 @@
 package eu.hbp.mip.controllers;
 
-import eu.hbp.mip.model.DTOs.ExperimentDTO;
+import eu.hbp.mip.models.DTOs.ExperimentDTO;
 import eu.hbp.mip.services.ActiveUserService;
 import eu.hbp.mip.services.ExperimentService;
 import eu.hbp.mip.utils.JsonConverters;

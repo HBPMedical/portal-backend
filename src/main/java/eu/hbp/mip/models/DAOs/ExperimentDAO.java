@@ -1,10 +1,10 @@
-package eu.hbp.mip.model.DAOs;
+package eu.hbp.mip.models.DAOs;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
-import eu.hbp.mip.model.DTOs.AlgorithmDTO;
-import eu.hbp.mip.model.DTOs.ExperimentDTO;
+import eu.hbp.mip.models.DTOs.AlgorithmDTO;
+import eu.hbp.mip.models.DTOs.ExperimentDTO;
 import eu.hbp.mip.utils.JsonConverters;
 import io.swagger.annotations.ApiModel;
 

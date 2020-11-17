@@ -2,7 +2,7 @@
  * Created by mirco on 04.12.15.
  */
 
-package eu.hbp.mip.model.DAOs;
+package eu.hbp.mip.models.DAOs;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.gson.annotations.Expose;

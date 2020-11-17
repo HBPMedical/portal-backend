@@ -1,6 +1,6 @@
 package eu.hbp.mip.services;
 
-import eu.hbp.mip.model.DAOs.UserDAO;
+import eu.hbp.mip.models.DAOs.UserDAO;
 import eu.hbp.mip.repositories.UserRepository;
 import org.keycloak.KeycloakPrincipal;
 import org.keycloak.representations.IDToken;

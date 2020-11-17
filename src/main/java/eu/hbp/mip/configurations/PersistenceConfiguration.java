@@ -1,4 +1,4 @@
-package eu.hbp.mip.configuration;
+package eu.hbp.mip.configurations;
 
 import org.flywaydb.core.Flyway;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -36,7 +36,7 @@ public class PersistenceConfiguration {
         emfb.setDataSource(portalDataSource());
         JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
         emfb.setJpaVendorAdapter(vendorAdapter);
-        emfb.setPackagesToScan("eu.hbp.mip.model.DAOs");
+        emfb.setPackagesToScan("eu.hbp.mip.models.DAOs");
         return emfb;
     }
 

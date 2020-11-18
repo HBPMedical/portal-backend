@@ -31,15 +31,17 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
     @Value("#{'${authentication.enabled}'}")
     private boolean authenticationEnabled;
 
+    @Value("#{'${release_stage.production}'}")
+    private boolean deployedOnProduction;
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         super.configure(http);
 
         if (authenticationEnabled) {
 
-            // Used for development with authentication turned on.
-            // Should not be enabled on production.
-            http.csrf().disable();
+            if(!deployedOnProduction)
+                http.csrf().disable();
 
             http.authorizeRequests()
                     .antMatchers(

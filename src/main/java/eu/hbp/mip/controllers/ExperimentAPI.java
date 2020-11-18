@@ -2,7 +2,6 @@ package eu.hbp.mip.controllers;
 
 
 import eu.hbp.mip.models.DTOs.ExperimentDTO;
-import eu.hbp.mip.services.ActiveUserService;
 import eu.hbp.mip.services.ExperimentService;
 import eu.hbp.mip.utils.JsonConverters;
 import io.swagger.annotations.Api;
@@ -76,15 +75,6 @@ public class ExperimentAPI {
     }
 
 
-    @ApiOperation(value = "Create a transient experiment", response = ExperimentDTO.class)
-    @RequestMapping(value = "/transient", method = RequestMethod.POST)
-    public ResponseEntity<String> createTransientExperiment(Authentication authentication, @RequestBody ExperimentDTO experimentDTO) {
-        experimentDTO = experimentService.createTransientExperiment(authentication, experimentDTO, "(POST) /experiments/transient");
-
-        return new ResponseEntity<>(JsonConverters.convertObjectToJsonString(experimentDTO), HttpStatus.OK);
-    }
-
-
     @ApiOperation(value = "Update an experiment", response = ExperimentDTO.class)
     @RequestMapping(value = "/{uuid}", method = RequestMethod.PATCH)
     public ResponseEntity<String> updateExperiment(@RequestBody ExperimentDTO experimentDTO, @ApiParam(value = "uuid", required = true) @PathVariable("uuid") String uuid) {
@@ -99,5 +89,14 @@ public class ExperimentAPI {
             @ApiParam(value = "uuid", required = true) @PathVariable("uuid") String uuid) {
         experimentService.deleteExperiment(uuid, "(DELETE) /experiments/{uuid}");
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+
+    @ApiOperation(value = "Create a transient experiment", response = ExperimentDTO.class)
+    @RequestMapping(value = "/transient", method = RequestMethod.POST)
+    public ResponseEntity<String> createTransientExperiment(Authentication authentication, @RequestBody ExperimentDTO experimentDTO) {
+        experimentDTO = experimentService.createTransientExperiment(authentication, experimentDTO, "(POST) /experiments/transient");
+
+        return new ResponseEntity<>(JsonConverters.convertObjectToJsonString(experimentDTO), HttpStatus.OK);
     }
 }

@@ -16,7 +16,7 @@ authentication:
 
 ### RELEASE STAGE ###
 release_stage:
-  production: false
+  production: true
 
 
 ### DATABASE CONFIGURATION ###

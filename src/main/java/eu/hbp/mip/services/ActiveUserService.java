@@ -46,19 +46,15 @@ public class ActiveUserService {
             return user;
         }
 
-
-        // TODO Update user if new values are providedTO
         // If authentication is ON get user info from Token
         KeycloakPrincipal keycloakPrincipal =
                 (KeycloakPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         IDToken idToken = keycloakPrincipal.getKeycloakSecurityContext().getIdToken();
-        UserDAO userInDatabase = userRepository.findByUsername(idToken.getPreferredUsername());
-        if (userInDatabase != null) {
-            user = userInDatabase;
-        } else {
-            UserDAO newUser = new UserDAO(idToken.getPreferredUsername(), idToken.getName(), idToken.getEmail());
-            userRepository.save(newUser);
-            user = newUser;
+        user = new UserDAO(idToken.getPreferredUsername(), idToken.getName(), idToken.getEmail());
+
+        UserDAO userInDatabase = userRepository.findByUsername(user.getUsername());
+        if (userInDatabase == null || !userInDatabase.equals(user)) {
+            userRepository.save(user);
         }
         return user;
     }

@@ -25,7 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 @KeycloakConfiguration
 public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter {
 
-    // Redirect to login page url
+    // Upon logout, redirect to login page url
     private static final String logoutRedirectURL = "/sso/login";
 
     @Value("#{'${authentication.enabled}'}")
@@ -36,6 +36,11 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
         super.configure(http);
 
         if (authenticationEnabled) {
+
+            // Used for development with authentication turned on.
+            // Should not be enabled on production.
+            http.csrf().disable();
+
             http.authorizeRequests()
                     .antMatchers(
                             "/sso/login",

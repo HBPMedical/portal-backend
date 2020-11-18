@@ -75,3 +75,4 @@ To use this image, you need a running instance of PostgreSQL and to configure th
 
 
 # TODO Refactor variables
+# TODO Refactor variables on mip-deployent as well

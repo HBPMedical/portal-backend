@@ -1,6 +1,6 @@
 package eu.hbp.mip.services;
 
-import eu.hbp.mip.model.DAOs.ExperimentDAO;
+import eu.hbp.mip.models.DAOs.ExperimentDAO;
 import eu.hbp.mip.utils.Exceptions.BadRequestException;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -17,33 +17,31 @@ public class ExperimentSpecifications {
         private String name;
         private String regExp;
 
-        public  ExperimentWithName(String name){
+        public ExperimentWithName(String name) {
             this.name = name;
             this.regExp = name;
         }
 
-        public Predicate toPredicate(Root<ExperimentDAO> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder cb)
-        {
+        public Predicate toPredicate(Root<ExperimentDAO> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder cb) {
             if (name == null) {
                 return cb.isTrue(cb.literal(true));
-            }
-            else {
-                regExp = (name.contains("%")?name:name+"%");
+            } else {
+                regExp = (name.contains("%") ? name : name + "%");
             }
 
-            return cb.like( root.get( "name" ), this.regExp );
+            return cb.like(root.get("name"), this.regExp);
         }
     }
+
     public static class ExperimentWithAlgorithm implements Specification<ExperimentDAO> {
 
         private String algorithm;
 
-        public  ExperimentWithAlgorithm(String algorithm){
+        public ExperimentWithAlgorithm(String algorithm) {
             this.algorithm = algorithm;
         }
 
-        public Predicate toPredicate(Root<ExperimentDAO> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder cb)
-        {
+        public Predicate toPredicate(Root<ExperimentDAO> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder cb) {
             if (algorithm == null) {
                 return cb.isTrue(cb.literal(true));
             }
@@ -56,7 +54,7 @@ public class ExperimentSpecifications {
 
         private Boolean viewed;
 
-        public  ExperimentWithViewed(Boolean viewed){
+        public ExperimentWithViewed(Boolean viewed) {
             this.viewed = viewed;
         }
 
@@ -72,7 +70,7 @@ public class ExperimentSpecifications {
 
         private Boolean shared;
 
-        public  ExperimentWithShared(Boolean shared){
+        public ExperimentWithShared(Boolean shared) {
             this.shared = shared;
         }
 
@@ -87,13 +85,14 @@ public class ExperimentSpecifications {
     public static class ExperimentOrderBy implements Specification<ExperimentDAO> {
 
         private String orderBy;
-        private Boolean descending ;
-        public  ExperimentOrderBy(String orderBy, Boolean descending){
+        private Boolean descending;
+
+        public ExperimentOrderBy(String orderBy, Boolean descending) {
             if (properColumnToBeOrderedBy(orderBy))
                 this.orderBy = orderBy;
             else
                 throw new BadRequestException("Please provide proper column to order by.");
-            if(descending == null)
+            if (descending == null)
                 this.descending = true;
             else
                 this.descending = descending;
@@ -110,7 +109,7 @@ public class ExperimentSpecifications {
 
     }
 
-    public static boolean properColumnToBeOrderedBy(String column){
+    public static boolean properColumnToBeOrderedBy(String column) {
         {
             List<String> properColumns = new ArrayList<>();
             properColumns.add("uuid");

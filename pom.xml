@@ -18,11 +18,9 @@
     </parent>
 
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <sonar.host.url>https://hbps1.chuv.ch/sonarqube/</sonar.host.url>
-        <sonar.projectName>MIP portal-backend</sonar.projectName>
-        <sonar.sources>src/main/java/</sonar.sources>
         <java.version>1.8</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <keycloak-spring.version>11.0.2</keycloak-spring.version>
         <springfox-swagger.version>2.5.0</springfox-swagger.version>
         <spring-context.version>5.2.10.RELEASE</spring-context.version>
         <springfox-boot-starter.version>3.0.0</springfox-boot-starter.version>
@@ -46,6 +44,7 @@
         <flyway-core.version>4.2.0</flyway-core.version>
         <hibernate-jpa-2.1-api.version>1.0.0.Final</hibernate-jpa-2.1-api.version>
         <hibernate.version>5.4.10.Final</hibernate.version>
+        <hibernate-validator.version>6.1.0.Final</hibernate-validator.version>
         <aspectjweaver.version>1.8.9</aspectjweaver.version>
         <javax-inject.version>1</javax-inject.version>
         <protobuf-java.version>3.1.0</protobuf-java.version>
@@ -73,7 +72,7 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -81,30 +80,21 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.security.oauth.boot</groupId>
-            <artifactId>spring-security-oauth2-autoconfigure</artifactId>
-            <version>2.0.1.RELEASE</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-oauth2-resource-server</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.security.oauth</groupId>
-            <artifactId>spring-security-oauth2</artifactId>
-            <version>2.5.0.RELEASE</version>
-        </dependency>
-        <dependency>
-            <groupId>net.logstash.logback</groupId>
-            <artifactId>logstash-logback-encoder</artifactId>
-            <version>6.4</version>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-commons</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-spring-boot-starter</artifactId>
+            <version>${keycloak-spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-spring-security-adapter</artifactId>
+            <version>${keycloak-spring.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
@@ -144,6 +134,11 @@
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-core</artifactId>
             <version>${hibernate.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>${hibernate-validator.version}</version>
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
@@ -257,11 +252,11 @@
             <artifactId>svenson</artifactId>
             <version>1.5.8</version>
         </dependency>
-        <!--<dependency>
+        <dependency>
            <groupId>eu.hbp.mip</groupId>
            <artifactId>portal-backend</artifactId>
            <version>4.0.0</version>
-       </dependency>-->
+       </dependency>
    </dependencies>
 
    <build>
@@ -275,11 +270,12 @@
                    <include>**/*.csv</include>
                    <include>**/*.sql</include>
                    <include>**/*.conf</include>
-                   <!--  <include>**/*.yml</include>     Only for development -->
+                   <include>**/*.yml</include>  <!--     Only for development -->
                 </includes>
                 <filtering>true</filtering>
-
             </resource>
+
+            <!-- Used for development. Docker/config folder files added as resources -->
             <resource>
                 <directory>config</directory>
                 <includes>

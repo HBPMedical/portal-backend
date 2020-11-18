@@ -12,13 +12,12 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import eu.hbp.mip.controllers.galaxy.retrofit.RetroFitGalaxyClients;
 import eu.hbp.mip.controllers.galaxy.retrofit.RetrofitClientInstance;
-import eu.hbp.mip.model.DAOs.ExperimentDAO;
-import eu.hbp.mip.model.DAOs.UserDAO;
-import eu.hbp.mip.model.DTOs.AlgorithmDTO;
-import eu.hbp.mip.model.DTOs.ExperimentDTO;
-import eu.hbp.mip.model.UserInfo;
-import eu.hbp.mip.model.galaxy.GalaxyWorkflowResult;
-import eu.hbp.mip.model.galaxy.PostWorkflowToGalaxyDtoResponse;
+import eu.hbp.mip.models.DAOs.ExperimentDAO;
+import eu.hbp.mip.models.DAOs.UserDAO;
+import eu.hbp.mip.models.DTOs.AlgorithmDTO;
+import eu.hbp.mip.models.DTOs.ExperimentDTO;
+import eu.hbp.mip.models.galaxy.GalaxyWorkflowResult;
+import eu.hbp.mip.models.galaxy.PostWorkflowToGalaxyDtoResponse;
 import eu.hbp.mip.repositories.ExperimentRepository;
 import eu.hbp.mip.utils.ClaimUtils;
 import eu.hbp.mip.utils.Exceptions.*;
@@ -27,7 +26,6 @@ import eu.hbp.mip.utils.JsonConverters;
 import eu.hbp.mip.utils.Logging;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -56,38 +54,38 @@ public class ExperimentService {
     @Value("#{'${services.galaxy.galaxyApiKey}'}")
     private String galaxyApiKey;
 
-    // Enable HBP collab authentication (1) or disable it (0). Default is 1
-    @Value("#{'${hbp.authentication.enabled:1}'}")
+    @Value("#{'${authentication.enabled}'}")
     private boolean authenticationIsEnabled;
 
     private static final Gson gson = new Gson();
 
-    private final UserInfo userInfo;
+    private ActiveUserService activeUserService;
     private final ExperimentRepository experimentRepository;
 
-    public ExperimentService(@Qualifier("userInfo") UserInfo userInfo, ExperimentRepository experimentRepository) {
-        this.userInfo = userInfo;
+    public ExperimentService(ActiveUserService activeUserService, ExperimentRepository experimentRepository) {
+        this.activeUserService = activeUserService;
         this.experimentRepository = experimentRepository;
     }
 
     /**
      * The getExperiments will retrieve the experiments from database according to the filters.
      *
-     * @param name is optional, in case it is required to filter the experiments by name
-     * @param algorithm is optional, in case it is required to filter the experiments by algorithm name
-     * @param shared is optional, in case it is required to filter the experiments by shared
-     * @param viewed is optional, in case it is required to filter the experiments by viewed
-     * @param page is the page that is required to be retrieve
-     * @param size is the size of each page
-     * @param orderBy is the column that is required to ordered by
+     * @param name       is optional, in case it is required to filter the experiments by name
+     * @param algorithm  is optional, in case it is required to filter the experiments by algorithm name
+     * @param shared     is optional, in case it is required to filter the experiments by shared
+     * @param viewed     is optional, in case it is required to filter the experiments by viewed
+     * @param page       is the page that is required to be retrieve
+     * @param size       is the size of each page
+     * @param orderBy    is the column that is required to ordered by
      * @param descending is a boolean to determine if the experiments will be order by descending or ascending
-     * @param endpoint is the endpoint that called the function
+     * @param endpoint   is the endpoint that called the function
      * @return a list of mapped experiments
      */
-    public Map getExperiments(String name,String algorithm, Boolean shared,Boolean viewed, int page, int size, String  orderBy, Boolean descending, String endpoint) {
-        UserDAO user = userInfo.getUser();
+
+    public Map getExperiments(String name, String algorithm, Boolean shared, Boolean viewed, int page, int size, String orderBy, Boolean descending, String endpoint) {
+        UserDAO user = activeUserService.getActiveUser();
         Logging.LogUserAction(user.getUsername(), endpoint, "Listing my experiments.");
-        if(size > 10 )
+        if (size > 10)
             throw new BadRequestException("Invalid size input, max size is 10.");
 
         Specification<ExperimentDAO> spec = Specification
@@ -98,7 +96,7 @@ public class ExperimentService {
                 .and(new ExperimentSpecifications.ExperimentOrderBy(orderBy, descending));
 
         Pageable paging = PageRequest.of(page, size);
-         Page<ExperimentDAO> pageExperiments = experimentRepository.findAll(spec, paging);
+        Page<ExperimentDAO> pageExperiments = experimentRepository.findAll(spec, paging);
         List<ExperimentDAO> experimentDAOs = pageExperiments.getContent();
 
         if (experimentDAOs.isEmpty())
@@ -119,14 +117,14 @@ public class ExperimentService {
     /**
      * The getExperiment will retrieve the experiment from database according to the input uuid
      *
-     * @param uuid is the id of the experiment to be retrieved
+     * @param uuid     is the id of the experiment to be retrieved
      * @param endpoint is the endpoint that called the function
      * @return the experiment information that was retrieved from the database
      */
     public ExperimentDTO getExperiment(String uuid, String endpoint) {
 
         ExperimentDAO experimentDAO;
-        UserDAO user = userInfo.getUser();
+        UserDAO user = activeUserService.getActiveUser();
 
         Logging.LogUserAction(user.getUsername(), endpoint, "Loading Experiment with uuid : " + uuid);
 
@@ -146,12 +144,12 @@ public class ExperimentService {
      * The createExperiment will create and save an experiment in the database.
      *
      * @param authentication is the role of the user
-     * @param experimentDTO is the experiment information
-     * @param endpoint is the endpoint that called the function
+     * @param experimentDTO  is the experiment information
+     * @param endpoint       is the endpoint that called the function
      * @return the experiment information which was created
      */
     public ExperimentDTO createExperiment(Authentication authentication, ExperimentDTO experimentDTO, String endpoint) {
-        UserDAO user = userInfo.getUser();
+        UserDAO user = activeUserService.getActiveUser();
 
         //Checking if check (POST) /experiments has proper input.
         checkPostExperimentProperInput(experimentDTO, endpoint);
@@ -180,12 +178,12 @@ public class ExperimentService {
      * The createTransientExperiment will run synchronous a transient experiment into exareme and provide results
      *
      * @param authentication is the role of the user
-     * @param experimentDTO is the experiment information
-     * @param endpoint is the endpoint that called the function
+     * @param experimentDTO  is the experiment information
+     * @param endpoint       is the endpoint that called the function
      * @return the experiment information which was created
      */
-    public ExperimentDTO createTransientExperiment(Authentication authentication, ExperimentDTO experimentDTO, String endpoint){
-        UserDAO user = userInfo.getUser();
+    public ExperimentDTO createTransientExperiment(Authentication authentication, ExperimentDTO experimentDTO, String endpoint) {
+        UserDAO user = activeUserService.getActiveUser();
 
         //Checking if check (POST) /experiments has proper input.
         checkPostExperimentProperInput(experimentDTO, endpoint);
@@ -197,7 +195,7 @@ public class ExperimentService {
         // Get the type and name of algorithm
         String algorithmName = experimentDTO.getAlgorithmDetails().getName();
 
-        if (!allowedTransientAlgorithms(algorithmName)){
+        if (!allowedTransientAlgorithms(algorithmName)) {
             Logging.LogUserAction(user.getUsername(), endpoint,
                     "Not proper algorithm.");
             throw new BadRequestException("Please provide proper algorithm.");
@@ -220,10 +218,10 @@ public class ExperimentService {
         // Results are stored in the experiment object
         ExaremeResult exaremeResult = runExaremeExperiment(url, body, experimentDTO);
 
-        Logging.LogUserAction(user.getUsername(), endpoint, "Experiment with uuid: " + experimentDTO.getUuid() + "gave response code: " +exaremeResult.getCode() + " and result: "+ exaremeResult.getResults());
+        Logging.LogUserAction(user.getUsername(), endpoint, "Experiment with uuid: " + experimentDTO.getUuid() + "gave response code: " + exaremeResult.getCode() + " and result: " + exaremeResult.getResults());
 
-        experimentDTO.setResult((exaremeResult.getCode()>= 400)? null: exaremeResult.getResults());
-        experimentDTO.setStatus((exaremeResult.getCode()>= 400)? ExperimentDAO.Status.error: ExperimentDAO.Status.success);
+        experimentDTO.setResult((exaremeResult.getCode() >= 400) ? null : exaremeResult.getResults());
+        experimentDTO.setStatus((exaremeResult.getCode() >= 400) ? ExperimentDAO.Status.error : ExperimentDAO.Status.success);
 
         return experimentDTO;
     }
@@ -231,40 +229,38 @@ public class ExperimentService {
     /**
      * The updateExperiment will update the experiment's properties
      *
-     * @param uuid is the id of the experiment to be updated
+     * @param uuid          is the id of the experiment to be updated
      * @param experimentDTO is the experiment information to be updated
-     * @param endpoint is the endpoint that called the function
+     * @param endpoint      is the endpoint that called the function
      * @return the updated experiment information
      */
-    public ExperimentDTO updateExperiment(String uuid, ExperimentDTO experimentDTO, String endpoint)
-    {
+    public ExperimentDTO updateExperiment(String uuid, ExperimentDTO experimentDTO, String endpoint) {
         ExperimentDAO experimentDAO;
-        UserDAO user = userInfo.getUser();
+        UserDAO user = activeUserService.getActiveUser();
         Logging.LogUserAction(user.getUsername(), endpoint, "Updating experiment with uuid : " + uuid + ".");
 
         experimentDAO = loadExperiment(uuid, endpoint);
 
         //Verify (PATCH) /experiments non editable fields.
         verifyPatchExperimentNonEditableFields(uuid, experimentDTO, experimentDAO, endpoint);
-        
+
         if (!experimentDAO.getCreatedBy().getUsername().equals(user.getUsername()))
             throw new UnauthorizedException("You don't have access to the experiment.");
 
-        if(experimentDTO.getName() != null && experimentDTO.getName().length() != 0)
+        if (experimentDTO.getName() != null && experimentDTO.getName().length() != 0)
             experimentDAO.setName(experimentDTO.getName());
 
-        if(experimentDTO.getShared() != null)
+        if (experimentDTO.getShared() != null)
             experimentDAO.setShared(experimentDTO.getShared());
 
-        if(experimentDTO.getViewed() != null)
+        if (experimentDTO.getViewed() != null)
             experimentDAO.setViewed(experimentDTO.getViewed());
 
         experimentDAO.setUpdated(new Date());
 
         try {
             experimentRepository.save(experimentDAO);
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             Logging.LogUserAction(user.getUsername(), endpoint, "Attempted to save changes to database but an error ocurred  : " + e.getMessage() + ".");
             throw new InternalServerError(e.getMessage());
         }
@@ -278,13 +274,12 @@ public class ExperimentService {
     /**
      * The deleteExperiment will delete an experiment from the database
      *
-     * @param uuid is the id of the experiment to be deleted
+     * @param uuid     is the id of the experiment to be deleted
      * @param endpoint is the endpoint that called the function
      */
-    public void deleteExperiment(String uuid, String endpoint)
-    {
+    public void deleteExperiment(String uuid, String endpoint) {
         ExperimentDAO experimentDAO;
-        UserDAO user = userInfo.getUser();
+        UserDAO user = activeUserService.getActiveUser();
         Logging.LogUserAction(user.getUsername(), endpoint, "Deleting experiment with uuid : " + uuid + ".");
 
         experimentDAO = loadExperiment(uuid, endpoint);
@@ -294,8 +289,7 @@ public class ExperimentService {
 
         try {
             experimentRepository.delete(experimentDAO);
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             Logging.LogUserAction(user.getUsername(), endpoint, "Attempted to delete an experiment to database but an error ocurred  : " + e.getMessage() + ".");
             throw new InternalServerError(e.getMessage());
         }
@@ -305,72 +299,69 @@ public class ExperimentService {
 
     //    /* -------------------------------  PRIVATE METHODS  ----------------------------------------------------*/
 
-    private void checkPostExperimentProperInput(ExperimentDTO experimentDTO, String endpoint)
-    {
+    private void checkPostExperimentProperInput(ExperimentDTO experimentDTO, String endpoint) {
 
         boolean properInput =
-            experimentDTO.getShared() == null
-            && experimentDTO.getViewed() == null
-            && experimentDTO.getCreated() == null
-            && experimentDTO.getCreatedBy() == null
-            && experimentDTO.getResult() == null
-            && experimentDTO.getStatus() == null
-            && experimentDTO.getUuid() == null;
+                experimentDTO.getShared() == null
+                        && experimentDTO.getViewed() == null
+                        && experimentDTO.getCreated() == null
+                        && experimentDTO.getCreatedBy() == null
+                        && experimentDTO.getResult() == null
+                        && experimentDTO.getStatus() == null
+                        && experimentDTO.getUuid() == null;
 
-        if (!properInput){
-            Logging.LogUserAction(userInfo.getUser().getUsername(), endpoint, "Invalid input.");
+        if (!properInput) {
+            Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), endpoint, "Invalid input.");
             throw new BadRequestException("Please provide proper input.");
         }
     }
 
-    private boolean allowedTransientAlgorithms(String algorithmName)
-    {
+    private boolean allowedTransientAlgorithms(String algorithmName) {
         List<String> properAlgorithms = new ArrayList<>();
         properAlgorithms.add("MULTIPLE_HISTOGRAMS");
         properAlgorithms.add("DESCRIPTIVE_STATS");
         return properAlgorithms.contains(algorithmName);
     }
 
-    private void verifyPatchExperimentNonEditableFields(String uuid , ExperimentDTO experimentDTO, ExperimentDAO experimentDAO, String endpoint)
-    {
-        if(experimentDTO.getUuid() !=  null && experimentDTO.getUuid().toString().compareTo(uuid) != 0){
-            Logging.LogUserAction(userInfo.getUser().getUsername(), endpoint, "Uuid is not editable.");
+    private void verifyPatchExperimentNonEditableFields(String uuid, ExperimentDTO experimentDTO, ExperimentDAO experimentDAO, String endpoint) {
+        if (experimentDTO.getUuid() != null && experimentDTO.getUuid().toString().compareTo(uuid) != 0) {
+            Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), endpoint, "Uuid is not editable.");
             throw new BadRequestException("Uuid is not editable.");
         }
-        
-        if(experimentDTO.getAlgorithm() !=  null && experimentDTO.getAlgorithm().compareTo(experimentDAO.getAlgorithm()) != 0){
-            Logging.LogUserAction(userInfo.getUser().getUsername(), endpoint, "Algorithm is not editable.");
+
+        if (experimentDTO.getAlgorithm() != null && experimentDTO.getAlgorithm().compareTo(experimentDAO.getAlgorithm()) != 0) {
+            Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), endpoint, "Algorithm is not editable.");
             throw new BadRequestException("Algorithm is not editable.");
         }
 
-        if(experimentDTO.getCreated() !=  null && experimentDTO.getCreatedBy().compareTo(experimentDAO.getCreatedBy().getUsername()) != 0){
-            Logging.LogUserAction(userInfo.getUser().getUsername(), endpoint, "CreatedBy is not editable.");
+        if (experimentDTO.getCreated() != null && experimentDTO.getCreatedBy().compareTo(experimentDAO.getCreatedBy().getUsername()) != 0) {
+            Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), endpoint, "CreatedBy is not editable.");
             throw new BadRequestException("CreatedBy is not editable.");
         }
 
-        if(experimentDTO.getAlgorithmDetails() !=  null && JsonConverters.convertObjectToJsonString(experimentDTO.getAlgorithmDetails()).compareTo(experimentDAO.getAlgorithmDetails()) != 0){
-            Logging.LogUserAction(userInfo.getUser().getUsername(), endpoint, "AlgorithmDetails is not editable.");
+        if (experimentDTO.getAlgorithmDetails() != null && JsonConverters.convertObjectToJsonString(experimentDTO.getAlgorithmDetails()).compareTo(experimentDAO.getAlgorithmDetails()) != 0) {
+            Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), endpoint, "AlgorithmDetails is not editable.");
             throw new BadRequestException("AlgorithmDetails is not editable.");
         }
-        
-        if(experimentDTO.getCreated() !=  null && experimentDTO.getAlgorithm().compareTo(experimentDAO.getAlgorithm()) != 0){
-            Logging.LogUserAction(userInfo.getUser().getUsername(), endpoint, "Created is not editable.");
+
+        if (experimentDTO.getCreated() != null && experimentDTO.getAlgorithm().compareTo(experimentDAO.getAlgorithm()) != 0) {
+            Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), endpoint, "Created is not editable.");
             throw new BadRequestException("Created is not editable.");
         }
-        
-        if(experimentDTO.getResult() !=  null && JsonConverters.convertObjectToJsonString(experimentDTO.getResult()).compareTo(experimentDAO.getResult()) != 0){
-            Logging.LogUserAction(userInfo.getUser().getUsername(), endpoint, "Status is not editable.");
+
+        if (experimentDTO.getResult() != null && JsonConverters.convertObjectToJsonString(experimentDTO.getResult()).compareTo(experimentDAO.getResult()) != 0) {
+            Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), endpoint, "Status is not editable.");
             throw new BadRequestException("Status is not editable.");
         }
-        
-        if(experimentDTO.getStatus() !=  null && experimentDTO.getStatus().compareTo(experimentDAO.getStatus()) != 0){
-            Logging.LogUserAction(userInfo.getUser().getUsername(), endpoint, "Status is not editable.");
+
+        if (experimentDTO.getStatus() != null && experimentDTO.getStatus().compareTo(experimentDAO.getStatus()) != 0) {
+            Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), endpoint, "Status is not editable.");
             throw new BadRequestException("Status is not editable.");
         }
     }
 
     private void algorithmParametersLogging(ExperimentDTO experimentDTO, String endpoint) {
-        UserDAO user = userInfo.getUser() ;
+        UserDAO user = activeUserService.getActiveUser();
         String algorithmName = experimentDTO.getAlgorithm();
         StringBuilder parametersLogMessage = new StringBuilder(", Parameters:\n");
         experimentDTO.getAlgorithmDetails().getParameters().forEach(
@@ -379,7 +370,7 @@ public class ExperimentService {
                         .append(params.getLabel())
                         .append(" -> ")
                         .append(params.getValue())
-                        .append("\n") );
+                        .append("\n"));
         Logging.LogUserAction(user.getUsername(), endpoint, "Executing " + algorithmName + parametersLogMessage);
     }
 
@@ -387,7 +378,7 @@ public class ExperimentService {
      * The getDatasetFromExperimentParameters will retrieve the dataset from the experiment parameters
      *
      * @param experimentDTO is the experiment information
-     * @param endpoint is the endpoint that called the function
+     * @param endpoint      is the endpoint that called the function
      * @return the dataset from the experiment
      */
     private String getDatasetFromExperimentParameters(ExperimentDTO experimentDTO, String endpoint) {
@@ -401,7 +392,7 @@ public class ExperimentService {
         }
 
         if (experimentDatasets == null || experimentDatasets.equals("")) {
-            Logging.LogUserAction(userInfo.getUser().getUsername(), endpoint,
+            Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), endpoint,
                     "A dataset should be specified to run an algorithm.");
             throw new BadRequestException("Please provide at least one dataset to run the algorithm.");
         }
@@ -414,22 +405,20 @@ public class ExperimentService {
      * @param uuid is the id of the experiment to be retrieved
      * @return the experiment information that was retrieved from database
      */
-    private ExperimentDAO loadExperiment(String uuid, String endpoint){
-        UUID experimentUuid ;
+    private ExperimentDAO loadExperiment(String uuid, String endpoint) {
+        UUID experimentUuid;
         ExperimentDAO experimentDAO;
 
         try {
             experimentUuid = UUID.fromString(uuid);
-        }
-        catch (Exception e)
-        {
-            Logging.LogUserAction(userInfo.getUser().getUsername(), endpoint, e.getMessage());
+        } catch (Exception e) {
+            Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), endpoint, e.getMessage());
             throw new BadRequestException(e.getMessage());
         }
 
         experimentDAO = experimentRepository.findByUuid(experimentUuid);
-        if (experimentDAO == null){
-            Logging.LogUserAction(userInfo.getUser().getUsername(), endpoint, "Experiment with uuid : " + uuid + "was not found.");
+        if (experimentDAO == null) {
+            Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), endpoint, "Experiment with uuid : " + uuid + "was not found.");
             throw new ExperimentNotFoundException("Experiment with uuid : " + uuid + " was not found.");
         }
 
@@ -443,8 +432,7 @@ public class ExperimentService {
      * @return the experiment information that was inserted into the database
      */
     private ExperimentDAO createExperimentInTheDatabase(ExperimentDTO experimentDTO, String endpoint) {
-
-        UserDAO user = userInfo.getUser();
+        UserDAO user = activeUserService.getActiveUser();
 
         ExperimentDAO experimentDAO = new ExperimentDAO();
         experimentDAO.setUuid(UUID.randomUUID());
@@ -456,8 +444,7 @@ public class ExperimentService {
 
         try {
             experimentRepository.save(experimentDAO);
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             Logging.LogUserAction(user.getUsername(), endpoint, "Attempted to save changes to database but an error ocurred  : " + e.getMessage() + ".");
             throw new InternalServerError(e.getMessage());
         }
@@ -469,7 +456,7 @@ public class ExperimentService {
     }
 
     private void saveExperiment(ExperimentDAO experimentDAO, String endpoint) {
-        UserDAO user = userInfo.getUser();
+        UserDAO user = activeUserService.getActiveUser();
 
         Logging.LogUserAction(user.getUsername(), endpoint, " id : " + experimentDAO.getUuid());
         Logging.LogUserAction(user.getUsername(), endpoint, " algorithms : " + experimentDAO.getAlgorithmDetails());
@@ -479,8 +466,7 @@ public class ExperimentService {
 
         try {
             experimentRepository.save(experimentDAO);
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             Logging.LogUserAction(user.getUsername(), endpoint, "Attempted to save changes to database but an error ocurred  : " + e.getMessage() + ".");
             throw new InternalServerError(e.getMessage());
         }
@@ -493,9 +479,8 @@ public class ExperimentService {
 
         try {
             experimentRepository.save(experimentDAO);
-        }
-        catch (Exception e){
-            Logging.LogUserAction(userInfo.getUser().getUsername(), endpoint, "Attempted to save changes to database but an error ocurred  : " + e.getMessage() + ".");
+        } catch (Exception e) {
+            Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), endpoint, "Attempted to save changes to database but an error ocurred  : " + e.getMessage() + ".");
             throw new InternalServerError(e.getMessage());
         }
     }
@@ -506,12 +491,12 @@ public class ExperimentService {
      * The createExaremeExperiment will POST the algorithm to the exareme client
      *
      * @param experimentDTO is the request with the experiment information
-     * @param endpoint is the endpoint that called the function
+     * @param endpoint      is the endpoint that called the function
      * @return the experiment information that was retrieved from exareme
      */
     public ExperimentDTO createExaremeExperiment(ExperimentDTO experimentDTO, String endpoint) {
+        UserDAO user = activeUserService.getActiveUser();
 
-        UserDAO user = userInfo.getUser();
         Logging.LogUserAction(user.getUsername(), endpoint, "Running the algorithm...");
 
         ExperimentDAO experimentDAO = createExperimentInTheDatabase(experimentDTO, endpoint);
@@ -543,10 +528,10 @@ public class ExperimentService {
                 // Results are stored in the experiment object
                 ExaremeResult exaremeResult = runExaremeExperiment(url, body, finalExperimentDTO);
 
-                Logging.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Experiment with uuid: " + experimentDAO.getUuid() + "gave response code: " +exaremeResult.getCode() + " and result: "+ exaremeResult.getResults());
+                Logging.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Experiment with uuid: " + experimentDAO.getUuid() + "gave response code: " + exaremeResult.getCode() + " and result: " + exaremeResult.getResults());
 
-                experimentDAO.setResult((exaremeResult.getCode()>= 400)? null : JsonConverters.convertObjectToJsonString(exaremeResult.getResults()));
-                experimentDAO.setStatus((exaremeResult.getCode()>= 400)? ExperimentDAO.Status.error: ExperimentDAO.Status.success);
+                experimentDAO.setResult((exaremeResult.getCode() >= 400) ? null : JsonConverters.convertObjectToJsonString(exaremeResult.getResults()));
+                experimentDAO.setStatus((exaremeResult.getCode() >= 400) ? ExperimentDAO.Status.error : ExperimentDAO.Status.success);
             } catch (Exception e) {
                 Logging.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "There was an exception: " + e.getMessage());
 
@@ -563,20 +548,19 @@ public class ExperimentService {
     /**
      * The runExaremeExperiment will run to exareme the experiment
      *
-     * @param url is the url that contain the results of the experiment
-     * @param body is the parameters of the algorithm
+     * @param url           is the url that contain the results of the experiment
+     * @param body          is the parameters of the algorithm
      * @param experimentDTO is the experiment information to be executed in the exareme
      * @return the result of exareme as well as the http status that was retrieved
      */
-    public ExaremeResult runExaremeExperiment(String url,String body, ExperimentDTO experimentDTO) {
+    public ExaremeResult runExaremeExperiment(String url, String body, ExperimentDTO experimentDTO) {
 
         StringBuilder results = new StringBuilder();
         int code;
         try {
             code = HTTPUtil.sendPost(url, body, results);
-        }
-        catch (Exception e){
-            throw new InternalServerError("Error occurred : "+ e.getMessage());
+        } catch (Exception e) {
+            throw new InternalServerError("Error occurred : " + e.getMessage());
         }
         Logging.LogExperimentAction(experimentDTO.getName(), experimentDTO.getUuid(), "Algorithm finished with code: " + code);
 
@@ -596,7 +580,7 @@ public class ExperimentService {
      * @return the response to be returned
      */
     public ExperimentDTO runGalaxyWorkflow(ExperimentDTO experimentDTO, String endpoint) {
-        UserDAO user = userInfo.getUser();
+        UserDAO user = activeUserService.getActiveUser();
         Logging.LogUserAction(user.getUsername(), endpoint, "Running a workflow...");
 
         ExperimentDAO experimentDAO = createExperimentInTheDatabase(experimentDTO, endpoint);
@@ -670,7 +654,7 @@ public class ExperimentService {
                 JSONObject jObjectError = new JSONObject(msgErr);
                 String errMsg = jObjectError.get("err_msg").toString();
 
-                experimentDTO.setStatus((response.code()>= 400)? ExperimentDAO.Status.error: ExperimentDAO.Status.success);
+                experimentDTO.setStatus((response.code() >= 400) ? ExperimentDAO.Status.error : ExperimentDAO.Status.success);
             }
 
         } catch (Exception e) {
@@ -693,11 +677,11 @@ public class ExperimentService {
      * This method creates a thread that will fetch the workflow result when it is ready
      *
      * @param experimentDAO will be used to fetch it's workflow status, it should have the workflowHistoryId initialized
-     *                   and the result should not already be fetched
+     *                      and the result should not already be fetched
      * @return nothing, just updates the experiment
      */
     public void updateWorkflowExperiment(ExperimentDAO experimentDAO, String endpoint) {
-        UserDAO user = userInfo.getUser();
+        UserDAO user = activeUserService.getActiveUser();
 
         if (experimentDAO == null) {
             Logging.LogUserAction(user.getUsername(), endpoint, "The experiment does not exist.");
@@ -749,8 +733,7 @@ public class ExperimentService {
                                 Logging.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "ResultDTO: " + result);
                                 if (result == null) {
                                     experimentDAO.setStatus(ExperimentDAO.Status.error);
-                                }
-                                else {
+                                } else {
                                     experimentDAO.setResult("[" + result + "]");
                                     experimentDAO.setStatus(ExperimentDAO.Status.success);
                                     resultFound = true;
@@ -908,7 +891,7 @@ public class ExperimentService {
 
     /**
      * @param experimentDAO The experiment of the workflow
-     * @param contentId  the id of the job result that we want
+     * @param contentId     the id of the job result that we want
      * @return the result of the specific workflow job, null if there was an error
      */
     public String getWorkflowResultBody(ExperimentDAO experimentDAO, String contentId) {
@@ -923,7 +906,7 @@ public class ExperimentService {
         Call<Object> call =
                 service.getWorkflowResultsBodyFromGalaxy(historyId, contentId, galaxyApiKey);
 
-        String resultJson ;
+        String resultJson;
         try {
             Response<Object> response = call.execute();
             if (response.code() >= 400) {

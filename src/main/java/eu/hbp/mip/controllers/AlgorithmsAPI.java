@@ -8,16 +8,15 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import eu.hbp.mip.controllers.galaxy.retrofit.RetroFitGalaxyClients;
 import eu.hbp.mip.controllers.galaxy.retrofit.RetrofitClientInstance;
-import eu.hbp.mip.model.DTOs.AlgorithmDTO;
-import eu.hbp.mip.model.UserInfo;
-import eu.hbp.mip.model.galaxy.WorkflowDTO;
+import eu.hbp.mip.models.DTOs.AlgorithmDTO;
+import eu.hbp.mip.services.ActiveUserService;
+import eu.hbp.mip.models.galaxy.WorkflowDTO;
 import eu.hbp.mip.utils.CustomResourceLoader;
 import eu.hbp.mip.utils.HTTPUtil;
 import eu.hbp.mip.utils.Logging;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
@@ -38,13 +37,12 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RestController
 @RequestMapping(value = "/algorithms", produces = {APPLICATION_JSON_VALUE})
 @Api(value = "/algorithms")
-public class AlgorithmsApi {
+public class AlgorithmsAPI {
 
     private static final Gson gson = new Gson();
 
-    @Qualifier("userInfo")
     @Autowired
-    private UserInfo userInfo;
+    private ActiveUserService activeUserService;
 
     @Value("#{'${services.exareme.algorithmsUrl}'}")
     private String exaremeAlgorithmsUrl;
@@ -55,13 +53,13 @@ public class AlgorithmsApi {
     @Value("#{'${services.galaxy.galaxyApiKey}'}")
     private String galaxyApiKey;
 
-    @Value("#{'${services.algorithms.disabledAlgorithmsUrl}'}")
-    private String disabledAlgorithmsUrl;
+    @Value("#{'${files.disabledAlgorithms_json}'}")
+    private String disabledAlgorithmsFilePath;
 
     @ApiOperation(value = "List all algorithms", response = String.class)
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<AlgorithmDTO>> getAlgorithms() {
-        String username = userInfo.getUser().getUsername();
+        String username = activeUserService.getActiveUser().getUsername();
         String endpoint = "(GET) /algorithms";
         Logging.LogUserAction(username, endpoint, "Executing...");
 
@@ -110,7 +108,7 @@ public class AlgorithmsApi {
      * @return a list of AlgorithmDTOs or null if something fails
      */
     public LinkedList<AlgorithmDTO> getExaremeAlgorithms() {
-        String username = userInfo.getUser().getUsername();
+        String username = activeUserService.getActiveUser().getUsername();
         String endpoint = "(GET) /algorithms";
         LinkedList<AlgorithmDTO> algorithms = new LinkedList<>();
         // Get exareme algorithms
@@ -139,7 +137,7 @@ public class AlgorithmsApi {
      * @return a list of AlgorithmDTOs or null if something fails
      */
     public LinkedList<AlgorithmDTO> getGalaxyWorkflows() {
-        String username = userInfo.getUser().getUsername();
+        String username = activeUserService.getActiveUser().getUsername();
         String endpoint = "(GET) /algorithms";
         List<Workflow> workflowList;
         try {
@@ -150,7 +148,6 @@ public class AlgorithmsApi {
             workflowList = new ArrayList<>(workflowsClient.getWorkflows());
         } catch (Exception e) {
             Logging.LogUserAction(username, endpoint, "Error when calling list galaxy workflows: " + e.getMessage());
-
             return null;
         }
 
@@ -205,7 +202,7 @@ public class AlgorithmsApi {
      */
     List<String> getDisabledAlgorithms() throws IOException {
 
-        Resource resource = resourceLoader.getResource(disabledAlgorithmsUrl);
+        Resource resource = resourceLoader.getResource(disabledAlgorithmsFilePath);
 
         List<String> response = gson.fromJson(convertInputStreamToString(
                 resource.getInputStream()),

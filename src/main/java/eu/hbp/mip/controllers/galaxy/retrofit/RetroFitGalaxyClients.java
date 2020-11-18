@@ -1,9 +1,9 @@
 package eu.hbp.mip.controllers.galaxy.retrofit;
 
 import com.google.gson.JsonObject;
-import eu.hbp.mip.model.galaxy.GalaxyWorkflowResult;
-import eu.hbp.mip.model.galaxy.PostWorkflowToGalaxyDtoResponse;
-import eu.hbp.mip.model.galaxy.WorkflowDTO;
+import eu.hbp.mip.models.galaxy.GalaxyWorkflowResult;
+import eu.hbp.mip.models.galaxy.PostWorkflowToGalaxyDtoResponse;
+import eu.hbp.mip.models.galaxy.WorkflowDTO;
 import retrofit2.Call;
 import retrofit2.http.*;
 

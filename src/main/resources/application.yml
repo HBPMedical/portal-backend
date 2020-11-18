@@ -1,6 +1,6 @@
-# Configuration template for the portal running inside a Docker container
+# Configuration for development purposes
 
-# See http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
+### DATABASE CONFIGURATION ###
 spring:
   portal-datasource:
     url: "jdbc:postgresql://127.0.0.1:5433/portal"
@@ -8,7 +8,6 @@ spring:
     username: "portal"
     password: "portalpwd"
     driver-class-name: org.postgresql.Driver
-
   data:
     jpa:
       repositories:
@@ -18,22 +17,7 @@ spring:
       dialect: org.hibernate.dialect.PostgreSQL9Dialect
       ddl-auto: validate
 
-# HBP OAUTH2 LOGIN
-hbp:
-  authentication:
-    enabled: 0
-  client:
-    clientId: "MIP"
-    clientSecret: "dae83a6b-c769-4186-8383-f0984c6edf05"
-    logoutUri: http://127.0.0.1/auth/realms/MIP/protocol/openid-connect/logout
-
-
-# WEB FRONTEND
-frontend:
-  loginUrl: "http://127.0.0.1/services/login/hbp"
-  redirectAfterLoginUrl: "http://127.0.0.1/"
-  redirectAfterLogoutUrl: "http://127.0.0.1/services/login/hbp"
-
+### LOG LEVELS ###
 logging:
   level:
     root: "ERROR"
@@ -41,16 +25,14 @@ logging:
     eu:
       hbp: "DEBUG"
 
-# EMBEDDED SERVER CONFIGURATION
+### EMBEDDED SERVER CONFIGURATION ###
 server:
   servlet:
     contextPath: "/services"
   port: 8080
   forward-headers-strategy: native
-  session:
-    timeout: "2592000"
 
-# ENDPOINTS
+### ENDPOINTS ###
 endpoints:
   enabled: true
   health:
@@ -58,12 +40,11 @@ endpoints:
     endpoint: "/health"
     sensitive: false
 
-# External Services
+### EXTERNAL SERVICES ###
 services:
   exareme:
     queryExaremeUrl: "http://127.0.0.1:9090/mining/query"
     algorithmsUrl: "http://127.0.0.1:9090/mining/algorithms.json"
-
   galaxy:
     galaxyUrl: "http://127.0.0.1:8090"
     galaxyContext:  "nativeGalaxy/workflows/list"
@@ -71,11 +52,23 @@ services:
     galaxyUsername:  "admin"
     galaxyPassword:  "password"
 
-  keycloak:
-   keycloakUrl: "127.0.0.1"
+### Authentication ###
+authentication:
+  enabled: true
 
-  pathologies:
-    pathologiesUrl: "classPath:/pathologies.json"
+### Keycloak ###
+keycloak:
+  enabled: true
+  auth-server-url: "http://127.0.0.1/auth"
+  realm: "MIP"
+  resource: "MIP"
+  enable-basic-auth: true
+  credentials:
+    secret: "dae83a6b-c769-4186-8383-f0984c6edf05"
+  principal-attribute: "preferred_username"
 
-  algorithms:
-    disabledAlgorithmsUrl: "classPath:/disableAlgorithms.json"
+### EXTERNAL FILES ###
+# Files are loaded from the resources
+files:
+  pathologies_json: "classPath:/pathologies.json"
+  disabledAlgorithms_json: "classPath:/disabledAlgorithms.json"

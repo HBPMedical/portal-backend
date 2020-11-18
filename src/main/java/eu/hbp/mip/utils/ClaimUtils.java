@@ -1,7 +1,7 @@
 package eu.hbp.mip.utils;
 
 import com.google.gson.Gson;
-import eu.hbp.mip.model.DTOs.PathologyDTO;
+import eu.hbp.mip.models.DTOs.PathologyDTO;
 import eu.hbp.mip.utils.Exceptions.BadRequestException;
 import org.springframework.security.core.GrantedAuthority;
 
@@ -16,11 +16,11 @@ public class ClaimUtils {
     private static final Gson gson = new Gson();
 
     public static String allDatasetsAllowedClaim() {
-        return "dataset_all";
+        return "role_dataset_all";
     }
 
     public static String getDatasetClaim(String datasetCode) {
-        return "dataset_" + datasetCode.toLowerCase();
+        return "role_dataset_" + datasetCode.toLowerCase();
     }
 
     public static void validateAccessRightsOnDatasets(String username, Collection<? extends GrantedAuthority> authorities,

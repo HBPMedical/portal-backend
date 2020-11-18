@@ -1,13 +1,9 @@
-/**
- * Created by mirco on 04.12.15.
- */
-
 package eu.hbp.mip.controllers;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import eu.hbp.mip.model.DTOs.PathologyDTO;
-import eu.hbp.mip.model.UserInfo;
+import eu.hbp.mip.models.DTOs.PathologyDTO;
+import eu.hbp.mip.services.ActiveUserService;
 import eu.hbp.mip.utils.ClaimUtils;
 import eu.hbp.mip.utils.CustomResourceLoader;
 import eu.hbp.mip.utils.Exceptions.BadRequestException;
@@ -15,7 +11,6 @@ import eu.hbp.mip.utils.InputStreamConverter;
 import eu.hbp.mip.utils.Logging;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
@@ -32,20 +27,19 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RestController
 @RequestMapping(value = "/pathologies", produces = {APPLICATION_JSON_VALUE})
 @Api(value = "/pathologies")
-public class PathologiesApi {
+public class PathologiesAPI {
 
     private static final Gson gson = new Gson();
 
-    @Qualifier("userInfo")
     @Autowired
-    private UserInfo userInfo;
+    private ActiveUserService activeUserService;
 
     // Enable HBP collab authentication (1) or disable it (0). Default is 1
-    @Value("#{'${hbp.authentication.enabled:1}'}")
+    @Value("#{'${authentication.enabled}'}")
     private boolean authenticationIsEnabled;
 
-    @Value("#{'${services.pathologies.pathologiesUrl}'}")
-    private String pathologiesUrl;
+    @Value("#{'${files.pathologies_json}'}")
+    private String pathologiesFilePath;
 
     @Autowired
     private CustomResourceLoader resourceLoader;
@@ -53,11 +47,11 @@ public class PathologiesApi {
     @RequestMapping(name = "/pathologies", method = RequestMethod.GET)
     public ResponseEntity<String> getPathologies(Authentication authentication) {
         String endpoint = "(GET) /pathologies";
-        String username = userInfo.getUser().getUsername();
+        String username = activeUserService.getActiveUser().getUsername();
         Logging.LogUserAction(username, endpoint, "Loading pathologies ...");
 
         // Load pathologies from file
-        Resource resource = resourceLoader.getResource(pathologiesUrl);
+        Resource resource = resourceLoader.getResource(pathologiesFilePath);
         List<PathologyDTO> allPathologies;
         try {
             allPathologies = gson.fromJson(InputStreamConverter.convertInputStreamToString(resource.getInputStream()), new TypeToken<List<PathologyDTO>>() {

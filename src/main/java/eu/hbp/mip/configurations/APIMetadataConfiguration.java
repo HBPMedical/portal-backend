@@ -1,4 +1,4 @@
-package eu.hbp.mip.configuration;
+package eu.hbp.mip.configurations;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,18 +10,9 @@ import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
-/**
- * Created by mirco on 11.07.16.
- */
-
 @Configuration
 @EnableSwagger2
-public class WebConfiguration {
-
-//    @Bean
-//    public String[] swaggerUiConfig() {
-//        return UiConfiguration.Constants.DEFAULT_SUBMIT_METHODS;
-//    }
+public class APIMetadataConfiguration {
 
     @Bean
     public Docket swaggerDocumentation() {
@@ -36,10 +27,8 @@ public class WebConfiguration {
     private ApiInfo metadata() {
         return new ApiInfoBuilder()
                 .title("Medical Informatics Platform API")
-                .description("Serve the MIP Frontend")
-                .version("1.0")
-                .contact(new Contact("Mirco Nasuti", "https://www.unil.ch/lren/en/home.html", "mirco.nasuti@chuv.ch"))
+                .description("Serving the MIP Frontend")
+                .contact(new Contact("Kostas Filippopolitis", "https://github.com/KFilippopolitis", "kostasfilippop@gmail.com"))
                 .build();
     }
-
 }

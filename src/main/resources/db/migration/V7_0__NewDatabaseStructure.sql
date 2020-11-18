@@ -16,6 +16,9 @@ ALTER TABLE experiment
 RENAME workflowstatus TO status;
 
 ALTER TABLE experiment
+ADD COLUMN updated timestamp without time zone;
+
+ALTER TABLE experiment
 ADD COLUMN algorithm text;
 
 ALTER TABLE "user"

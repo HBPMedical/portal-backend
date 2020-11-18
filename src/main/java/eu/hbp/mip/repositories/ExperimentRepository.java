@@ -13,5 +13,5 @@ import java.util.UUID;
 
 public interface ExperimentRepository extends CrudRepository<ExperimentDAO, UUID>, JpaSpecificationExecutor<ExperimentDAO>
 {
-    Optional<ExperimentDAO> findByUuid(UUID experimentUuid);
+    ExperimentDAO findByUuid(UUID experimentUuid);
 }

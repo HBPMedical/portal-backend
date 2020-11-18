@@ -3,7 +3,7 @@ package eu.hbp.mip.model.DTOs;
 import eu.hbp.mip.model.DAOs.ExperimentDAO;
 
 import java.util.Date;
-import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class ExperimentDTO {
@@ -12,9 +12,11 @@ public class ExperimentDTO {
     private String name;
     private String createdBy;
     private Date created;
+    private Date updated;
+    private Date finished;
     private Boolean shared;
     private Boolean viewed;
-    private ExperimentDTO.ResultDTO result;
+    private Map result;
     private ExperimentDAO.Status status;
 
     private String algorithm;
@@ -71,6 +73,22 @@ public class ExperimentDTO {
     public void setCreated(Date created) {
         this.created = created;
     }
+    
+    public Date getUpdated() {
+        return updated;
+    }
+
+    public void setUpdated(Date updated) {
+        this.updated = updated;
+    }
+    
+    public Date getFinished() {
+        return finished;
+    }
+
+    public void setFinished(Date finished) {
+        this.finished = finished;
+    }
 
     public Boolean getShared() {
         return shared;
@@ -88,11 +106,11 @@ public class ExperimentDTO {
         this.viewed = viewed;
     }
 
-    public ExperimentDTO.ResultDTO getResult() {
+    public Map getResult() {
         return result;
     }
 
-    public void setResult(ExperimentDTO.ResultDTO result) {
+    public void setResult(Map result) {
         this.result = result;
     }
 
@@ -104,37 +122,25 @@ public class ExperimentDTO {
         this.status = status;
     }
 
-    public static class OutputDTO {
+    public static class ResultDTO {
 
-        private String data;
-        private ExperimentDAO.MimeTypes mimeTypes;
+        private Object data;
+        private ExperimentDAO.Type type;
 
-        public String getData() {
+        public Object getData() {
             return this.data;
         }
 
-        public void setData(String data) {
+        public void setData(Object data) {
             this.data = data;
         }
 
-        public ExperimentDAO.MimeTypes getMimeTypes() {
-            return mimeTypes;
+        public ExperimentDAO.Type getType() {
+            return type;
         }
 
-        public void setMimeTypes(ExperimentDAO.MimeTypes mimeTypes) {
-            this.mimeTypes = mimeTypes;
-        }
-    }
-
-    public static class ResultDTO {
-        private List<OutputDTO> result;
-
-        public List<OutputDTO> getResult() {
-            return this.result;
-        }
-
-        public void setResult(List<OutputDTO> result) {
-            this.result = result;
+        public void setType(ExperimentDAO.Type type) {
+            this.type = type;
         }
     }
 }

@@ -251,20 +251,31 @@
             <artifactId>java-jwt</artifactId>
             <version>3.11.0</version>
         </dependency>
-    </dependencies>
 
-    <build>
-        <finalName>portal-backend</finalName>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <includes>
-                    <include>**/*.xml</include>
-                    <include>**/*.json</include>
-                    <include>**/*.csv</include>
-                    <include>**/*.sql</include>
-                    <include>**/*.conf</include>
-                    <include>**/*.yml</include>    <!--  Only for development -->
+        <dependency>
+            <groupId>com.google.code.svenson</groupId>
+            <artifactId>svenson</artifactId>
+            <version>1.5.8</version>
+        </dependency>
+        <!--<dependency>
+           <groupId>eu.hbp.mip</groupId>
+           <artifactId>portal-backend</artifactId>
+           <version>4.0.0</version>
+       </dependency>-->
+   </dependencies>
+
+   <build>
+       <finalName>portal-backend</finalName>
+       <resources>
+           <resource>
+               <directory>src/main/resources</directory>
+               <includes>
+                   <include>**/*.xml</include>
+                   <include>**/*.json</include>
+                   <include>**/*.csv</include>
+                   <include>**/*.sql</include>
+                   <include>**/*.conf</include>
+                   <!--  <include>**/*.yml</include>     Only for development -->
                 </includes>
                 <filtering>true</filtering>
 

@@ -2,6 +2,7 @@ package eu.hbp.mip.utils;
 
 import com.google.gson.Gson;
 import eu.hbp.mip.model.DTOs.PathologyDTO;
+import eu.hbp.mip.utils.Exceptions.BadRequestException;
 import org.springframework.security.core.GrantedAuthority;
 
 import java.util.ArrayList;
@@ -22,7 +23,7 @@ public class ClaimUtils {
         return "dataset_" + datasetCode.toLowerCase();
     }
 
-    public static boolean userHasDatasetsAuthorization(String username, Collection<? extends GrantedAuthority> authorities,
+    public static void validateAccessRightsOnDatasets(String username, Collection<? extends GrantedAuthority> authorities,
                                                        String experimentDatasets) {
 
         List<String> userClaims = Arrays.asList(authorities.toString().toLowerCase()
@@ -37,13 +38,12 @@ public class ClaimUtils {
                 if (!userClaims.contains(datasetRole.toLowerCase())) {
                     Logging.LogUserAction(username, "(POST) /experiments/runAlgorithm",
                             "You are not allowed to use dataset: " + dataset);
-                    return false;
+                    throw new BadRequestException("You are not authorized to use these datasets.");
                 }
             }
             Logging.LogUserAction(username, "(POST) /experiments/runAlgorithm",
                     "User is authorized to use the datasets: " + experimentDatasets);
         }
-        return true;
     }
 
     public static String getAuthorizedPathologies(String username, Collection<? extends GrantedAuthority> authorities,

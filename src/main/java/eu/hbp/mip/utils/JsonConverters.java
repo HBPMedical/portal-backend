@@ -7,7 +7,7 @@ import com.google.gson.Gson;
 import java.lang.reflect.Type;
 
 public class JsonConverters {
-    Gson gson = new Gson();
+    private static final Gson gson = new Gson();
 
     public static String convertObjectToJsonString(Object object)  {
         ObjectMapper mapper = new ObjectMapper();
@@ -22,6 +22,6 @@ public class JsonConverters {
     public static  <T> T convertJsonStringToObject(String jsonString, Type typeOfT)  {
         if(jsonString == null || jsonString.isEmpty())
             return null;
-        return new Gson().fromJson(jsonString, typeOfT);
+        return gson.fromJson(jsonString, typeOfT);
     }
 }

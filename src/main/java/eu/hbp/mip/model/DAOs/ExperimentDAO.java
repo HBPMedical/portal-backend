@@ -7,10 +7,10 @@ import eu.hbp.mip.model.DTOs.AlgorithmDTO;
 import eu.hbp.mip.model.DTOs.ExperimentDTO;
 import eu.hbp.mip.utils.JsonConverters;
 import io.swagger.annotations.ApiModel;
+import org.svenson.JSONParser;
 
 import javax.persistence.*;
-import java.util.Date;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Created by habfast on 21/04/16.
@@ -65,6 +65,10 @@ public class ExperimentDAO {
     @Expose
     @Column(columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
     private Date created = new Date();
+    
+    @Expose
+    @Column(columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
+    private Date updated;
 
     @Expose
     @Column(columnDefinition = "BOOLEAN")
@@ -81,7 +85,7 @@ public class ExperimentDAO {
         success
     }
 
-    public enum MimeTypes {
+    public enum Type {
         ERROR("text/plain+error"),
         WARNING("text/plain+warning"),
         USER_WARNING("text/plain+user_error"),
@@ -93,15 +97,15 @@ public class ExperimentDAO {
         HTML("text/html"),
         TEXT("text/plain");
 
-        private String types;
+        private String type;
 
         //Constructor to initialize the instance variable
-        MimeTypes(String types) {
-            this.types = types;
+        Type(String type) {
+            this.type = type;
         }
 
-        public String getTypes() {
-            return this.types;
+        public String getType() {
+            return this.type;
         }
     }
 
@@ -116,15 +120,25 @@ public class ExperimentDAO {
         ExperimentDTO experimentDTO = new ExperimentDTO();
         experimentDTO.setAlgorithmDetails(JsonConverters.convertJsonStringToObject(this.algorithmDetails, AlgorithmDTO.class));
         experimentDTO.setCreated(this.created);
+        experimentDTO.setUpdated(this.updated);
+        experimentDTO.setFinished(this.finished);
         experimentDTO.setCreatedBy(this.createdBy.getUsername());
         experimentDTO.setName(this.name);
-        experimentDTO.setResult(JsonConverters.convertJsonStringToObject(this.result, ExperimentDTO.ResultDTO.class));
+        experimentDTO.setResult(convertJsonStringToResult(this.result));
+        experimentDTO.setStatus(this.status);
         experimentDTO.setShared(this.shared);
         experimentDTO.setUuid(this.uuid);
         experimentDTO.setViewed(this.viewed);
         return experimentDTO;
     }
 
+    public static Map convertJsonStringToResult(String jsonResult)  {
+        if(jsonResult == null || jsonResult.isEmpty())
+            return null;
+        JSONParser parser = new JSONParser();
+        parser.addTypeHint("Result[]", ExperimentDTO.ResultDTO.class);
+        return parser.parse(Map.class, jsonResult);
+    }
     public String getAlgorithmDetails() {
         return algorithmDetails;
     }
@@ -179,6 +193,14 @@ public class ExperimentDAO {
 
     public void setCreated(Date created) {
         this.created = created;
+    }
+    
+    public Date getUpdated() {
+        return updated;
+    }
+
+    public void setUpdated(Date updated) {
+        this.updated = updated;
     }
 
     public UUID getUuid() {

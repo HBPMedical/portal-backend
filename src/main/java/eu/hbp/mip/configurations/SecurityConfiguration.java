@@ -25,11 +25,11 @@ import javax.servlet.http.HttpServletRequest;
 @KeycloakConfiguration
 public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter {
 
-    @Value("#{'${authentication.enabled}'}")
-    private boolean authenticationEnabled;
-
     // Redirect to login page url
     private static final String logoutRedirectURL = "/sso/login";
+
+    @Value("#{'${authentication.enabled}'}")
+    private boolean authenticationEnabled;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -38,7 +38,7 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
         if (authenticationEnabled) {
             http.authorizeRequests()
                     .antMatchers(
-                            "/sso/login", "/webjars/**",
+                            "/sso/login",
                             "/v2/api-docs", "/swagger-ui/**", "/swagger-resources/**"  // Swagger URLs
                     ).permitAll()
                     .antMatchers("/galaxy*", "/galaxy/*").hasRole("DATA MANAGER")

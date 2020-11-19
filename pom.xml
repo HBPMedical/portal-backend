@@ -189,7 +189,6 @@
             <artifactId>aspectjweaver</artifactId>
             <version>${aspectjweaver.version}</version>
         </dependency>
-        
         <dependency>
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
@@ -221,42 +220,32 @@
             <artifactId>blend4j</artifactId>
             <version>0.2.0</version>
         </dependency>
-
         <dependency>
             <groupId>com.squareup.retrofit2</groupId>
             <artifactId>retrofit</artifactId>
             <version>2.9.0</version>
         </dependency>
-
         <!-- https://mvnrepository.com/artifact/com.squareup.retrofit2/converter-gson -->
         <dependency>
             <groupId>com.squareup.retrofit2</groupId>
             <artifactId>converter-gson</artifactId>
             <version>2.9.0</version>
         </dependency>
-
         <!-- https://mvnrepository.com/artifact/com.squareup.okhttp3/logging-interceptor -->
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>logging-interceptor</artifactId>
         </dependency>
-
         <dependency>
             <groupId>com.auth0</groupId>
             <artifactId>java-jwt</artifactId>
             <version>3.11.0</version>
         </dependency>
-
         <dependency>
             <groupId>com.google.code.svenson</groupId>
             <artifactId>svenson</artifactId>
             <version>1.5.8</version>
         </dependency>
-        <!-- <dependency>
-           <groupId>eu.hbp.mip</groupId>
-           <artifactId>portal-backend</artifactId>
-           <version>4.0.0</version>
-       </dependency>-->
    </dependencies>
 
    <build>

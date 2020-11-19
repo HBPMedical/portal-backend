@@ -14,18 +14,29 @@ import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.web.authentication.session.RegisterSessionAuthenticationStrategy;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
+import org.springframework.security.web.csrf.CsrfFilter;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.WebUtils;
 
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 
 @Controller
 @KeycloakConfiguration
 public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter {
 
-    // Redirect to login page url
+    // Upon logout, redirect to login page url
     private static final String logoutRedirectURL = "/sso/login";
 
     @Value("#{'${authentication.enabled}'}")
@@ -42,13 +53,41 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
                             "/v2/api-docs", "/swagger-ui/**", "/swagger-resources/**"  // Swagger URLs
                     ).permitAll()
                     .antMatchers("/galaxy*", "/galaxy/*").hasRole("DATA MANAGER")
-                    .anyRequest().hasRole("RESEARCHER");
+                    .anyRequest().hasRole("RESEARCHER")
+                    .and().csrf().ignoringAntMatchers("/logout").csrfTokenRepository(csrfTokenRepository())
+                    .and().addFilterAfter(csrfHeaderFilter(), CsrfFilter.class);
         } else {
             http.antMatcher("/**")
                     .authorizeRequests()
                     .antMatchers("/**").permitAll()
                     .and().csrf().disable();
         }
+    }
+
+    private Filter csrfHeaderFilter() {
+        return new OncePerRequestFilter() {
+            @Override
+            protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                            FilterChain filterChain) throws ServletException, IOException {
+                CsrfToken csrf = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
+                if (csrf != null) {
+                    Cookie cookie = WebUtils.getCookie(request, "XSRF-TOKEN");
+                    String token = csrf.getToken();
+                    if (cookie == null || token != null && !token.equals(cookie.getValue())) {
+                        cookie = new Cookie("XSRF-TOKEN", token);
+                        cookie.setPath("/");
+                        response.addCookie(cookie);
+                    }
+                }
+                filterChain.doFilter(request, response);
+            }
+        };
+    }
+
+    private CsrfTokenRepository csrfTokenRepository() {
+        HttpSessionCsrfTokenRepository repository = new HttpSessionCsrfTokenRepository();
+        repository.setHeaderName("X-XSRF-TOKEN");
+        return repository;
     }
 
     @Autowired

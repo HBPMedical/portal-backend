@@ -1,5 +1,19 @@
 # Configuration template for the portal running inside a Docker container
 
+### LOG LEVELS ###
+logging:
+  level:
+    root: {{ default .Env.LOG_LEVEL_FRAMEWORK "ERROR" }}
+    org: {{ default .Env.LOG_LEVEL_FRAMEWORK "ERROR" }}
+    eu:
+      hbp: {{ default .Env.LOG_LEVEL "INFO" }}
+
+
+### AUTHENTICATION ###
+authentication:
+  enabled: {{ default .Env.AUTHENTICATION "true" }}
+
+
 ### DATABASE CONFIGURATION ###
 spring:
   portal-datasource:
@@ -17,28 +31,6 @@ spring:
       dialect: org.hibernate.dialect.PostgreSQL9Dialect
       ddl-auto: validate
 
-### LOG LEVELS ###
-logging:
-  level:
-    root: {{ default .Env.LOG_LEVEL_FRAMEWORK "ERROR" }}
-    org: {{ default .Env.LOG_LEVEL_FRAMEWORK "ERROR" }}
-    eu:
-      hbp: {{ default .Env.LOG_LEVEL "INFO" }}
-
-### EMBEDDED SERVER CONFIGURATION ###
-server:
-  servlet:
-    contextPath: "/services"
-  port: 8080
-  forward-headers-strategy: native
-
-### ENDPOINTS ###
-endpoints:
-  enabled: true
-  health:
-    enabled: true
-    endpoint: /health
-    sensitive: false
 
 ### EXTERNAL SERVICES ###
 services:
@@ -48,24 +40,21 @@ services:
 
   galaxy:
     galaxyUrl:      {{ default .Env.GALAXY_URL "http://localhost:8090/" }}
-    galaxyContext:  {{ default .Env.GALAXY_CONTEXT "nativeGalaxy/workflows/list" }}
+    galaxyContext:  "nativeGalaxy/workflows/list"
     galaxyApiKey:   {{ .Env.GALAXY_API_KEY }}
     galaxyUsername:  {{ default .Env.GALAXY_USERNAME "admin" }}
     galaxyPassword:  {{ default .Env.GALAXY_PASSWORD "password" }}
 
-### Authentication ###
-authentication:
-  enabled: {{ default .Env.AUTHENTICATION "1" }}
 
-### Keycloak ###
+### KEYCLOAK ###
 keycloak:
   enabled: true
   auth-server-url: {{ .Env.KEYCLOAK_AUTH_URL }}
   realm: {{ .Env.KEYCLOAK_REALM }}
-  resource: {{ .Env.CLIENT_ID }}
+  resource: {{ .Env.KEYCLOAK_CLIENT_ID }}
   enable-basic-auth: true
   credentials:
-    secret: {{ .Env.CLIENT_SECRET }}
+    secret: {{ .Env.KEYCLOAK_CLIENT_SECRET }}
   principal-attribute: "preferred_username"
 
 ### EXTERNAL FILES ###
@@ -73,3 +62,20 @@ keycloak:
 files:
   pathologies_json: "file:/opt/portal/api/pathologies.json"
   disabledAlgorithms_json: "file:/opt/portal/api/disabledAlgorithms.json"
+
+
+### EMBEDDED SERVER CONFIGURATION ###
+server:
+  servlet:
+    contextPath: "/services"
+  port: 8080
+  forward-headers-strategy: native
+
+
+### ENDPOINTS ###
+endpoints:
+  enabled: true
+  health:
+    enabled: true
+    endpoint: /health
+    sensitive: false

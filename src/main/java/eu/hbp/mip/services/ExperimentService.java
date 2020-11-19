@@ -74,6 +74,7 @@ public class ExperimentService {
      * @param algorithm  is optional, in case it is required to filter the experiments by algorithm name
      * @param shared     is optional, in case it is required to filter the experiments by shared
      * @param viewed     is optional, in case it is required to filter the experiments by viewed
+     * @param includeShared     is optional, in case it is required to retrieve the experiment that is shared
      * @param page       is the page that is required to be retrieve
      * @param size       is the size of each page
      * @param orderBy    is the column that is required to ordered by
@@ -82,17 +83,28 @@ public class ExperimentService {
      * @return a list of mapped experiments
      */
 
-    public Map getExperiments(String name, String algorithm, Boolean shared, Boolean viewed, int page, int size, String orderBy, Boolean descending, String endpoint) {
+    public Map getExperiments(String name, String algorithm, Boolean shared, Boolean viewed, boolean includeShared, int page, int size, String orderBy, Boolean descending, String endpoint) {
         UserDAO user = activeUserService.getActiveUser();
         Logging.LogUserAction(user.getUsername(), endpoint, "Listing my experiments.");
-        if (size > 10)
-            throw new BadRequestException("Invalid size input, max size is 10.");
-
+        if (size > 50)
+            throw new BadRequestException("Invalid size input, max size is 50.");
+        /*TODO:if(role == master){
         Specification<ExperimentDAO> spec = Specification
                 .where(new ExperimentSpecifications.ExperimentWithName(name))
                 .and(new ExperimentSpecifications.ExperimentWithAlgorithm(algorithm))
                 .and(new ExperimentSpecifications.ExperimentWithShared(shared))
                 .and(new ExperimentSpecifications.ExperimentWithViewed(viewed))
+                .and(new ExperimentSpecifications.ExperimentOrderBy(orderBy, descending));
+        }
+        else
+         */
+        Specification<ExperimentDAO> spec = Specification
+                .where(new ExperimentSpecifications.MyExperiment(user.getUsername()))
+                .or(new ExperimentSpecifications.SharedExperiment(includeShared))
+                .and(new ExperimentSpecifications.ExperimentWithAlgorithm(algorithm))
+                .and(new ExperimentSpecifications.ExperimentWithShared(shared))
+                .and(new ExperimentSpecifications.ExperimentWithViewed(viewed))
+                .and(new ExperimentSpecifications.ExperimentWithName(name))
                 .and(new ExperimentSpecifications.ExperimentOrderBy(orderBy, descending));
 
         Pageable paging = PageRequest.of(page, size);
@@ -103,7 +115,7 @@ public class ExperimentService {
             throw new NoContent("No experiment found with the filters provided.");
 
         List<ExperimentDTO> experimentDTOs = new ArrayList<>();
-        experimentDAOs.forEach(experimentDAO -> experimentDTOs.add(experimentDAO.convertToDTO()));
+        experimentDAOs.forEach(experimentDAO -> experimentDTOs.add(experimentDAO.convertToDTO(false)));
 
         Map<String, Object> response = new HashMap<>();
         response.put("experiments", experimentDTOs);
@@ -129,12 +141,12 @@ public class ExperimentService {
         Logging.LogUserAction(user.getUsername(), endpoint, "Loading Experiment with uuid : " + uuid);
 
         experimentDAO = loadExperiment(uuid, endpoint);
-
-        if (!experimentDAO.isShared() && !experimentDAO.getCreatedBy().getUsername().equals(user.getUsername())) {
+        //TODO: if (!experimentDAO.isShared() && !experimentDAO.getCreatedBy().getUsername().equals(user.getUsername()) && if not master) {
+        if (!experimentDAO.isShared() && !experimentDAO.getCreatedBy().getUsername().equals(user.getUsername()) ) {
             Logging.LogUserAction(user.getUsername(), endpoint, "Accessing Experiment is unauthorized.");
             throw new UnauthorizedException("You don't have access to the experiment.");
         }
-        ExperimentDTO experimentDTO = experimentDAO.convertToDTO();
+        ExperimentDTO experimentDTO = experimentDAO.convertToDTO(true);
         Logging.LogUserAction(user.getUsername(), endpoint, "Experiment was Loaded with uuid : " + uuid + ".");
 
         return experimentDTO;
@@ -161,7 +173,7 @@ public class ExperimentService {
 
         if (authenticationIsEnabled) {
             String experimentDatasets = getDatasetFromExperimentParameters(experimentDTO, endpoint);
-            ClaimUtils.validateAccessRightsOnDatasets(user.getUsername(), authentication.getAuthorities(), experimentDatasets);
+            ClaimUtils.validateAccessRightsOnDatasets(user.getUsername(), authentication.getAuthorities(), experimentDatasets, endpoint);
         }
 
         // Run with the appropriate engine
@@ -205,7 +217,7 @@ public class ExperimentService {
 
         if (authenticationIsEnabled) {
             String experimentDatasets = getDatasetFromExperimentParameters(experimentDTO, endpoint);
-            ClaimUtils.validateAccessRightsOnDatasets(user.getUsername(), authentication.getAuthorities(), experimentDatasets);
+            ClaimUtils.validateAccessRightsOnDatasets(user.getUsername(), authentication.getAuthorities(), experimentDatasets, endpoint);
         }
 
         String body = gson.toJson(algorithmParameters);
@@ -267,7 +279,7 @@ public class ExperimentService {
 
         Logging.LogUserAction(user.getUsername(), endpoint, "Updated experiment with uuid : " + uuid + ".");
 
-        experimentDTO = experimentDAO.convertToDTO();
+        experimentDTO = experimentDAO.convertToDTO(true);
         return experimentDTO;
     }
 
@@ -324,37 +336,37 @@ public class ExperimentService {
     }
 
     private void verifyPatchExperimentNonEditableFields(String uuid, ExperimentDTO experimentDTO, ExperimentDAO experimentDAO, String endpoint) {
-        if (experimentDTO.getUuid() != null && experimentDTO.getUuid().toString().compareTo(uuid) != 0) {
+        if (experimentDTO.getUuid() != null ) {
             Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), endpoint, "Uuid is not editable.");
             throw new BadRequestException("Uuid is not editable.");
         }
 
-        if (experimentDTO.getAlgorithm() != null && experimentDTO.getAlgorithm().compareTo(experimentDAO.getAlgorithm()) != 0) {
+        if (experimentDTO.getAlgorithm() != null ) {
             Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), endpoint, "Algorithm is not editable.");
             throw new BadRequestException("Algorithm is not editable.");
         }
 
-        if (experimentDTO.getCreated() != null && experimentDTO.getCreatedBy().compareTo(experimentDAO.getCreatedBy().getUsername()) != 0) {
+        if (experimentDTO.getCreated() != null) {
             Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), endpoint, "CreatedBy is not editable.");
             throw new BadRequestException("CreatedBy is not editable.");
         }
 
-        if (experimentDTO.getAlgorithmDetails() != null && JsonConverters.convertObjectToJsonString(experimentDTO.getAlgorithmDetails()).compareTo(experimentDAO.getAlgorithmDetails()) != 0) {
+        if (experimentDTO.getAlgorithmDetails() != null) {
             Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), endpoint, "AlgorithmDetails is not editable.");
             throw new BadRequestException("AlgorithmDetails is not editable.");
         }
 
-        if (experimentDTO.getCreated() != null && experimentDTO.getAlgorithm().compareTo(experimentDAO.getAlgorithm()) != 0) {
+        if (experimentDTO.getCreated() != null) {
             Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), endpoint, "Created is not editable.");
             throw new BadRequestException("Created is not editable.");
         }
 
-        if (experimentDTO.getResult() != null && JsonConverters.convertObjectToJsonString(experimentDTO.getResult()).compareTo(experimentDAO.getResult()) != 0) {
+        if (experimentDTO.getResult() != null) {
             Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), endpoint, "Status is not editable.");
             throw new BadRequestException("Status is not editable.");
         }
 
-        if (experimentDTO.getStatus() != null && experimentDTO.getStatus().compareTo(experimentDAO.getStatus()) != 0) {
+        if (experimentDTO.getStatus() != null) {
             Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), endpoint, "Status is not editable.");
             throw new BadRequestException("Status is not editable.");
         }
@@ -541,7 +553,7 @@ public class ExperimentService {
             finishExperiment(experimentDAO, endpoint);
             Logging.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Finished the experiment: " + experimentDAO.toString());
         }).start();
-        experimentDTO = experimentDAO.convertToDTO();
+        experimentDTO = experimentDAO.convertToDTO(true);
         return experimentDTO;
     }
 
@@ -565,8 +577,8 @@ public class ExperimentService {
         Logging.LogExperimentAction(experimentDTO.getName(), experimentDTO.getUuid(), "Algorithm finished with code: " + code);
 
         // Results are stored in the experiment object
-        Map resultsDTO = ExperimentDAO.convertJsonStringToResult(String.valueOf(results));
-        return new ExaremeResult(code, resultsDTO);
+        List<ExperimentDTO.ResultDTO> resultDTOS = JsonConverters.convertJsonStringToObject(String.valueOf(results), new ArrayList<ExperimentDTO.ResultDTO>().getClass());
+        return new ExaremeResult(code, resultDTOS);
     }
 
 
@@ -668,7 +680,7 @@ public class ExperimentService {
 
         Logging.LogUserAction(user.getUsername(), endpoint, "Run workflow completed!");
 
-        experimentDTO = experimentDAO.convertToDTO();
+        experimentDTO = experimentDAO.convertToDTO(true);
         return experimentDTO;
     }
 
@@ -974,9 +986,9 @@ public class ExperimentService {
 
     static class ExaremeResult {
         private int code;
-        private Map results;
+        private List<ExperimentDTO.ResultDTO> results;
 
-        public ExaremeResult(int code, Map results) {
+        public ExaremeResult(int code, List<ExperimentDTO.ResultDTO> results) {
             this.code = code;
             this.results = results;
         }
@@ -985,7 +997,7 @@ public class ExperimentService {
             return code;
         }
 
-        public Map getResults() {
+        public List<ExperimentDTO.ResultDTO> getResults() {
             return results;
         }
     }

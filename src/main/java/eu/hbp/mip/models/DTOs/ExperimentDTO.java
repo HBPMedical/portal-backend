@@ -1,11 +1,15 @@
 package eu.hbp.mip.models.DTOs;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import eu.hbp.mip.models.DAOs.ExperimentDAO;
 
+import java.lang.reflect.Array;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ExperimentDTO {
 
     private UUID uuid;
@@ -16,7 +20,7 @@ public class ExperimentDTO {
     private Date finished;
     private Boolean shared;
     private Boolean viewed;
-    private Map result;
+    private List<ExperimentDTO.ResultDTO> result;
     private ExperimentDAO.Status status;
 
     private String algorithm;
@@ -106,11 +110,11 @@ public class ExperimentDTO {
         this.viewed = viewed;
     }
 
-    public Map getResult() {
+    public List<ExperimentDTO.ResultDTO> getResult() {
         return result;
     }
 
-    public void setResult(Map result) {
+    public void setResult(List<ExperimentDTO.ResultDTO> result) {
         this.result = result;
     }
 

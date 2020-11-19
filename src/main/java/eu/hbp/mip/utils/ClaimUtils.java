@@ -3,6 +3,7 @@ package eu.hbp.mip.utils;
 import com.google.gson.Gson;
 import eu.hbp.mip.models.DTOs.PathologyDTO;
 import eu.hbp.mip.utils.Exceptions.BadRequestException;
+import eu.hbp.mip.utils.Exceptions.UnauthorizedException;
 import org.springframework.security.core.GrantedAuthority;
 
 import java.util.ArrayList;
@@ -24,11 +25,11 @@ public class ClaimUtils {
     }
 
     public static void validateAccessRightsOnDatasets(String username, Collection<? extends GrantedAuthority> authorities,
-                                                       String experimentDatasets) {
+                                                       String experimentDatasets, String endpoint) {
 
         List<String> userClaims = Arrays.asList(authorities.toString().toLowerCase()
                 .replaceAll("[\\s+\\]\\[]", "").split(","));
-        Logging.LogUserAction(username, "(POST) /experiments/runAlgorithm", userClaims.toString());
+        Logging.LogUserAction(username, endpoint, userClaims.toString());
 
         // Don't check for dataset claims if "super" claim exists allowing everything
         if (!userClaims.contains(ClaimUtils.allDatasetsAllowedClaim())) {
@@ -36,12 +37,12 @@ public class ClaimUtils {
             for (String dataset : experimentDatasets.split(",")) {
                 String datasetRole = ClaimUtils.getDatasetClaim(dataset);
                 if (!userClaims.contains(datasetRole.toLowerCase())) {
-                    Logging.LogUserAction(username, "(POST) /experiments/runAlgorithm",
+                    Logging.LogUserAction(username, endpoint,
                             "You are not allowed to use dataset: " + dataset);
-                    throw new BadRequestException("You are not authorized to use these datasets.");
+                    throw new UnauthorizedException("You are not authorized to use these datasets.");
                 }
             }
-            Logging.LogUserAction(username, "(POST) /experiments/runAlgorithm",
+            Logging.LogUserAction(username, endpoint,
                     "User is authorized to use the datasets: " + experimentDatasets);
         }
     }

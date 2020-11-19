@@ -86,7 +86,6 @@ public class ExperimentDAO {
     }
 
     public enum Type {
-        ERROR("text/plain+error"),
         WARNING("text/plain+warning"),
         USER_WARNING("text/plain+user_error"),
         HIGHCHARTS("application/vnd.highcharts+json"),
@@ -115,7 +114,7 @@ public class ExperimentDAO {
          */
     }
 
-    public ExperimentDTO convertToDTO()
+    public ExperimentDTO convertToDTO(boolean includeResult)
     {
         ExperimentDTO experimentDTO = new ExperimentDTO();
         experimentDTO.setAlgorithmDetails(JsonConverters.convertJsonStringToObject(this.algorithmDetails, AlgorithmDTO.class));
@@ -124,7 +123,9 @@ public class ExperimentDAO {
         experimentDTO.setFinished(this.finished);
         experimentDTO.setCreatedBy(this.createdBy.getUsername());
         experimentDTO.setName(this.name);
-        experimentDTO.setResult(convertJsonStringToResult(this.result));
+        if(includeResult){
+            experimentDTO.setResult(JsonConverters.convertJsonStringToObject(String.valueOf(this.result), new ArrayList<ExperimentDTO.ResultDTO>().getClass()));
+        }
         experimentDTO.setStatus(this.status);
         experimentDTO.setShared(this.shared);
         experimentDTO.setUuid(this.uuid);
@@ -132,13 +133,6 @@ public class ExperimentDAO {
         return experimentDTO;
     }
 
-    public static Map convertJsonStringToResult(String jsonResult)  {
-        if(jsonResult == null || jsonResult.isEmpty())
-            return null;
-        JSONParser parser = new JSONParser();
-        parser.addTypeHint("Result[]", ExperimentDTO.ResultDTO.class);
-        return parser.parse(Map.class, jsonResult);
-    }
     public String getAlgorithmDetails() {
         return algorithmDetails;
     }

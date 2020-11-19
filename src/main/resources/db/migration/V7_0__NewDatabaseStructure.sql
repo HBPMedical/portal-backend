@@ -33,12 +33,13 @@ DROP COLUMN password,
 DROP COLUMN phone,
 DROP COLUMN picture,
 DROP COLUMN team,
-DROP COLUMN web;
+DROP COLUMN web,
+DROP COLUMN apikey;
 
 DROP TABLE "config_title", "config_yaxisvariables";
 DROP TABLE "dataset_variable", "dataset_grouping", "dataset_data", "dataset_header";
 DROP TABLE "query_variable", "query_grouping", "query_filter", "query_covariable";
-DROP TABLE "article_tag", "tag";
+DROP TABLE "article_tag", "tag","article";
 DROP TABLE "variable_value";
 DROP TABLE "query_training_datasets", "query_validation_datasets", "query_testing_datasets";
 DROP TABLE "variable", "value";

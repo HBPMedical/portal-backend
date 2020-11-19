@@ -1,13 +1,11 @@
 package eu.hbp.mip.services;
 
 import eu.hbp.mip.models.DAOs.ExperimentDAO;
+import eu.hbp.mip.models.DAOs.UserDAO;
 import eu.hbp.mip.utils.Exceptions.BadRequestException;
 import org.springframework.data.jpa.domain.Specification;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import javax.persistence.criteria.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -79,6 +77,39 @@ public class ExperimentSpecifications {
                 return cb.isTrue(cb.literal(true));
             }
             return cb.equal(root.get("shared"), this.shared);
+        }
+    }
+
+    public static class MyExperiment implements Specification<ExperimentDAO> {
+
+        private String username;
+
+        public MyExperiment(String username) {
+            this.username = username;
+        }
+
+        public Predicate toPredicate(Root<ExperimentDAO> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder cb) {
+            if (username == null) {
+                return cb.isTrue(cb.literal(true));
+            }
+            Join<ExperimentDAO, UserDAO> experimentDAOUserDAOJoin = root.join("createdBy");
+            return cb.equal(experimentDAOUserDAOJoin.get("username"), username);
+        }
+    }
+
+    public static class SharedExperiment implements Specification<ExperimentDAO> {
+
+        private boolean shared;
+
+        public SharedExperiment(boolean shared) {
+            this.shared = shared;
+        }
+
+        public Predicate toPredicate(Root<ExperimentDAO> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder cb) {
+            if (shared == false) {
+                return cb.isTrue(cb.literal(false));
+            }
+            return cb.equal(root.get("shared"), shared);
         }
     }
 

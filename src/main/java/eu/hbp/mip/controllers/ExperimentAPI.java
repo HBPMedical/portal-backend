@@ -40,16 +40,18 @@ public class ExperimentAPI {
             @RequestParam(name = "algorithm", required = false) String algorithm,
             @RequestParam(name = "shared", required = false) Boolean shared,
             @RequestParam(name = "viewed", required = false) Boolean viewed,
+            @RequestParam(name = "includeShared", required = false, defaultValue = "true") boolean includeShared,
             @RequestParam(name = "orderBy", required = false, defaultValue = "created") String orderBy,
             @RequestParam(name = "descending", required = false, defaultValue = "true") Boolean descending,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "3") int size
+            @RequestParam(defaultValue = "10") int size
     ) {
         Map experiments = experimentService.getExperiments(
                 name,
                 algorithm,
                 shared,
                 viewed,
+                includeShared,
                 page,
                 size,
                 orderBy,

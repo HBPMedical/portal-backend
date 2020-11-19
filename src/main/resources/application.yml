@@ -54,7 +54,7 @@ services:
 
 ### Authentication ###
 authentication:
-  enabled: true
+  enabled: false
 
 ### Keycloak ###
 keycloak:

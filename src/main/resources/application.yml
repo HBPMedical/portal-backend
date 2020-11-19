@@ -14,11 +14,6 @@ authentication:
   enabled: true
 
 
-### RELEASE STAGE ###
-release_stage:
-  production: true
-
-
 ### DATABASE CONFIGURATION ###
 spring:
   portal-datasource:

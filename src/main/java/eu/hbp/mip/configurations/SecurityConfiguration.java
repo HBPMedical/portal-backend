@@ -42,9 +42,6 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
     @Value("#{'${authentication.enabled}'}")
     private boolean authenticationEnabled;
 
-    @Value("#{'${release_stage.production}'}")
-    private boolean deployedOnProduction;
-
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         super.configure(http);
@@ -56,19 +53,14 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
                             "/v2/api-docs", "/swagger-ui/**", "/swagger-resources/**"  // Swagger URLs
                     ).permitAll()
                     .antMatchers("/galaxy*", "/galaxy/*").hasRole("DATA MANAGER")
-                    .anyRequest().hasRole("RESEARCHER");
+                    .anyRequest().hasRole("RESEARCHER")
+                    .and().csrf().ignoringAntMatchers("/logout").csrfTokenRepository(csrfTokenRepository())
+                    .and().addFilterAfter(csrfHeaderFilter(), CsrfFilter.class);
         } else {
             http.antMatcher("/**")
                     .authorizeRequests()
-                    .antMatchers("/**").permitAll();
-        }
-
-        if (!deployedOnProduction) {
-            // If deployed for development, csrf can be disabled
-            http.csrf().disable();
-        } else {
-            http.csrf().ignoringAntMatchers("/logout").csrfTokenRepository(csrfTokenRepository())
-                    .and().addFilterAfter(csrfHeaderFilter(), CsrfFilter.class);
+                    .antMatchers("/**").permitAll()
+                    .and().csrf().disable();
         }
     }
 

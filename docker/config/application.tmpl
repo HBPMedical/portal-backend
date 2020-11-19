@@ -14,11 +14,6 @@ authentication:
   enabled: {{ default .Env.AUTHENTICATION "true" }}
 
 
-### RELEASE STAGE ###
-release_stage:
-  production: {{ default .Env.PRODUCTION "true" }}
-
-
 ### DATABASE CONFIGURATION ###
 spring:
   portal-datasource:

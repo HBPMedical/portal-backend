@@ -16,10 +16,6 @@ To use this image, you need a running instance of PostgreSQL and to configure th
 * AUTHENTICATION: true for production, false for development.
 
 
-### RELEASE STAGE ###
-* PRODUCTION: Deployed on production? (True/False) Default is True.
-
-
 ### DATABASE CONFIGURATION ###
 * PORTAL_DB_URL: JDBC URL to connect to the portal database, default value is "jdbc:postgresql://127.0.0.1:5432/portal".
 * PORTAL_DB_SCHEMA: Database schema, default value is "public".

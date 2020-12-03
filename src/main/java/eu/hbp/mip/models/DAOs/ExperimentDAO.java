@@ -7,7 +7,6 @@ import eu.hbp.mip.models.DTOs.AlgorithmDTO;
 import eu.hbp.mip.models.DTOs.ExperimentDTO;
 import eu.hbp.mip.utils.JsonConverters;
 import io.swagger.annotations.ApiModel;
-import org.svenson.JSONParser;
 
 import javax.persistence.*;
 import java.util.*;
@@ -117,7 +116,7 @@ public class ExperimentDAO {
     public ExperimentDTO convertToDTO(boolean includeResult)
     {
         ExperimentDTO experimentDTO = new ExperimentDTO();
-        experimentDTO.setAlgorithmDetails(JsonConverters.convertJsonStringToObject(this.algorithmDetails, AlgorithmDTO.class));
+        experimentDTO.setAlgorithm(JsonConverters.convertJsonStringToObject(this.algorithmDetails, AlgorithmDTO.class));
         experimentDTO.setCreated(this.created);
         experimentDTO.setUpdated(this.updated);
         experimentDTO.setFinished(this.finished);

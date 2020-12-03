@@ -3,10 +3,8 @@ package eu.hbp.mip.models.DTOs;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import eu.hbp.mip.models.DAOs.ExperimentDAO;
 
-import java.lang.reflect.Array;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -23,27 +21,17 @@ public class ExperimentDTO {
     private List<ExperimentDTO.ResultDTO> result;
     private ExperimentDAO.Status status;
 
-    private String algorithm;
-    private AlgorithmDTO algorithmDetails;
+    private AlgorithmDTO algorithm;
 
     public ExperimentDTO() {
     }
 
-    public String getAlgorithm() {
+    public AlgorithmDTO getAlgorithm() {
         return algorithm;
     }
 
-    public void setAlgorithm(String algorithm) {
+    public void setAlgorithm(AlgorithmDTO algorithm) {
         this.algorithm = algorithm;
-    }
-
-    public AlgorithmDTO getAlgorithmDetails() {
-        return algorithmDetails;
-    }
-
-    public void setAlgorithmDetails(AlgorithmDTO algorithmDetails) {
-        this.algorithmDetails = algorithmDetails;
-        this.algorithm = algorithmDetails.getName();
     }
 
     public UUID getUuid() {

@@ -167,7 +167,7 @@ public class ExperimentService {
         checkPostExperimentProperInput(experimentDTO, endpoint);
 
         // Get the type and name of algorithm
-        String algorithmType = experimentDTO.getAlgorithmDetails().getType();
+        String algorithmType = experimentDTO.getAlgorithm().getType();
 
         if(algorithmType == null){
             Logging.LogUserAction(user.getUsername(), endpoint, "Please provide algorithm type.");
@@ -207,10 +207,10 @@ public class ExperimentService {
 
         // Get the parameters
         List<AlgorithmDTO.AlgorithmParamDTO> algorithmParameters
-                = experimentDTO.getAlgorithmDetails().getParameters();
+                = experimentDTO.getAlgorithm().getParameters();
 
         // Get the type and name of algorithm
-        String algorithmName = experimentDTO.getAlgorithmDetails().getName();
+        String algorithmName = experimentDTO.getAlgorithm().getName();
 
         if (!allowedTransientAlgorithms(algorithmName)) {
             Logging.LogUserAction(user.getUsername(), endpoint,
@@ -356,7 +356,7 @@ public class ExperimentService {
             throw new BadRequestException("CreatedBy is not editable.");
         }
 
-        if (experimentDTO.getAlgorithmDetails() != null) {
+        if (experimentDTO.getAlgorithm() != null) {
             Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), endpoint, "AlgorithmDetails is not editable.");
             throw new BadRequestException("AlgorithmDetails is not editable.");
         }
@@ -379,9 +379,9 @@ public class ExperimentService {
 
     private void algorithmParametersLogging(ExperimentDTO experimentDTO, String endpoint) {
         UserDAO user = activeUserService.getActiveUser();
-        String algorithmName = experimentDTO.getAlgorithm();
+        String algorithmName = experimentDTO.getAlgorithm().getName();
         StringBuilder parametersLogMessage = new StringBuilder(", Parameters:\n");
-        experimentDTO.getAlgorithmDetails().getParameters().forEach(
+        experimentDTO.getAlgorithm().getParameters().forEach(
                 params -> parametersLogMessage
                         .append("  ")
                         .append(params.getLabel())
@@ -401,7 +401,7 @@ public class ExperimentService {
     private String getDatasetFromExperimentParameters(ExperimentDTO experimentDTO, String endpoint) {
 
         String experimentDatasets = null;
-        for (AlgorithmDTO.AlgorithmParamDTO parameter : experimentDTO.getAlgorithmDetails().getParameters()) {
+        for (AlgorithmDTO.AlgorithmParamDTO parameter : experimentDTO.getAlgorithm().getParameters()) {
             if (parameter.getLabel().equals("dataset")) {
                 experimentDatasets = parameter.getValue();
                 break;
@@ -454,8 +454,8 @@ public class ExperimentService {
         ExperimentDAO experimentDAO = new ExperimentDAO();
         experimentDAO.setUuid(UUID.randomUUID());
         experimentDAO.setCreatedBy(user);
-        experimentDAO.setAlgorithmDetails(JsonConverters.convertObjectToJsonString(experimentDTO.getAlgorithmDetails()));
-        experimentDAO.setAlgorithm(experimentDTO.getAlgorithm());
+        experimentDAO.setAlgorithmDetails(JsonConverters.convertObjectToJsonString(experimentDTO.getAlgorithm()));
+        experimentDAO.setAlgorithm(experimentDTO.getAlgorithm().getName());
         experimentDAO.setName(experimentDTO.getName());
         experimentDAO.setStatus(ExperimentDAO.Status.pending);
 
@@ -520,11 +520,11 @@ public class ExperimentService {
         Logging.LogUserAction(user.getUsername(), endpoint, "Created experiment with uuid :" + experimentDAO.getUuid());
 
         // Run the 1st algorithm from the list
-        String algorithmName = experimentDTO.getAlgorithmDetails().getName();
+        String algorithmName = experimentDTO.getAlgorithm().getName();
 
         // Get the parameters
         List<AlgorithmDTO.AlgorithmParamDTO> algorithmParameters
-                = experimentDTO.getAlgorithmDetails().getParameters();
+                = experimentDTO.getAlgorithm().getParameters();
 
         String body = gson.toJson(algorithmParameters);
         String url = queryExaremeUrl + "/" + algorithmName;
@@ -606,11 +606,11 @@ public class ExperimentService {
 
 
         // Run the 1st algorithm from the list
-        String workflowId = experimentDTO.getAlgorithmDetails().getName();
+        String workflowId = experimentDTO.getAlgorithm().getName();
 
         // Get the parameters
         List<AlgorithmDTO.AlgorithmParamDTO> algorithmParameters
-                = experimentDTO.getAlgorithmDetails().getParameters();
+                = experimentDTO.getAlgorithm().getParameters();
 
         // Convert the parameters to workflow parameters
         HashMap<String, String> algorithmParamsIncludingEmpty = new HashMap<>();

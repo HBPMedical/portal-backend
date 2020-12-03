@@ -169,6 +169,11 @@ public class ExperimentService {
         // Get the type and name of algorithm
         String algorithmType = experimentDTO.getAlgorithmDetails().getType();
 
+        if(algorithmType == null){
+            Logging.LogUserAction(user.getUsername(), endpoint, "Please provide algorithm type.");
+            throw new BadRequestException("Please provide algorithm type.");
+        }
+
         algorithmParametersLogging(experimentDTO, endpoint);
 
         if (authenticationIsEnabled) {
@@ -577,7 +582,8 @@ public class ExperimentService {
         Logging.LogExperimentAction(experimentDTO.getName(), experimentDTO.getUuid(), "Algorithm finished with code: " + code);
 
         // Results are stored in the experiment object
-        List<ExperimentDTO.ResultDTO> resultDTOS = JsonConverters.convertJsonStringToObject(String.valueOf(results), new ArrayList<ExperimentDTO.ResultDTO>().getClass());
+        ExperimentDTO experimentDTOWithOnlyResult = JsonConverters.convertJsonStringToObject(String.valueOf(results), ExperimentDTO.class);
+        List<ExperimentDTO.ResultDTO> resultDTOS = experimentDTOWithOnlyResult.getResult();
         return new ExaremeResult(code, resultDTOS);
     }
 

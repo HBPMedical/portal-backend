@@ -447,6 +447,8 @@ public class ExperimentService {
      *
      * @param experimentDTO is the experiment information to inserted in the database
      * @return the experiment information that was inserted into the database
+     * @Note In the database there will be stored Algorithm Details that is the whole information about the algorithm
+     * and an Algorithm column that is required for the filtering with algorithm name  in the GET /experiments.
      */
     private ExperimentDAO createExperimentInTheDatabase(ExperimentDTO experimentDTO, String endpoint) {
         UserDAO user = activeUserService.getActiveUser();

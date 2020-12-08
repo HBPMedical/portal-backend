@@ -27,7 +27,7 @@ public class ExperimentSpecifications {
                 regExp = (name.contains("%") ? name : name + "%");
             }
 
-            return cb.like(root.get("name"), this.regExp);
+            return cb.like(cb.lower(root.get("name")), this.regExp.toLowerCase());
         }
     }
 
@@ -44,7 +44,7 @@ public class ExperimentSpecifications {
                 return cb.isTrue(cb.literal(true));
             }
 
-            return cb.equal(root.get("algorithm"), this.algorithm);
+            return cb.equal(cb.lower(root.get("algorithm")), this.algorithm.toLowerCase());
         }
     }
 

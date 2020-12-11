@@ -84,29 +84,6 @@ public class ExperimentDAO {
         success
     }
 
-    public enum Type {
-        WARNING("text/plain+warning"),
-        USER_WARNING("text/plain+user_error"),
-        HIGHCHARTS("application/vnd.highcharts+json"),
-        JSON("application/json"),
-        JSONBTREE("application/binary-tree+json"),
-        PFA("application/pfa+json"),
-        JSONDATA("application/vnd.dataresource+json"),
-        HTML("text/html"),
-        TEXT("text/plain");
-
-        private String type;
-
-        //Constructor to initialize the instance variable
-        Type(String type) {
-            this.type = type;
-        }
-
-        public String getType() {
-            return this.type;
-        }
-    }
-
     public ExperimentDAO() {
         /*
          *  Empty constructor is needed by Hibernate

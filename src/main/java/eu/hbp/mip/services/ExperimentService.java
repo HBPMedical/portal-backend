@@ -212,12 +212,6 @@ public class ExperimentService {
         // Get the type and name of algorithm
         String algorithmName = experimentDTO.getAlgorithm().getName();
 
-        if (!allowedTransientAlgorithms(algorithmName)) {
-            Logging.LogUserAction(user.getUsername(), endpoint,
-                    "Not proper algorithm.");
-            throw new BadRequestException("Please provide proper algorithm.");
-        }
-
         algorithmParametersLogging(experimentDTO, endpoint);
 
         if (authenticationIsEnabled) {
@@ -331,13 +325,6 @@ public class ExperimentService {
             Logging.LogUserAction(activeUserService.getActiveUser().getUsername(), endpoint, "Invalid input.");
             throw new BadRequestException("Please provide proper input.");
         }
-    }
-
-    private boolean allowedTransientAlgorithms(String algorithmName) {
-        List<String> properAlgorithms = new ArrayList<>();
-        properAlgorithms.add("MULTIPLE_HISTOGRAMS");
-        properAlgorithms.add("DESCRIPTIVE_STATS");
-        return properAlgorithms.contains(algorithmName);
     }
 
     private void verifyPatchExperimentNonEditableFields(String uuid, ExperimentDTO experimentDTO, ExperimentDAO experimentDAO, String endpoint) {

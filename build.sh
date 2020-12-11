@@ -26,7 +26,7 @@ else
   DOCKER="sudo docker"
 fi
 
-IMAGE="thanasulas/portal-backend"
+IMAGE="kfilippopolitis/portal-backend"
 VCS_REF=$(git describe --tags --dirty)
 VERSION=$(git describe --tags --dirty)
 

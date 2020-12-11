@@ -117,7 +117,7 @@ public class ExperimentDTO {
     public static class ResultDTO {
 
         private Object data;
-        private ExperimentDAO.Type type;
+        private Object type;
 
         public Object getData() {
             return this.data;
@@ -127,11 +127,11 @@ public class ExperimentDTO {
             this.data = data;
         }
 
-        public ExperimentDAO.Type getType() {
+        public Object getType() {
             return type;
         }
 
-        public void setType(ExperimentDAO.Type type) {
+        public void setType(Object type) {
             this.type = type;
         }
     }

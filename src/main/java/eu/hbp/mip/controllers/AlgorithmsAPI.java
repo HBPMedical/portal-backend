@@ -9,14 +9,13 @@ import com.google.gson.reflect.TypeToken;
 import eu.hbp.mip.controllers.galaxy.retrofit.RetroFitGalaxyClients;
 import eu.hbp.mip.controllers.galaxy.retrofit.RetrofitClientInstance;
 import eu.hbp.mip.models.DTOs.AlgorithmDTO;
-import eu.hbp.mip.services.ActiveUserService;
 import eu.hbp.mip.models.galaxy.WorkflowDTO;
+import eu.hbp.mip.services.ActiveUserService;
 import eu.hbp.mip.utils.CustomResourceLoader;
 import eu.hbp.mip.utils.HTTPUtil;
-import eu.hbp.mip.utils.Logging;
+import eu.hbp.mip.utils.Logger;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
@@ -41,8 +40,7 @@ public class AlgorithmsAPI {
 
     private static final Gson gson = new Gson();
 
-    @Autowired
-    private ActiveUserService activeUserService;
+    private final ActiveUserService activeUserService;
 
     @Value("#{'${services.exareme.algorithmsUrl}'}")
     private String exaremeAlgorithmsUrl;
@@ -56,38 +54,40 @@ public class AlgorithmsAPI {
     @Value("#{'${files.disabledAlgorithms_json}'}")
     private String disabledAlgorithmsFilePath;
 
+    public AlgorithmsAPI(ActiveUserService activeUserService, CustomResourceLoader resourceLoader) {
+        this.activeUserService = activeUserService;
+        this.resourceLoader = resourceLoader;
+    }
+
     @ApiOperation(value = "List all algorithms", response = String.class)
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<AlgorithmDTO>> getAlgorithms() {
-        String username = activeUserService.getActiveUser().getUsername();
-        String endpoint = "(GET) /algorithms";
-        Logging.LogUserAction(username, endpoint, "Executing...");
+        Logger logger = new Logger(activeUserService.getActiveUser().getUsername(), "(GET) /algorithms");
 
-        LinkedList<AlgorithmDTO> exaremeAlgorithms = getExaremeAlgorithms();
-        Logging.LogUserAction(username, endpoint, "Loaded " + exaremeAlgorithms.size() + " exareme algorithms");
-        LinkedList<AlgorithmDTO> galaxyAlgorithms = getGalaxyWorkflows();
-        Logging.LogUserAction(username, endpoint, "Loaded " + galaxyAlgorithms.size() + " galaxy algorithms");
+        logger.LogUserAction("Executing...");
+
+        LinkedList<AlgorithmDTO> exaremeAlgorithms = getExaremeAlgorithms(logger);
+        logger.LogUserAction("Loaded " + exaremeAlgorithms.size() + " exareme algorithms");
+        LinkedList<AlgorithmDTO> galaxyAlgorithms = getGalaxyWorkflows(logger);
+        logger.LogUserAction("Loaded " + galaxyAlgorithms.size() + " galaxy algorithms");
 
         LinkedList<AlgorithmDTO> algorithms = new LinkedList<>();
         if (exaremeAlgorithms != null) {
             algorithms.addAll(exaremeAlgorithms);
         } else {
-            Logging.LogUserAction(username, endpoint,
-                    "Getting exareme algorithms failed and returned null");
+            logger.LogUserAction("Getting exareme algorithms failed and returned null");
         }
         if (galaxyAlgorithms != null) {
             algorithms.addAll(galaxyAlgorithms);
         } else {
-            Logging.LogUserAction(username, endpoint,
-                    "Getting galaxy workflows failed and returned null");
+            logger.LogUserAction("Getting galaxy workflows failed and returned null");
         }
 
         List<String> disabledAlgorithms = new ArrayList<>();
         try {
             disabledAlgorithms = getDisabledAlgorithms();
         } catch (IOException e) {
-            Logging.LogUserAction(username, endpoint,
-                    "The disabled algorithms could not be loaded.");
+            logger.LogUserAction("The disabled algorithms could not be loaded.");
         }
 
         // Remove any disabled algorithm
@@ -97,8 +97,7 @@ public class AlgorithmsAPI {
                 allowedAlgorithms.add(algorithm);
             }
         }
-        Logging.LogUserAction(username, endpoint,
-                "Successfully listed " + allowedAlgorithms.size() + " algorithms");
+        logger.LogUserAction("Successfully listed " + allowedAlgorithms.size() + " algorithms");
         return ResponseEntity.ok(allowedAlgorithms);
     }
 
@@ -107,10 +106,8 @@ public class AlgorithmsAPI {
      *
      * @return a list of AlgorithmDTOs or null if something fails
      */
-    public LinkedList<AlgorithmDTO> getExaremeAlgorithms() {
-        String username = activeUserService.getActiveUser().getUsername();
-        String endpoint = "(GET) /algorithms";
-        LinkedList<AlgorithmDTO> algorithms = new LinkedList<>();
+    public LinkedList<AlgorithmDTO> getExaremeAlgorithms(Logger logger) {
+        LinkedList<AlgorithmDTO> algorithms;
         // Get exareme algorithms
         try {
             StringBuilder response = new StringBuilder();
@@ -122,12 +119,11 @@ public class AlgorithmsAPI {
                     }.getType()
             );
         } catch (IOException e) {
-            Logging.LogUserAction(username, endpoint, "An exception occurred: " + e.getMessage());
+            logger.LogUserAction("An exception occurred: " + e.getMessage());
             return null;
         }
 
-        Logging.LogUserAction(username, endpoint,
-                "Completed, returned " + algorithms.size() + " algorithms.");
+        logger.LogUserAction("Completed, returned " + algorithms.size() + " algorithms.");
         return algorithms;
     }
 
@@ -136,9 +132,7 @@ public class AlgorithmsAPI {
      *
      * @return a list of AlgorithmDTOs or null if something fails
      */
-    public LinkedList<AlgorithmDTO> getGalaxyWorkflows() {
-        String username = activeUserService.getActiveUser().getUsername();
-        String endpoint = "(GET) /algorithms";
+    public LinkedList<AlgorithmDTO> getGalaxyWorkflows(Logger logger) {
         List<Workflow> workflowList;
         try {
             // Get all the workflows with the galaxy client
@@ -147,7 +141,7 @@ public class AlgorithmsAPI {
 
             workflowList = new ArrayList<>(workflowsClient.getWorkflows());
         } catch (Exception e) {
-            Logging.LogUserAction(username, endpoint, "Error when calling list galaxy workflows: " + e.getMessage());
+            logger.LogUserAction("Error when calling list galaxy workflows: " + e.getMessage());
             return null;
         }
 
@@ -166,33 +160,31 @@ public class AlgorithmsAPI {
 
                 } else {     // Something unexpected happened
                     String msgErr = gson.toJson(response.errorBody());
-                    Logging.LogUserAction(username, endpoint, "Error Response: " + msgErr);
+                    logger.LogUserAction("Error Response: " + msgErr);
                     return null;
                 }
             } catch (Exception e) {
-                Logging.LogUserAction(username, endpoint, "An exception occurred: " + e.getMessage());
+                logger.LogUserAction("An exception occurred: " + e.getMessage());
                 return null;
             }
         }
-        Logging.LogUserAction(username, endpoint, "Workflows fetched: " + workflows.size());
+        logger.LogUserAction("Workflows fetched: " + workflows.size());
 
         // Convert the workflows to algorithms
         LinkedList<AlgorithmDTO> algorithms = new LinkedList<>();
         for (WorkflowDTO workflow : workflows) {
-            Logging.LogUserAction(username, endpoint, "Converting workflow: " + workflow);
+            logger.LogUserAction("Converting workflow: " + workflow);
 
             algorithms.add(workflow.convertToAlgorithmDTO());
 
-            Logging.LogUserAction(username, endpoint,
-                    "Converted algorithm: " + algorithms.get(algorithms.size() - 1));
+            logger.LogUserAction("Converted algorithm: " + algorithms.get(algorithms.size() - 1));
         }
 
-        Logging.LogUserAction(username, endpoint, "Completed!");
+        logger.LogUserAction("Completed!");
         return algorithms;
     }
 
-    @Autowired
-    private CustomResourceLoader resourceLoader;
+    private final CustomResourceLoader resourceLoader;
 
     /**
      * Fetches the disabled algorithms from a .json file
@@ -204,11 +196,10 @@ public class AlgorithmsAPI {
 
         Resource resource = resourceLoader.getResource(disabledAlgorithmsFilePath);
 
-        List<String> response = gson.fromJson(convertInputStreamToString(
+        return gson.fromJson(convertInputStreamToString(
                 resource.getInputStream()),
                 new TypeToken<List<String>>() {
                 }.getType()
         );
-        return response;
     }
 }

@@ -2,8 +2,10 @@ package eu.hbp.mip.controllers;
 
 
 import eu.hbp.mip.models.DTOs.ExperimentDTO;
+import eu.hbp.mip.services.ActiveUserService;
 import eu.hbp.mip.services.ExperimentService;
 import eu.hbp.mip.utils.JsonConverters;
+import eu.hbp.mip.utils.Logger;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -27,14 +29,18 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 public class ExperimentAPI {
 
     private final ExperimentService experimentService;
-
-    public ExperimentAPI(ExperimentService experimentService) {
+    private final ActiveUserService activeUserService;
+    public ExperimentAPI(
+            ExperimentService experimentService,
+            ActiveUserService activeUserService
+    ) {
         this.experimentService = experimentService;
+        this.activeUserService = activeUserService;
     }
 
     @ApiOperation(value = "Get experiments", response = Map.class, responseContainer = "List")
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<String> getExperiments(
+    public ResponseEntity<String> getExperiments(Authentication authentication,
             @RequestParam(name = "name", required = false) String name,
             @RequestParam(name = "algorithm", required = false) String algorithm,
             @RequestParam(name = "shared", required = false) Boolean shared,
@@ -45,7 +51,7 @@ public class ExperimentAPI {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        Map experiments = experimentService.getExperiments(
+        Map experiments = experimentService.getExperiments(authentication,
                 name,
                 algorithm,
                 shared,
@@ -55,16 +61,16 @@ public class ExperimentAPI {
                 size,
                 orderBy,
                 descending,
-                "(GET) /experiments");
+                new Logger(activeUserService.getActiveUser().getUsername(),"(GET) /experiments"));
         return new ResponseEntity(experiments, HttpStatus.OK);
     }
 
 
     @ApiOperation(value = "Get an experiment", response = ExperimentDTO.class)
     @RequestMapping(value = "/{uuid}", method = RequestMethod.GET)
-    public ResponseEntity<String> getExperiment(
+    public ResponseEntity<String> getExperiment(Authentication authentication,
             @ApiParam(value = "uuid", required = true) @PathVariable("uuid") String uuid) {
-        ExperimentDTO experimentDTO = experimentService.getExperiment(uuid, "(GET) /experiments/{uuid}");
+        ExperimentDTO experimentDTO = experimentService.getExperiment(authentication, uuid, new Logger(activeUserService.getActiveUser().getUsername(),"(GET) /experiments/{uuid}"));
         return new ResponseEntity<>(JsonConverters.convertObjectToJsonString(experimentDTO), HttpStatus.OK);
     }
 
@@ -72,7 +78,7 @@ public class ExperimentAPI {
     @ApiOperation(value = "Create an experiment", response = ExperimentDTO.class)
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<String> createExperiment(Authentication authentication, @RequestBody ExperimentDTO experimentDTO) {
-        experimentDTO = experimentService.createExperiment(authentication, experimentDTO, "(POST) /experiments");
+        experimentDTO = experimentService.createExperiment(authentication, experimentDTO, new Logger(activeUserService.getActiveUser().getUsername(),"(POST) /experiments"));
         return new ResponseEntity<>(JsonConverters.convertObjectToJsonString(experimentDTO), HttpStatus.CREATED);
     }
 
@@ -80,7 +86,7 @@ public class ExperimentAPI {
     @ApiOperation(value = "Update an experiment", response = ExperimentDTO.class)
     @RequestMapping(value = "/{uuid}", method = RequestMethod.PATCH)
     public ResponseEntity<String> updateExperiment(@RequestBody ExperimentDTO experimentDTO, @ApiParam(value = "uuid", required = true) @PathVariable("uuid") String uuid) {
-        experimentDTO = experimentService.updateExperiment(uuid, experimentDTO, "(PATCH) /experiments/{uuid}");
+        experimentDTO = experimentService.updateExperiment(uuid, experimentDTO, new Logger(activeUserService.getActiveUser().getUsername(),"(PATCH) /experiments/{uuid}"));
         return new ResponseEntity<>(JsonConverters.convertObjectToJsonString(experimentDTO), HttpStatus.OK);
     }
 
@@ -89,7 +95,7 @@ public class ExperimentAPI {
     @RequestMapping(value = "/{uuid}", method = RequestMethod.DELETE)
     public ResponseEntity<String> deleteExperiment(
             @ApiParam(value = "uuid", required = true) @PathVariable("uuid") String uuid) {
-        experimentService.deleteExperiment(uuid, "(DELETE) /experiments/{uuid}");
+        experimentService.deleteExperiment(uuid, new Logger(activeUserService.getActiveUser().getUsername(), "(DELETE) /experiments/{uuid}"));
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -97,8 +103,7 @@ public class ExperimentAPI {
     @ApiOperation(value = "Create a transient experiment", response = ExperimentDTO.class)
     @RequestMapping(value = "/transient", method = RequestMethod.POST)
     public ResponseEntity<String> createTransientExperiment(Authentication authentication, @RequestBody ExperimentDTO experimentDTO) {
-        experimentDTO = experimentService.createTransientExperiment(authentication, experimentDTO, "(POST) /experiments/transient");
-
+        experimentDTO = experimentService.createTransientExperiment(authentication, experimentDTO, new Logger(activeUserService.getActiveUser().getUsername(), "(POST) /experiments/transient"));
         return new ResponseEntity<>(JsonConverters.convertObjectToJsonString(experimentDTO), HttpStatus.OK);
     }
 }

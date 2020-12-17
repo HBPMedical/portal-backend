@@ -1,16 +1,23 @@
 package eu.hbp.mip.utils;
 
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
-public class Logging {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Logging.class);
+public class Logger {
 
-    public static void LogUserAction(String userName, String endpoint, String actionInfo) {
-        LOGGER.info(" User -> " + userName + " ,"
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(Logger.class);
+    private  String username;
+    private  String endpoint;
+
+    public Logger(String username, String endpoint){
+        this.username = username;
+        this.endpoint = endpoint;
+    }
+
+    public void LogUserAction(String actionInfo) {
+        LOGGER.info(" User -> " + username + " ,"
                 + "Endpoint -> " + endpoint + " ,"
                 + "Info ->  " + actionInfo);
     }

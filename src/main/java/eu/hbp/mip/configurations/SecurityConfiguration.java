@@ -22,7 +22,6 @@ import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.WebUtils;
 
@@ -43,6 +42,10 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
     @Value("#{'${authentication.enabled}'}")
     private boolean authenticationEnabled;
 
+    public SecurityConfiguration(HttpServletRequest request) {
+        this.request = request;
+    }
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         super.configure(http);
@@ -54,7 +57,7 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
                             "/v2/api-docs", "/swagger-ui/**", "/swagger-resources/**"  // Swagger URLs
                     ).permitAll()
                     .antMatchers("/galaxy*", "/galaxy/*").hasRole("DATA MANAGER")
-                    .anyRequest().hasRole("RESEARCHER")
+                    .antMatchers("/**").authenticated()
                     .and().csrf().ignoringAntMatchers("/logout").csrfTokenRepository(csrfTokenRepository())
                     .and().addFilterAfter(csrfHeaderFilter(), CsrfFilter.class);
         } else {
@@ -92,8 +95,7 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
         return repository;
     }
 
-    @Autowired
-    private HttpServletRequest request;
+    private final HttpServletRequest request;
 
     @GetMapping(value = "/logout")
     public String logout() throws ServletException {

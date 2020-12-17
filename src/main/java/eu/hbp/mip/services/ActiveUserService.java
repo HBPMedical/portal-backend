@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
@@ -19,12 +20,15 @@ import javax.inject.Named;
 public class ActiveUserService {
 
     @Value("#{'${authentication.enabled}'}")
-    private boolean authentication;
+    private boolean authenticationIsEnabled;
 
     private UserDAO user;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+
+    public ActiveUserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     /**
      * Fetches the details of the active user.
@@ -39,13 +43,13 @@ public class ActiveUserService {
             return user;
 
         // If Authentication is OFF, create anonymous user with accepted NDA
-        if (!authentication) {
+        if (!authenticationIsEnabled) {
             user = new UserDAO("anonymous", "anonymous", "anonymous@anonymous.com");
             user.setAgreeNDA(true);
             userRepository.save(user);
             return user;
         }
-
+        //TODO:
         // If authentication is ON get user info from Token
         KeycloakPrincipal keycloakPrincipal =
                 (KeycloakPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();

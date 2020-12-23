@@ -117,7 +117,7 @@ public class ExperimentDTO {
     public static class ResultDTO {
 
         private Object data;
-        private Object type;
+        private String type;
 
         public Object getData() {
             return this.data;
@@ -127,11 +127,11 @@ public class ExperimentDTO {
             this.data = data;
         }
 
-        public Object getType() {
+        public String getType() {
             return type;
         }
 
-        public void setType(Object type) {
+        public void setType(String type) {
             this.type = type;
         }
     }

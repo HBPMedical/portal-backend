@@ -43,6 +43,7 @@ public class ExperimentDAO {
 
     @Expose
     @Column(columnDefinition = "TEXT")
+    @Enumerated(EnumType.STRING)
     private Status status;
 
     @Expose
@@ -55,11 +56,11 @@ public class ExperimentDAO {
 
     @Expose
     @Column(columnDefinition = "TEXT")
-    private String algorithmDetails;
+    private String algorithm;
 
     @Expose
     @Column(columnDefinition = "TEXT")
-    private String algorithm;
+    private String algorithmId;
 
     @Expose
     @Column(columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
@@ -93,14 +94,14 @@ public class ExperimentDAO {
     public ExperimentDTO convertToDTO(boolean includeResult)
     {
         ExperimentDTO experimentDTO = new ExperimentDTO();
-        experimentDTO.setAlgorithm(JsonConverters.convertJsonStringToObject(this.algorithmDetails, AlgorithmDTO.class));
+        experimentDTO.setAlgorithm(JsonConverters.convertJsonStringToObject(this.algorithm, AlgorithmDTO.class));
         experimentDTO.setCreated(this.created);
         experimentDTO.setUpdated(this.updated);
         experimentDTO.setFinished(this.finished);
         experimentDTO.setCreatedBy(this.createdBy.getUsername());
         experimentDTO.setName(this.name);
         if(includeResult){
-            experimentDTO.setResult(JsonConverters.convertJsonStringToObject(String.valueOf(this.result), new ArrayList<ExperimentDTO.ResultDTO>().getClass()));
+            experimentDTO.setResult(JsonConverters.convertJsonStringToObject(String.valueOf(this.result),  new ArrayList<ExperimentDTO.ResultDTO>().getClass()));
         }
         experimentDTO.setStatus(this.status);
         experimentDTO.setShared(this.shared);
@@ -109,20 +110,20 @@ public class ExperimentDAO {
         return experimentDTO;
     }
 
-    public String getAlgorithmDetails() {
-        return algorithmDetails;
-    }
-
-    public void setAlgorithmDetails(String algorithmDetails) {
-        this.algorithmDetails = algorithmDetails;
-    }
-
     public String getAlgorithm() {
         return algorithm;
     }
 
     public void setAlgorithm(String algorithm) {
         this.algorithm = algorithm;
+    }
+
+    public String getAlgorithmId() {
+        return algorithmId;
+    }
+
+    public void setAlgorithmId(String algorithmId) {
+        this.algorithmId = algorithmId;
     }
 
     public String getWorkflowHistoryId() {

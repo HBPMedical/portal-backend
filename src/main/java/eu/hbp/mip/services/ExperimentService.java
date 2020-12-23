@@ -59,7 +59,7 @@ public class ExperimentService {
 
     private static final Gson gson = new Gson();
 
-    private ActiveUserService activeUserService;
+    private final ActiveUserService activeUserService;
     private final ExperimentRepository experimentRepository;
 
     public ExperimentService(ActiveUserService activeUserService, ExperimentRepository experimentRepository) {
@@ -90,7 +90,7 @@ public class ExperimentService {
         if (size > 50)
             throw new BadRequestException("Invalid size input, max size is 50.");
         Specification<ExperimentDAO> spec;
-        if(authenticationIsEnabled  && ClaimUtils.validateAccessRightsOnExperiments(user.getUsername(), authentication.getAuthorities(), logger))
+        if(!authenticationIsEnabled  || ClaimUtils.validateAccessRightsOnExperiments(user.getUsername(), authentication.getAuthorities(), logger))
         {
             spec = Specification
                     .where(new ExperimentSpecifications.ExperimentWithName(name))
@@ -146,6 +146,7 @@ public class ExperimentService {
         if (
                 !experimentDAO.isShared()
                 && !experimentDAO.getCreatedBy().getUsername().equals(user.getUsername())
+                && authenticationIsEnabled
                 && ClaimUtils.validateAccessRightsOnExperiments(user.getUsername(), authentication.getAuthorities(), logger)
         ) {
             logger.LogUserAction("Accessing Experiment is unauthorized.");
@@ -346,9 +347,24 @@ public class ExperimentService {
             throw new BadRequestException("Created is not editable.");
         }
 
+        if (experimentDTO.getCreatedBy() != null) {
+            logger.LogUserAction( "CreatedBy is not editable.");
+            throw new BadRequestException("CreatedBy is not editable.");
+        }
+
+        if (experimentDTO.getUpdated() != null) {
+            logger.LogUserAction( "Updated is not editable.");
+            throw new BadRequestException("Updated is not editable.");
+        }
+
+        if (experimentDTO.getFinished() != null) {
+            logger.LogUserAction( "Finished is not editable.");
+            throw new BadRequestException("Finished is not editable.");
+        }
+
         if (experimentDTO.getResult() != null) {
-            logger.LogUserAction( "Status is not editable.");
-            throw new BadRequestException("Status is not editable.");
+            logger.LogUserAction( "Result is not editable.");
+            throw new BadRequestException("Result is not editable.");
         }
 
         if (experimentDTO.getStatus() != null) {
@@ -369,7 +385,7 @@ public class ExperimentService {
                         .append("\n"));
         logger.LogUserAction("Executing " + algorithmName + parametersLogMessage);
     }
-
+    
     /**
      * The getDatasetFromExperimentParameters will retrieve the dataset from the experiment parameters
      *
@@ -434,8 +450,8 @@ public class ExperimentService {
         ExperimentDAO experimentDAO = new ExperimentDAO();
         experimentDAO.setUuid(UUID.randomUUID());
         experimentDAO.setCreatedBy(user);
-        experimentDAO.setAlgorithmDetails(JsonConverters.convertObjectToJsonString(experimentDTO.getAlgorithm()));
-        experimentDAO.setAlgorithm(experimentDTO.getAlgorithm().getName());
+        experimentDAO.setAlgorithm(JsonConverters.convertObjectToJsonString(experimentDTO.getAlgorithm()));
+        experimentDAO.setAlgorithmId(experimentDTO.getAlgorithm().getName());
         experimentDAO.setName(experimentDTO.getName());
         experimentDAO.setStatus(ExperimentDAO.Status.pending);
 
@@ -447,7 +463,7 @@ public class ExperimentService {
         }
 
         logger.LogUserAction(" id : " + experimentDAO.getUuid());
-        logger.LogUserAction(" algorithms : " + experimentDAO.getAlgorithmDetails());
+        logger.LogUserAction(" algorithm : " + experimentDAO.getAlgorithm());
         logger.LogUserAction(" name : " + experimentDAO.getName());
         return experimentDAO;
     }
@@ -455,7 +471,7 @@ public class ExperimentService {
     private void saveExperiment(ExperimentDAO experimentDAO, Logger logger) {
 
         logger.LogUserAction(" id : " + experimentDAO.getUuid());
-        logger.LogUserAction(" algorithms : " + experimentDAO.getAlgorithmDetails());
+        logger.LogUserAction(" algorithm : " + experimentDAO.getAlgorithm());
         logger.LogUserAction(" name : " + experimentDAO.getName());
         logger.LogUserAction(" historyId : " + experimentDAO.getWorkflowHistoryId());
         logger.LogUserAction(" status : " + experimentDAO.getStatus());

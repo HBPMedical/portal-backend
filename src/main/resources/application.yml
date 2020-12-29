@@ -55,6 +55,7 @@ keycloak:
   credentials:
     secret: "dae83a6b-c769-4186-8383-f0984c6edf05"
   principal-attribute: "preferred_username"
+  ssl-required: none
 
 
 ### EXTERNAL FILES ###

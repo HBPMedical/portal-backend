@@ -44,17 +44,17 @@ public class ActiveUserService {
 
         // If Authentication is OFF, create anonymous user with accepted NDA
         if (!authenticationIsEnabled) {
-            user = new UserDAO("anonymous", "anonymous", "anonymous@anonymous.com");
+            user = new UserDAO("anonymous", "anonymous", "anonymous@anonymous.com","anonymousId");
             user.setAgreeNDA(true);
             userRepository.save(user);
             return user;
         }
-        //TODO:
+
         // If authentication is ON get user info from Token
         KeycloakPrincipal keycloakPrincipal =
                 (KeycloakPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         IDToken idToken = keycloakPrincipal.getKeycloakSecurityContext().getIdToken();
-        user = new UserDAO(idToken.getPreferredUsername(), idToken.getName(), idToken.getEmail());
+        user = new UserDAO(idToken.getPreferredUsername(), idToken.getName(), idToken.getEmail(), idToken.getId());
 
         UserDAO userInDatabase = userRepository.findByUsername(user.getUsername());
         if (userInDatabase == null || !userInDatabase.equals(user)) {

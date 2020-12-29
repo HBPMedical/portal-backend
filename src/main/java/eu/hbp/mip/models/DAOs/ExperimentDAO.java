@@ -7,6 +7,8 @@ import eu.hbp.mip.models.DTOs.AlgorithmDTO;
 import eu.hbp.mip.models.DTOs.ExperimentDTO;
 import eu.hbp.mip.utils.JsonConverters;
 import io.swagger.annotations.ApiModel;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.util.*;
@@ -15,6 +17,8 @@ import java.util.*;
  * Created by habfast on 21/04/16.
  */
 @Entity
+@Getter
+@Setter
 @Table(name = "`experiment`")
 @ApiModel
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -108,109 +112,5 @@ public class ExperimentDAO {
         experimentDTO.setUuid(this.uuid);
         experimentDTO.setViewed(this.viewed);
         return experimentDTO;
-    }
-
-    public String getAlgorithm() {
-        return algorithm;
-    }
-
-    public void setAlgorithm(String algorithm) {
-        this.algorithm = algorithm;
-    }
-
-    public String getAlgorithmId() {
-        return algorithmId;
-    }
-
-    public void setAlgorithmId(String algorithmId) {
-        this.algorithmId = algorithmId;
-    }
-
-    public String getWorkflowHistoryId() {
-        return workflowHistoryId;
-    }
-
-    public void setWorkflowHistoryId(String workflowHistoryId) {
-        this.workflowHistoryId = workflowHistoryId;
-    }
-
-    public Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
-    }
-
-    public String getResult() {
-        return result;
-    }
-
-    public void setResult(String result) {
-        this.result = result;
-    }
-
-    public Date getFinished() {
-        return finished;
-    }
-
-    public void setFinished(Date finished) {
-        this.finished = finished;
-    }
-
-    public Date getCreated() {
-        return created;
-    }
-
-    public void setCreated(Date created) {
-        this.created = created;
-    }
-    
-    public Date getUpdated() {
-        return updated;
-    }
-
-    public void setUpdated(Date updated) {
-        this.updated = updated;
-    }
-
-    public UUID getUuid() {
-        return uuid;
-    }
-
-    public void setUuid(UUID uuid) {
-        this.uuid = uuid;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public UserDAO getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(UserDAO createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public boolean isViewed() {
-        return viewed;
-    }
-
-    public void setViewed(boolean viewed) {
-        this.viewed = viewed;
-    }
-
-    public boolean isShared() {
-        return shared;
-    }
-
-    public void setShared(boolean shared) {
-        this.shared = shared;
     }
 }

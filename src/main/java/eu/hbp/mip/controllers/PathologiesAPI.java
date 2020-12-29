@@ -70,7 +70,6 @@ public class PathologiesAPI {
         }
 
         logger.LogUserAction("Successfully loaded all authorized pathologies");
-        return ResponseEntity.ok().body(ClaimUtils.getAuthorizedPathologies(
-                activeUserService.getActiveUser().getUsername(), logger,  authentication.getAuthorities(), allPathologies));
+        return ResponseEntity.ok().body(ClaimUtils.getAuthorizedPathologies(logger,  authentication, allPathologies));
     }
 }

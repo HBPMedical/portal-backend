@@ -67,6 +67,9 @@ DROP COLUMN team,
 DROP COLUMN web,
 DROP COLUMN apikey;
 
+ALTER TABLE "user"
+ADD COLUMN subjectID text;
+
 DROP TABLE "config_title", "config_yaxisvariables";
 DROP TABLE "dataset_variable", "dataset_grouping", "dataset_data", "dataset_header";
 DROP TABLE "query_variable", "query_grouping", "query_filter", "query_covariable";

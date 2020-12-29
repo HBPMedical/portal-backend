@@ -90,7 +90,7 @@ public class ExperimentService {
         if (size > 50)
             throw new BadRequestException("Invalid size input, max size is 50.");
         Specification<ExperimentDAO> spec;
-        if(!authenticationIsEnabled  || ClaimUtils.validateAccessRightsOnExperiments(user.getUsername(), authentication.getAuthorities(), logger))
+        if(!authenticationIsEnabled  || ClaimUtils.validateAccessRightsOnExperiments(authentication, logger))
         {
             spec = Specification
                     .where(new ExperimentSpecifications.ExperimentWithName(name))
@@ -147,7 +147,7 @@ public class ExperimentService {
                 !experimentDAO.isShared()
                 && !experimentDAO.getCreatedBy().getUsername().equals(user.getUsername())
                 && authenticationIsEnabled
-                && ClaimUtils.validateAccessRightsOnExperiments(user.getUsername(), authentication.getAuthorities(), logger)
+                && ClaimUtils.validateAccessRightsOnExperiments(authentication, logger)
         ) {
             logger.LogUserAction("Accessing Experiment is unauthorized.");
             throw new UnauthorizedException("You don't have access to the experiment.");
@@ -184,7 +184,7 @@ public class ExperimentService {
 
         if (authenticationIsEnabled) {
             String experimentDatasets = getDatasetFromExperimentParameters(experimentDTO, logger);
-            ClaimUtils.validateAccessRightsOnDatasets(user.getUsername(), authentication.getAuthorities(), experimentDatasets, logger);
+            ClaimUtils.validateAccessRightsOnDatasets(authentication, experimentDatasets, logger);
         }
 
         // Run with the appropriate engine
@@ -222,7 +222,7 @@ public class ExperimentService {
 
         if (authenticationIsEnabled) {
             String experimentDatasets = getDatasetFromExperimentParameters(experimentDTO, logger);
-            ClaimUtils.validateAccessRightsOnDatasets(user.getUsername(), authentication.getAuthorities(), experimentDatasets, logger);
+            ClaimUtils.validateAccessRightsOnDatasets(authentication, experimentDatasets, logger);
         }
 
         String body = gson.toJson(algorithmParameters);
@@ -739,7 +739,7 @@ public class ExperimentService {
                                 if (result == null) {
                                     experimentDAO.setStatus(ExperimentDAO.Status.error);
                                 } else {
-                                    experimentDAO.setResult("[" + result + "]");
+                                    experimentDAO.setResult(result);
                                     experimentDAO.setStatus(ExperimentDAO.Status.success);
                                     resultFound = true;
                                 }

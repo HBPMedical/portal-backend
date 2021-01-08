@@ -26,8 +26,8 @@ DROP COLUMN hasservererror,
 DROP COLUMN validations,
 DROP COLUMN model_slug;
 
-UPDATE experiment
-SET algorithms = REPLACE(algorithms, '"name"', '"id"');
+ALTER TABLE experiment
+RENAME result TO results;
 ALTER TABLE experiment
 RENAME algorithms TO algorithm;
 ALTER TABLE experiment
@@ -45,7 +45,7 @@ ALTER TABLE experiment
 ADD COLUMN algorithmId text;
 
 UPDATE experiment
-SET algorithmId = (algorithm ->> 'id');
+SET algorithmId = (algorithm ->> 'name');
 
 ALTER TABLE experiment
 ALTER COLUMN algorithm TYPE text;

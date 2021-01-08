@@ -10,6 +10,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.internal.LinkedTreeMap;
 import eu.hbp.mip.controllers.galaxy.retrofit.RetroFitGalaxyClients;
 import eu.hbp.mip.controllers.galaxy.retrofit.RetrofitClientInstance;
 import eu.hbp.mip.models.DAOs.ExperimentDAO;
@@ -19,6 +20,7 @@ import eu.hbp.mip.models.DTOs.ExperimentDTO;
 import eu.hbp.mip.models.galaxy.GalaxyWorkflowResult;
 import eu.hbp.mip.models.galaxy.PostWorkflowToGalaxyDtoResponse;
 import eu.hbp.mip.repositories.ExperimentRepository;
+import eu.hbp.mip.services.Specifications.ExperimentSpecifications;
 import eu.hbp.mip.utils.ClaimUtils;
 import eu.hbp.mip.utils.Exceptions.*;
 import eu.hbp.mip.utils.HTTPUtil;
@@ -211,6 +213,14 @@ public class ExperimentService {
         //Checking if check (POST) /experiments has proper input.
         checkPostExperimentProperInput(experimentDTO, logger);
 
+        // Get the type and name of algorithm
+        String algorithmType = experimentDTO.getAlgorithm().getType();
+
+        if(algorithmType == "workflow"){
+            logger.LogUserAction("You can not run workflow algorithms transiently.");
+            throw new BadRequestException("You can not run workflow algorithms transiently.");
+        }
+
         // Get the parameters
         List<AlgorithmDTO.AlgorithmParamDTO> algorithmParameters
                 = experimentDTO.getAlgorithm().getParameters();
@@ -236,7 +246,7 @@ public class ExperimentService {
 
         logger.LogUserAction("Experiment with uuid: " + experimentDTO.getUuid() + "gave response code: " + exaremeResult.getCode() + " and result: " + exaremeResult.getResults());
 
-        experimentDTO.setResult((exaremeResult.getCode() >= 400) ? null : exaremeResult.getResults());
+        experimentDTO.setResults((exaremeResult.getCode() >= 400) ? null : JsonConverters.convertJsonStringToObject(exaremeResult.getResults(), new ArrayList<ArrayList<Object>>().getClass()));
         experimentDTO.setStatus((exaremeResult.getCode() >= 400) ? ExperimentDAO.Status.error : ExperimentDAO.Status.success);
 
         return experimentDTO;
@@ -244,10 +254,10 @@ public class ExperimentService {
 
     /**
      * The updateExperiment will update the experiment's properties
-     *
      * @param uuid          is the id of the experiment to be updated
      * @param experimentDTO is the experiment information to be updated
      * @param logger    contains username and the endpoint.
+     * @return
      */
     public ExperimentDTO updateExperiment(String uuid, ExperimentDTO experimentDTO, Logger logger) {
         ExperimentDAO experimentDAO;
@@ -321,7 +331,7 @@ public class ExperimentService {
                         && experimentDTO.getViewed() == null
                         && experimentDTO.getCreated() == null
                         && experimentDTO.getCreatedBy() == null
-                        && experimentDTO.getResult() == null
+                        && experimentDTO.getResults() == null
                         && experimentDTO.getStatus() == null
                         && experimentDTO.getUuid() == null;
 
@@ -362,7 +372,7 @@ public class ExperimentService {
             throw new BadRequestException("Finished is not editable.");
         }
 
-        if (experimentDTO.getResult() != null) {
+        if (experimentDTO.getResults() != null) {
             logger.LogUserAction( "Result is not editable.");
             throw new BadRequestException("Result is not editable.");
         }
@@ -497,6 +507,50 @@ public class ExperimentService {
         }
     }
 
+    private String formattingExaremeResult(String result) {
+        List<LinkedTreeMap<String,Object>> jsonObject = JsonConverters.convertJsonStringToObject(result, new ArrayList<ExperimentDAO.ResultObjectDTO>().getClass());
+        LinkedTreeMap<String,Object> firstResult = jsonObject.get(0);
+        return "[" + JsonConverters.convertObjectToJsonString(firstResult.get("result")) + "]";
+    }
+
+    private String formattingGalaxyResult(String result) {
+        List<LinkedTreeMap<String,Object>> jsonObjects = JsonConverters.convertJsonStringToObject(result, new ArrayList<ExperimentDAO.ResultObjectDTO>().getClass());
+        List<Object> objects = new ArrayList<>();
+        for (int i = 0; i < jsonObjects.size(); i++) {
+            LinkedTreeMap<String,Object> k = jsonObjects.get(i);
+            objects.add(k.get("result"));
+        }
+        return JsonConverters.convertObjectToJsonString(objects);
+    }
+
+
+    /**
+     * The runExaremeExperiment will run to exareme the experiment
+     *
+     * @param url           is the url that contain the results of the experiment
+     * @param body          is the parameters of the algorithm
+     * @param experimentDTO is the experiment information to be executed in the exareme
+     * @return the result of exareme as well as the http status that was retrieved
+     */
+    private ExaremeResult runExaremeExperiment(String url, String body, ExperimentDTO experimentDTO) {
+
+        StringBuilder results = new StringBuilder();
+        int code;
+        try {
+            code = HTTPUtil.sendPost(url, body, results);
+        } catch (Exception e) {
+            throw new InternalServerError("Error occurred : " + e.getMessage());
+        }
+
+        String resultToMatchGalaxy = "[" + results + "]";
+        String formattedResult = formattingExaremeResult(resultToMatchGalaxy);
+        Logger.LogExperimentAction(experimentDTO.getName(), experimentDTO.getUuid(), "Algorithm finished with code: " + code + "and result :" + formattedResult);
+
+        return new ExaremeResult(code, formattedResult);
+    }
+
+
+
     /* --------------------------------------  EXAREME CALLS ---------------------------------------------------------*/
 
     /**
@@ -539,7 +593,7 @@ public class ExperimentService {
 
                 Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Experiment with uuid: " + experimentDAO.getUuid() + "gave response code: " + exaremeResult.getCode() + " and result: " + exaremeResult.getResults());
 
-                experimentDAO.setResult((exaremeResult.getCode() >= 400) ? null : JsonConverters.convertObjectToJsonString(exaremeResult.getResults()));
+                experimentDAO.setResults((exaremeResult.getCode() >= 400) ? null : exaremeResult.getResults());
                 experimentDAO.setStatus((exaremeResult.getCode() >= 400) ? ExperimentDAO.Status.error : ExperimentDAO.Status.success);
             } catch (Exception e) {
                 Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "There was an exception: " + e.getMessage());
@@ -553,32 +607,6 @@ public class ExperimentService {
         experimentDTO = experimentDAO.convertToDTO(true);
         return experimentDTO;
     }
-
-    /**
-     * The runExaremeExperiment will run to exareme the experiment
-     *
-     * @param url           is the url that contain the results of the experiment
-     * @param body          is the parameters of the algorithm
-     * @param experimentDTO is the experiment information to be executed in the exareme
-     * @return the result of exareme as well as the http status that was retrieved
-     */
-    public ExaremeResult runExaremeExperiment(String url, String body, ExperimentDTO experimentDTO) {
-
-        StringBuilder results = new StringBuilder();
-        int code;
-        try {
-            code = HTTPUtil.sendPost(url, body, results);
-        } catch (Exception e) {
-            throw new InternalServerError("Error occurred : " + e.getMessage());
-        }
-        Logger.LogExperimentAction(experimentDTO.getName(), experimentDTO.getUuid(), "Algorithm finished with code: " + code);
-
-        // Results are stored in the experiment object
-        ExperimentDTO experimentDTOWithOnlyResult = JsonConverters.convertJsonStringToObject(String.valueOf(results), ExperimentDTO.class);
-        List<ExperimentDTO.ResultDTO> resultDTOS = experimentDTOWithOnlyResult.getResult();
-        return new ExaremeResult(code, resultDTOS);
-    }
-
 
     /* ---------------------------------------  GALAXY CALLS ---------------------------------------------------------*/
 
@@ -718,12 +746,12 @@ public class ExperimentService {
                 Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "State is: " + state);
 
                 switch (state) {
-                    case "running":
+                    case "pending":
                         // Do nothing, when the experiment is created the status is set to running
                         Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Workflow is still running.");
                         break;
 
-                    case "completed":
+                    case "success":
                         // Get only the job result that is visible
                         List<GalaxyWorkflowResult> workflowJobsResults = getWorkflowResults(experimentDAO);
                         Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Results are: " + workflowJobsResults.toString());
@@ -739,7 +767,7 @@ public class ExperimentService {
                                 if (result == null) {
                                     experimentDAO.setStatus(ExperimentDAO.Status.error);
                                 } else {
-                                    experimentDAO.setResult(result);
+                                    experimentDAO.setResults(result);
                                     experimentDAO.setStatus(ExperimentDAO.Status.success);
                                     resultFound = true;
                                 }
@@ -790,8 +818,8 @@ public class ExperimentService {
                 }
 
                 // If result exists return
-                if (experimentDAO.getResult() != null) {
-                    Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "ResultDTO exists: " + experimentDAO.getResult());
+                if (experimentDAO.getResults() != null) {
+                    Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "ResultDTO exists: " + experimentDAO.getResults());
                     return;
                 }
             }
@@ -801,10 +829,10 @@ public class ExperimentService {
 
     /**
      * @param experimentDAO The experiment of the workflow
-     * @return "running"           ->      When the workflow is still running
+     * @return "pending"           ->      When the workflow is still running
      * "internalError"     ->      When an exception or a bad request occurred
      * "error"             ->      When the workflow produced an error
-     * "completed"         ->      When the workflow completed successfully
+     * "success"         ->      When the workflow completed successfully
      */
     public String getWorkflowStatus(ExperimentDAO experimentDAO) {
         String historyId = experimentDAO.getWorkflowHistoryId();
@@ -846,14 +874,14 @@ public class ExperimentService {
         Logger.LogExperimentAction(experimentName, experimentId, " Completed!");
         switch (state) {
             case "ok":
-                return "completed";
+                return "success";
             case "error":
                 return "error";
-            case "running":
+            case "pending":
             case "new":
             case "waiting":
             case "queued":
-                return "running";
+                return "pending";
             default:
                 return "internalError";
         }
@@ -919,7 +947,8 @@ public class ExperimentService {
                         + response.code() + "" + " with body: " + (response.errorBody() != null ? response.errorBody().string() : " "));
                 return null;
             }
-            resultJson = new Gson().toJson(response.body());
+
+            resultJson = gson.toJson(response.body());
             Logger.LogExperimentAction(experimentName, experimentId, " ResultDTO: " + resultJson);
 
         } catch (IOException e) {
@@ -928,8 +957,8 @@ public class ExperimentService {
             return null;
         }
 
-        Logger.LogExperimentAction(experimentName, experimentId, " Completed!");
-        return resultJson;
+
+        return formattingGalaxyResult(resultJson);
     }
 
 
@@ -979,9 +1008,9 @@ public class ExperimentService {
 
     static class ExaremeResult {
         private int code;
-        private List<ExperimentDTO.ResultDTO> results;
+        private String results;
 
-        public ExaremeResult(int code, List<ExperimentDTO.ResultDTO> results) {
+        public ExaremeResult(int code, String results) {
             this.code = code;
             this.results = results;
         }
@@ -990,7 +1019,7 @@ public class ExperimentService {
             return code;
         }
 
-        public List<ExperimentDTO.ResultDTO> getResults() {
+        public String getResults() {
             return results;
         }
     }

@@ -2,6 +2,7 @@ package eu.hbp.mip.utils;
 
 import com.google.gson.Gson;
 import eu.hbp.mip.models.DTOs.PathologyDTO;
+import eu.hbp.mip.utils.Exceptions.InternalServerError;
 import eu.hbp.mip.utils.Exceptions.UnauthorizedException;
 import org.keycloak.KeycloakPrincipal;
 import org.keycloak.adapters.springsecurity.token.KeycloakAuthenticationToken;
@@ -29,7 +30,7 @@ public class ClaimUtils {
     public static void validateAccessRightsOnDatasets(Authentication authentication,
                                                       String experimentDatasets, Logger logger) {
 
-        ArrayList<String> authorities = getKeycloakAuthorities(authentication);
+        ArrayList<String> authorities = getKeycloakAuthorities(authentication, logger);
 
         // Don't check for dataset claims if "super" claim exists allowing everything
         if (!hasRoleAccess(authorities, ClaimUtils.allDatasetsAllowedClaim(), logger)) {
@@ -47,7 +48,7 @@ public class ClaimUtils {
 
     public static boolean validateAccessRightsOnExperiments(Authentication authentication, Logger logger) {
 
-        ArrayList<String> authorities = getKeycloakAuthorities(authentication);
+        ArrayList<String> authorities = getKeycloakAuthorities(authentication, logger);
 
         // Check for experiment_all claims
         return  hasRoleAccess(authorities, ClaimUtils.allExperimentsAllowedClaim(), logger);
@@ -58,7 +59,7 @@ public class ClaimUtils {
         // --- Providing only the allowed pathologies/datasets to the user  ---
         logger.LogUserAction("Filter out the unauthorised datasets.");
 
-        ArrayList<String> authorities = getKeycloakAuthorities(authentication);
+        ArrayList<String> authorities = getKeycloakAuthorities(authentication, logger);
 
         // If the "dataset_all" claim exists then return everything
         if (hasRoleAccess(authorities, ClaimUtils.allDatasetsAllowedClaim(), logger)) {
@@ -100,9 +101,15 @@ public class ClaimUtils {
         return userClaims.contains(role.toLowerCase());
     }
 
-    private static ArrayList<String> getKeycloakAuthorities(Authentication authentication){
+    private static ArrayList<String> getKeycloakAuthorities(Authentication authentication, Logger logger){
         KeycloakAuthenticationToken token = (KeycloakAuthenticationToken) authentication;
         KeycloakPrincipal keycloakPrincipal = (KeycloakPrincipal) token.getPrincipal();
-        return (ArrayList<String>)keycloakPrincipal.getKeycloakSecurityContext().getIdToken().getOtherClaims().get("authorities");
+        if(keycloakPrincipal.getKeycloakSecurityContext().getIdToken().getOtherClaims().get("authorities") == null)
+        {
+            logger.LogUserAction("Your user has no roles.");
+            throw new InternalServerError("Your user has no roles.");
+        }
+
+         return (ArrayList<String>)keycloakPrincipal.getKeycloakSecurityContext().getIdToken().getOtherClaims().get("authorities");
     }
 }

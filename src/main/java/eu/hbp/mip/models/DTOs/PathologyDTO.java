@@ -1,42 +1,14 @@
 package eu.hbp.mip.models.DTOs;
 
 import com.google.gson.annotations.SerializedName;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
+@Getter
+@Setter
 public class PathologyDTO {
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public String getLabel() {
-        return label;
-    }
-
-    public void setLabel(String label) {
-        this.label = label;
-    }
-
-    public Object getMetadataHierarchy() {
-        return metadataHierarchy;
-    }
-
-    public void setMetadataHierarchy(Object metadataHierarchy) {
-        this.metadataHierarchy = metadataHierarchy;
-    }
-
-    public List<PathologyDatasetDTO> getDatasets() {
-        return datasets;
-    }
-
-    public void setDatasets(List<PathologyDatasetDTO> datasets) {
-        this.datasets = datasets;
-    }
 
     @SerializedName("code")
     private String code;
@@ -50,28 +22,14 @@ public class PathologyDTO {
     @SerializedName("datasets")
     private List<PathologyDatasetDTO> datasets;
 
+    @Getter
+    @Setter
     public static class PathologyDatasetDTO {
         @SerializedName("code")
         private String code;
 
         @SerializedName("label")
         private String label;
-
-        public String getCode() {
-            return code;
-        }
-
-        public void setCode(String code) {
-            this.code = code;
-        }
-
-        public String getLabel() {
-            return label;
-        }
-
-        public void setLabel(String label) {
-            this.label = label;
-        }
 
         public String toString() {
             return code;
@@ -81,5 +39,4 @@ public class PathologyDTO {
     public String toString() {
         return code;
     }
-
 }

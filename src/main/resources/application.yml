@@ -11,7 +11,7 @@ logging:
 
 ### AUTHENTICATION ###
 authentication:
-  enabled: true
+  enabled: false
 
 
 ### DATABASE CONFIGURATION ###
@@ -48,14 +48,13 @@ services:
 ### KEYCLOAK ###
 keycloak:
   enabled: true
-  auth-server-url: "http://127.0.0.1/auth"
+  auth-server-url: "https://iam.humanbrainproject.eu/auth"
   realm: "MIP"
-  resource: "MIP"
+  resource: "mipfedqa"
   enable-basic-auth: true
   credentials:
-    secret: "dae83a6b-c769-4186-8383-f0984c6edf05"
+    secret: "492ddb7d-a7c6-4143-89ae-dbfa6f970aca"
   principal-attribute: "preferred_username"
-  ssl-required: none
 
 
 ### EXTERNAL FILES ###

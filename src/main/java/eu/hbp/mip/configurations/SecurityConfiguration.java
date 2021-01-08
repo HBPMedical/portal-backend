@@ -56,7 +56,7 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
                             "/sso/login",
                             "/v2/api-docs", "/swagger-ui/**", "/swagger-resources/**"  // Swagger URLs
                     ).permitAll()
-                    .antMatchers("/galaxy*", "/galaxy/*").hasRole("DATA MANAGER")
+                    .antMatchers("/galaxy*", "/galaxy/*").hasRole("WORKFLOW_ADMIN")
                     .antMatchers("/**").authenticated()
                     .and().csrf().ignoringAntMatchers("/logout").csrfTokenRepository(csrfTokenRepository())
                     .and().addFilterAfter(csrfHeaderFilter(), CsrfFilter.class);

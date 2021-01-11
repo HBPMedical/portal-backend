@@ -22,11 +22,10 @@ public class ExperimentDTO {
     private Date finished;
     private Boolean shared;
     private Boolean viewed;
-    private List<List<Object>> results;
+    private List<Object> result;
     private ExperimentDAO.Status status;
     private AlgorithmDTO algorithm;
 
     public ExperimentDTO() {
-
     }
 }

@@ -52,7 +52,7 @@ public class ExperimentDAO {
 
     @Expose
     @Column(columnDefinition = "TEXT")
-    private String results;
+    private String result;
 
     @Expose
     @Column(columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
@@ -95,28 +95,6 @@ public class ExperimentDAO {
          */
     }
 
-
-    public String getResults() {
-        return results;
-    }
-
-    public void setResults(String result) {
-        this.results = result;
-    }
-
-    public class ResultObjectDTO {
-
-        ArrayList<Object> result;
-
-        public ArrayList<Object> getResult() {
-            return this.result;
-        }
-
-        public void setResult(ArrayList<Object> results) {
-            this.result = results;
-        }
-    }
-
     public ExperimentDTO convertToDTO(boolean includeResult)
     {
         ExperimentDTO experimentDTO = new ExperimentDTO();
@@ -127,7 +105,7 @@ public class ExperimentDAO {
         experimentDTO.setCreatedBy(this.createdBy.getUsername());
         experimentDTO.setName(this.name);
         if(includeResult){
-            experimentDTO.setResults(JsonConverters.convertJsonStringToObject(this.results,  new ArrayList<ArrayList<Object>>().getClass()));
+            experimentDTO.setResult(JsonConverters.convertJsonStringToObject(String.valueOf(this.result),  new ArrayList<>().getClass()));
         }
         experimentDTO.setStatus(this.status);
         experimentDTO.setShared(this.shared);

@@ -27,8 +27,6 @@ DROP COLUMN validations,
 DROP COLUMN model_slug;
 
 ALTER TABLE experiment
-RENAME result TO results;
-ALTER TABLE experiment
 RENAME algorithms TO algorithm;
 ALTER TABLE experiment
 ALTER COLUMN algorithm TYPE json USING algorithm::json;

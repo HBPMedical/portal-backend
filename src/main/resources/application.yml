@@ -53,7 +53,7 @@ keycloak:
   resource: "mipfedqa"
   enable-basic-auth: true
   credentials:
-    secret: "492ddb7d-a7c6-4143-89ae-dbfa6f970aca"
+    secret: "dae83a6b-c769-4186-8383-f0984c6edf05"
   principal-attribute: "preferred_username"
 
 

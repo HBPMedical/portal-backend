@@ -535,7 +535,6 @@ public class ExperimentService {
         // Results are stored in the experiment object
         ExperimentDTO experimentDTOWithOnlyResult = JsonConverters.convertJsonStringToObject(String.valueOf(results), ExperimentDTO.class);
         List<Object> resultDTOS = experimentDTOWithOnlyResult.getResult();
-        Logger.LogExperimentAction(experimentDTO.getName(), experimentDTO.getUuid(), "Thread named :" + Thread.currentThread().getName() + " with id :" + Thread.currentThread().getId() + " started!");
 
         return new ExaremeResult(code, resultDTOS);
     }

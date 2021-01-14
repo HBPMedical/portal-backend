@@ -9,7 +9,7 @@ SET workflowstatus = 'error'
 WHERE workflowstatus IS NULL AND haserror;
 
 UPDATE experiment
-SET workflowstatus = 'completed'
+SET workflowstatus = 'success'
 WHERE workflowstatus IS NULL AND NOT haserror;
 
 UPDATE experiment

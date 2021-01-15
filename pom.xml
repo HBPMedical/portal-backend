@@ -14,27 +14,25 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>1.3.8.RELEASE</version>
-        <relativePath/>
-
+        <version>2.3.5.RELEASE</version>
     </parent>
 
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <sonar.host.url>https://hbps1.chuv.ch/sonarqube/</sonar.host.url>
-        <sonar.projectName>MIP portal-backend</sonar.projectName>
-        <sonar.sources>src/main/java/</sonar.sources>
         <java.version>1.8</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <keycloak-spring.version>11.0.2</keycloak-spring.version>
+        <springfox-swagger.version>2.5.0</springfox-swagger.version>
+        <spring-context.version>5.2.10.RELEASE</spring-context.version>
+        <springfox-boot-starter.version>3.0.0</springfox-boot-starter.version>
         <asciidoctor.maven.plugin.version>1.5.5</asciidoctor.maven.plugin.version>
         <asciidoctorj.pdf.version>1.5.0-alpha.15</asciidoctorj.pdf.version>
         <asciidoctorj.version>1.5.5</asciidoctorj.version>
-        <spring-data-commons.version>1.12.3.RELEASE</spring-data-commons.version>
         <angularjs.version>1.5.7</angularjs.version>
         <jquery.version>3.0.0</jquery.version>
         <bootstrap.version>3.3.7</bootstrap.version>
+        <webjars-locator.version>0.36</webjars-locator.version>
         <h2.version>1.4.192</h2.version>
         <postgresql.version>42.2.1</postgresql.version>
-        <springfox-swagger.version>2.5.0</springfox-swagger.version>
         <gson.version>2.7</gson.version>
         <slugify.version>2.1.5</slugify.version>
         <maven-resources-plugin.version>3.0.1</maven-resources-plugin.version>
@@ -42,15 +40,13 @@
         <swagger2markup-maven-plugin.version>1.0.0</swagger2markup-maven-plugin.version>
         <maven-compiler-plugin.version>3.5.1</maven-compiler-plugin.version>
         <hibernate4-maven-plugin.version>1.1.1</hibernate4-maven-plugin.version>
+        <commons-dbcp.version>2.7.0</commons-dbcp.version>
         <flyway-core.version>4.2.0</flyway-core.version>
         <hibernate-jpa-2.1-api.version>1.0.0.Final</hibernate-jpa-2.1-api.version>
-        <hibernate.version>4.3.11.Final</hibernate.version>
-        <spring-data-jpa.version>1.10.11.RELEASE</spring-data-jpa.version>
-        <spring-boot-starter-actuator.version>1.4.7.RELEASE</spring-boot-starter-actuator.version>
+        <hibernate.version>5.4.10.Final</hibernate.version>
+        <hibernate-validator.version>6.1.0.Final</hibernate-validator.version>
         <aspectjweaver.version>1.8.9</aspectjweaver.version>
         <javax-inject.version>1</javax-inject.version>
-        <akka.version>2.5.22</akka.version>
-        <spring-context.version>4.3.4.RELEASE</spring-context.version>
         <protobuf-java.version>3.1.0</protobuf-java.version>
     </properties>
 
@@ -66,20 +62,13 @@
     </repositories>
 
     <dependencies>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-            <version>${spring-boot-starter-actuator.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.data</groupId>
-            <artifactId>spring-data-commons</artifactId>
-            <version>${spring-data-commons.version}</version>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-data-rest</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -87,11 +76,25 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.security.oauth</groupId>
-            <artifactId>spring-security-oauth2</artifactId>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-commons</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-spring-boot-starter</artifactId>
+            <version>${keycloak-spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-spring-security-adapter</artifactId>
+            <version>${keycloak-spring.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
@@ -115,6 +118,7 @@
         <dependency>
             <groupId>org.webjars</groupId>
             <artifactId>webjars-locator</artifactId>
+            <version>${webjars-locator.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -133,6 +137,11 @@
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>${hibernate-validator.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
             <artifactId>hibernate-entitymanager</artifactId>
             <version>${hibernate.version}</version>
         </dependency>
@@ -148,13 +157,8 @@
         </dependency>
         <dependency>
             <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger2</artifactId>
-            <version>${springfox-swagger.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger-ui</artifactId>
-            <version>${springfox-swagger.version}</version>
+            <artifactId>springfox-boot-starter</artifactId>
+            <version>${springfox-boot-starter.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -169,11 +173,11 @@
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-jpa</artifactId>
-            <version>${spring-data-jpa.version}</version>
         </dependency>
         <dependency>
-            <groupId>commons-dbcp</groupId>
-            <artifactId>commons-dbcp</artifactId>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-dbcp2</artifactId>
+            <version>${commons-dbcp.version}</version>
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
@@ -185,16 +189,15 @@
             <artifactId>aspectjweaver</artifactId>
             <version>${aspectjweaver.version}</version>
         </dependency>
-        
         <dependency>
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
             <version>${javax-inject.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
-            <version>${spring.version}</version>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-context</artifactId>
+        <version>${spring-context.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.protobuf</groupId>
@@ -209,60 +212,70 @@
         <dependency>
             <groupId>org.glassfish.jaxb</groupId>
             <artifactId>jaxb-runtime</artifactId>
-            <version>2.4.0-b180830.0438</version>
+            <version>3.0.0-M4</version>
         </dependency>
-        
-        <dependency>
-            <groupId>com.auth0</groupId>
-            <artifactId>java-jwt</artifactId>
-            <version>3.8.3</version>
-        </dependency>
-
         <!-- https://mvnrepository.com/artifact/com.github.jmchilton.blend4j/blend4j -->
         <dependency>
             <groupId>com.github.jmchilton.blend4j</groupId>
             <artifactId>blend4j</artifactId>
             <version>0.2.0</version>
         </dependency>
-
         <dependency>
             <groupId>com.squareup.retrofit2</groupId>
             <artifactId>retrofit</artifactId>
-            <version>2.5.0</version>
+            <version>2.9.0</version>
         </dependency>
-
         <!-- https://mvnrepository.com/artifact/com.squareup.retrofit2/converter-gson -->
         <dependency>
             <groupId>com.squareup.retrofit2</groupId>
             <artifactId>converter-gson</artifactId>
-            <version>2.4.0</version>
+            <version>2.9.0</version>
         </dependency>
-
         <!-- https://mvnrepository.com/artifact/com.squareup.okhttp3/logging-interceptor -->
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>logging-interceptor</artifactId>
-            <version>3.12.1</version>
         </dependency>
-
         <dependency>
             <groupId>com.auth0</groupId>
             <artifactId>java-jwt</artifactId>
-            <version>3.8.3</version>
+            <version>3.11.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.code.svenson</groupId>
+            <artifactId>svenson</artifactId>
+            <version>1.5.8</version>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.16</version>
+            <scope>provided</scope>
+        </dependency>
+
     </dependencies>
 
-    <build>
-        <finalName>portal-backend</finalName>
-        <resources>
+   <build>
+       <finalName>portal-backend</finalName>
+       <resources>
+           <resource>
+               <directory>src/main/resources</directory>
+               <includes>
+                   <include>**/*.xml</include>
+                   <include>**/*.json</include>
+                   <include>**/*.csv</include>
+                   <include>**/*.sql</include>
+                   <include>**/*.conf</include>
+                   <include>**/*.yml</include>    <!--   Only for development -->
+                </includes>
+                <filtering>true</filtering>
+            </resource>
+
+            <!-- Used for development. Docker/config folder files added as resources -->
             <resource>
-                <directory>src/main/resources</directory>
+                <directory>config</directory>
                 <includes>
-                    <include>**/*.xml</include>
-                    <include>**/*.json</include>
-                    <include>**/*.csv</include>
-                    <include>**/*.sql</include>
-                    <include>**/*.conf</include>
+                    <include>*.json</include>
                 </includes>
                 <filtering>true</filtering>
             </resource>

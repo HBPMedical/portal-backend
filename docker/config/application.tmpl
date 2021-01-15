@@ -1,14 +1,27 @@
 # Configuration template for the portal running inside a Docker container
 
-# See http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
+### LOG LEVELS ###
+logging:
+  level:
+    root: {{ default .Env.LOG_LEVEL_FRAMEWORK "ERROR" }}
+    org: {{ default .Env.LOG_LEVEL_FRAMEWORK "ERROR" }}
+    eu:
+      hbp: {{ default .Env.LOG_LEVEL "INFO" }}
+
+
+### AUTHENTICATION ###
+authentication:
+  enabled: {{ default .Env.AUTHENTICATION "true" }}
+
+
+### DATABASE CONFIGURATION ###
 spring:
-  portalDatasource:
-    url: {{ default .Env.PORTAL_DB_URL "jdbc:postgresql://172.22.0.1:5432/portal" }}
+  portal-datasource:
+    url: {{ default .Env.PORTAL_DB_URL "jdbc:postgresql://88.197.53.106:5432/portal" }}
     schema: {{ default .Env.PORTAL_DB_SCHEMA "public" }}
     username: {{ default .Env.PORTAL_DB_USER "postgres" }}
     password: {{ .Env.PORTAL_DB_PASSWORD }}
     driver-class-name: org.postgresql.Driver
-
   data:
     jpa:
       repositories:
@@ -16,60 +29,10 @@ spring:
   jpa:
     hibernate:
       dialect: org.hibernate.dialect.PostgreSQL9Dialect
-  # SPRING RESOURCES HANDLING
-  resources:
-    chain:
-      enabled: true # TODO: why is that enabled? Do we serve any resources from the backend?
+      ddl-auto: validate
 
-# HBP OAUTH2 LOGIN
-hbp:
-  authentication:
-    enabled: {{ default .Env.AUTHENTICATION "1" }}
-  client:
-    clientId: {{ default .Env.CLIENT_ID "996f97c5-a3ca-460e-b18b-00df3e2be89a" }}
-    clientSecret: {{ .Env.CLIENT_SECRET }}
-    accessTokenUri: {{ default .Env.TOKEN_URI "https://services.humanbrainproject.eu/oidc/token" }}
-    userAuthorizationUri: {{ default .Env.AUTH_URI "https://services.humanbrainproject.eu/oidc/authorize" }}
-    logoutUri: {{ .Env.LOGOUT_URI }}
-    tokenName: access_token
-    authenticationScheme: query
-    clientAuthenticationScheme: form
-    useCurrentUri: false
-    preEstablishedRedirectUri: {{ default .Env.FRONTEND_LOGIN_URL "http://frontend/services/login/hbp" }}
-  resource:
-    userInfoUri: {{ default .Env.USER_INFO_URI "https://services.humanbrainproject.eu/oidc/userinfo" }}
-    revokeTokenUri: {{ default .Env.REVOKE_TOKEN_URI "https://services.humanbrainproject.eu/oidc/slo" }}
-  sso:
-    login-path:
 
-# WEB FRONTEND
-frontend:
-  loginUrl: {{ default .Env.FRONTEND_LOGIN_URL "http://frontend/services/login/hbp" }}
-  redirectAfterLogoutUrl: {{ default .Env.FRONTEND_AFTER_LOGOUT_URL (default .Env.LOGIN_URI "http://frontend/services/login/hbp") }}
-  redirectAfterLoginUrl: {{ default .Env.FRONTEND_AFTER_LOGIN_URL "http://frontend/home" }}
-  
-logging:
-  level:
-    root: {{ default .Env.LOG_LEVEL_FRAMEWORK "ERROR" }}
-    eu:
-      hbp: {{ default .Env.LOG_LEVEL "INFO" }}
-
-# EMBEDDED SERVER CONFIGURATION
-server:
-  contextPath: {{ default .Env.CONTEXT_PATH "/services" }}
-  port: 8080
-  use-forward-headers: true
-  session:
-    timeout: {{ default .Env.SESSION_TIMEOUT "2592000" }}
-
-# ENDPOINTS
-endpoints:
-  enabled: true
-  health:
-    enabled: true
-    endpoint: /health
-    sensitive: false
-
+### EXTERNAL SERVICES ###
 services:
   exareme:
     queryExaremeUrl: {{ default .Env.EXAREME_URL "http://localhost:9090" }}/mining/query
@@ -77,10 +40,43 @@ services:
 
   galaxy:
     galaxyUrl:      {{ default .Env.GALAXY_URL "http://localhost:8090/" }}
-    galaxyContext:  {{ default .Env.GALAXY_CONTEXT "nativeGalaxy/workflows/list" }}
+    galaxyContext:  "nativeGalaxy/workflows/list"
     galaxyApiKey:   {{ .Env.GALAXY_API_KEY }}
     galaxyUsername:  {{ default .Env.GALAXY_USERNAME "admin" }}
     galaxyPassword:  {{ default .Env.GALAXY_PASSWORD "password" }}
 
-  keycloak:
-    keycloakUrl: {{ .Env.KEYCLOAK_URL }}
+
+### KEYCLOAK ###
+keycloak:
+  enabled: true
+  auth-server-url: {{ .Env.KEYCLOAK_AUTH_URL }}
+  realm: {{ .Env.KEYCLOAK_REALM }}
+  resource: {{ .Env.KEYCLOAK_CLIENT_ID }}
+  enable-basic-auth: true
+  credentials:
+    secret: {{ .Env.KEYCLOAK_CLIENT_SECRET }}
+  principal-attribute: "preferred_username"
+  ssl-required: none
+
+### EXTERNAL FILES ###
+# Files are imported when building the docker image
+files:
+  pathologies_json: "file:/opt/portal/api/pathologies.json"
+  disabledAlgorithms_json: "file:/opt/portal/api/disabledAlgorithms.json"
+
+
+### EMBEDDED SERVER CONFIGURATION ###
+server:
+  servlet:
+    contextPath: "/services"
+  port: 8080
+  forward-headers-strategy: native
+
+
+### ENDPOINTS ###
+endpoints:
+  enabled: true
+  health:
+    enabled: true
+    endpoint: /health
+    sensitive: false

@@ -1,0 +1,81 @@
+# Configuration for development purposes
+
+### LOG LEVELS ###
+logging:
+  level:
+    root: "ERROR"
+    org: "ERROR"
+    eu:
+      hbp: "DEBUG"
+
+
+### AUTHENTICATION ###
+authentication:
+  enabled: false
+
+
+### DATABASE CONFIGURATION ###
+spring:
+  portal-datasource:
+    url: "jdbc:postgresql://127.0.0.1:5433/portal"
+    schema: "public"
+    username: "portal"
+    password: "portalpwd"
+    driver-class-name: org.postgresql.Driver
+  data:
+    jpa:
+      repositories:
+        bootstrap-mode: default
+  jpa:
+    hibernate:
+      dialect: org.hibernate.dialect.PostgreSQL9Dialect
+      ddl-auto: validate
+
+
+### EXTERNAL SERVICES ###
+services:
+  exareme:
+    queryExaremeUrl: "http://127.0.0.1:9090/mining/query"
+    algorithmsUrl: "http://127.0.0.1:9090/mining/algorithms.json"
+  galaxy:
+    galaxyUrl: "http://127.0.0.1:8090"
+    galaxyContext:  "nativeGalaxy/workflows/list"
+    galaxyApiKey:   "d14a4cc5eebf805eb2ff261374ed08a2"
+    galaxyUsername:  "admin"
+    galaxyPassword:  "password"
+
+
+### KEYCLOAK ###
+keycloak:
+  enabled: true
+  auth-server-url: "https://iam.humanbrainproject.eu/auth"
+  realm: "MIP"
+  resource: "mipfedqa"
+  enable-basic-auth: true
+  credentials:
+    secret: "dae83a6b-c769-4186-8383-f0984c6edf05"
+  principal-attribute: "preferred_username"
+
+
+### EXTERNAL FILES ###
+# Files are loaded from the resources
+files:
+  pathologies_json: "classPath:/pathologies.json"
+  disabledAlgorithms_json: "classPath:/disabledAlgorithms.json"
+
+
+### EMBEDDED SERVER CONFIGURATION ###
+server:
+  servlet:
+    contextPath: "/services"
+  port: 8080
+  forward-headers-strategy: native
+
+
+### ENDPOINTS ###
+endpoints:
+  enabled: true
+  health:
+    enabled: true
+    endpoint: "/health"
+    sensitive: false

@@ -1,13 +1,14 @@
 package eu.hbp.mip.utils;
 
 import com.google.gson.Gson;
-import eu.hbp.mip.model.PathologyDTO;
-import org.springframework.security.core.GrantedAuthority;
+import eu.hbp.mip.models.DTOs.PathologyDTO;
+import eu.hbp.mip.utils.Exceptions.InternalServerError;
+import eu.hbp.mip.utils.Exceptions.UnauthorizedException;
+import org.keycloak.KeycloakPrincipal;
+import org.keycloak.adapters.springsecurity.token.KeycloakAuthenticationToken;
+import org.springframework.security.core.Authentication;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 
 public class ClaimUtils {
@@ -15,68 +16,68 @@ public class ClaimUtils {
     private static final Gson gson = new Gson();
 
     public static String allDatasetsAllowedClaim() {
-        return "dataset_all";
+        return "research_dataset_all";
+    }
+
+    public static String allExperimentsAllowedClaim() {
+        return "research_experiment_all";
     }
 
     public static String getDatasetClaim(String datasetCode) {
-        return "dataset_" + datasetCode.toLowerCase();
+        return "research_dataset_" + datasetCode.toLowerCase();
     }
 
-    public static boolean userHasDatasetsAuthorization(String username, Collection<? extends GrantedAuthority> authorities,
-                                                       String experimentDatasets) {
+    public static void validateAccessRightsOnDatasets(Authentication authentication,
+                                                      String experimentDatasets, Logger logger) {
 
-        List<String> userClaims = Arrays.asList(authorities.toString().toLowerCase()
-                .replaceAll("[\\s+\\]\\[]", "").split(","));
-        Logging.LogUserAction(username, "(POST) /experiments/runAlgorithm", userClaims.toString());
+        ArrayList<String> authorities = getKeycloakAuthorities(authentication, logger);
 
         // Don't check for dataset claims if "super" claim exists allowing everything
-        if (!userClaims.contains(ClaimUtils.allDatasetsAllowedClaim())) {
+        if (!hasRoleAccess(authorities, ClaimUtils.allDatasetsAllowedClaim(), logger)) {
 
             for (String dataset : experimentDatasets.split(",")) {
                 String datasetRole = ClaimUtils.getDatasetClaim(dataset);
-                if (!userClaims.contains(datasetRole.toLowerCase())) {
-                    Logging.LogUserAction(username, "(POST) /experiments/runAlgorithm",
-                            "You are not allowed to use dataset: " + dataset);
-                    return false;
+                if (!hasRoleAccess(authorities, datasetRole, logger)) {
+                    logger.LogUserAction("You are not allowed to use dataset: " + dataset);
+                    throw new UnauthorizedException("You are not authorized to use these datasets.");
                 }
             }
-            Logging.LogUserAction(username, "(POST) /experiments/runAlgorithm",
-                    "User is authorized to use the datasets: " + experimentDatasets);
+            logger.LogUserAction("User is authorized to use the datasets: " + experimentDatasets);
         }
-        return true;
     }
 
-    public static String getAuthorizedPathologies(String username, Collection<? extends GrantedAuthority> authorities,
+    public static boolean validateAccessRightsOnExperiments(Authentication authentication, Logger logger) {
+
+        ArrayList<String> authorities = getKeycloakAuthorities(authentication, logger);
+
+        // Check for experiment_all claims
+        return  hasRoleAccess(authorities, ClaimUtils.allExperimentsAllowedClaim(), logger);
+    }
+
+    public static String getAuthorizedPathologies(Logger logger, Authentication authentication,
                                                   List<PathologyDTO> allPathologies) {
         // --- Providing only the allowed pathologies/datasets to the user  ---
-        Logging.LogUserAction(username,
-                "(GET) /pathologies", "Filter out the unauthorised datasets.");
+        logger.LogUserAction("Filter out the unauthorised datasets.");
 
-        List<String> userClaims = Arrays.asList(authorities.toString().toLowerCase()
-                .replaceAll("[\\s+\\]\\[]", "").split(","));
-
-        Logging.LogUserAction(username,
-                "(GET) /pathologies", "User Claims: " + userClaims);
+        ArrayList<String> authorities = getKeycloakAuthorities(authentication, logger);
 
         // If the "dataset_all" claim exists then return everything
-        if (userClaims.contains(ClaimUtils.allDatasetsAllowedClaim())) {
+        if (hasRoleAccess(authorities, ClaimUtils.allDatasetsAllowedClaim(), logger)) {
             return gson.toJson(allPathologies);
         }
 
         List<PathologyDTO> userPathologies = new ArrayList<>();
         for (PathologyDTO curPathology : allPathologies) {
-            List<PathologyDTO.PathologyDatasetDTO> userPathologyDatasets = new ArrayList<PathologyDTO.PathologyDatasetDTO>();
+            List<PathologyDTO.PathologyDatasetDTO> userPathologyDatasets = new ArrayList<>();
             for (PathologyDTO.PathologyDatasetDTO dataset : curPathology.getDatasets()) {
-                if (userClaims.contains(ClaimUtils.getDatasetClaim(dataset.getCode()))) {
-                    Logging.LogUserAction(username, "(GET) /pathologies",
-                            "Added dataset: " + dataset.getCode());
+                if (hasRoleAccess(authorities, ClaimUtils.getDatasetClaim(dataset.getCode()), logger)) {
+                    logger.LogUserAction("Added dataset: " + dataset.getCode());
                     userPathologyDatasets.add(dataset);
                 }
             }
 
             if (userPathologyDatasets.size() > 0) {
-                Logging.LogUserAction(username, "(GET) /pathologies",
-                        "Added pathology '" + curPathology.getLabel()
+                logger.LogUserAction("Added pathology '" + curPathology.getLabel()
                                 + "' with datasets: '" + userPathologyDatasets + "'");
 
                 PathologyDTO userPathology = new PathologyDTO();
@@ -91,4 +92,24 @@ public class ClaimUtils {
         return gson.toJson(userPathologies);
     }
 
+    private static boolean  hasRoleAccess(ArrayList<String> authorities, String role, Logger logger)
+    {
+        List<String> userClaims = Arrays.asList(authorities.toString().toLowerCase()
+                .replaceAll("[\\s+\\]\\[]", "").split(","));
+
+        logger.LogUserAction("User Claims: " + userClaims);
+        return userClaims.contains(role.toLowerCase());
+    }
+
+    private static ArrayList<String> getKeycloakAuthorities(Authentication authentication, Logger logger){
+        KeycloakAuthenticationToken token = (KeycloakAuthenticationToken) authentication;
+        KeycloakPrincipal keycloakPrincipal = (KeycloakPrincipal) token.getPrincipal();
+        if(keycloakPrincipal.getKeycloakSecurityContext().getIdToken().getOtherClaims().get("authorities") == null)
+        {
+            logger.LogUserAction("Your user has no roles.");
+            throw new InternalServerError("Your user has no roles.");
+        }
+
+         return (ArrayList<String>)keycloakPrincipal.getKeycloakSecurityContext().getIdToken().getOtherClaims().get("authorities");
+    }
 }

@@ -1,17 +1,17 @@
 package eu.hbp.mip.repositories;
 
-import eu.hbp.mip.model.Experiment;
-import eu.hbp.mip.model.User;
+import eu.hbp.mip.models.DAOs.ExperimentDAO;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.CrudRepository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 /**
  * Created by mirco on 11.07.16.
  */
 
-public interface ExperimentRepository extends CrudRepository<Experiment, UUID> {
-    Iterable<Experiment> findByCreatedBy(User user);
-
-    Iterable<Experiment> findByShared(Boolean shared);
+public interface ExperimentRepository extends CrudRepository<ExperimentDAO, UUID>, JpaSpecificationExecutor<ExperimentDAO>
+{
+    ExperimentDAO findByUuid(UUID experimentUuid);
 }

@@ -43,17 +43,16 @@ WORKDIR /home/portal
 ENTRYPOINT ["/run.sh"]
 
 # 8080: Web service API, health checks on http://host:8080$CONTEXT_PATH/health
-# 4089: Akka cluster
-EXPOSE 4089 8080
+EXPOSE 8080
 
 HEALTHCHECK --start-period=60s CMD curl -v --silent http://localhost:8080$CONTEXT_PATH/health 2>&1 | grep UP
 
 LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.name="hbpmip/portal-backend" \
-      org.label-schema.description="Java backend for the MIP portal" \
+      org.label-schema.description="Spring backend for the MIP portal" \
       org.label-schema.url="https://mip.humanbrainproject.eu" \
       org.label-schema.vcs-type="git" \
-      org.label-schema.vcs-url="https://github.com/LREN-CHUV/portal-backend" \
+      org.label-schema.vcs-url="https://github.com/HBPMedical/portal-backend" \
       org.label-schema.vcs-ref=$VCS_REF \
       org.label-schema.version="$VERSION" \
       org.label-schema.vendor="LREN CHUV" \

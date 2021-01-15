@@ -56,7 +56,7 @@ keycloak:
   credentials:
     secret: {{ .Env.KEYCLOAK_CLIENT_SECRET }}
   principal-attribute: "preferred_username"
-  ssl-required: {{ .Env.KEYCLOAK_SSL_REQUIRED }}
+  ssl-required: none
 
 ### EXTERNAL FILES ###
 # Files are imported when building the docker image

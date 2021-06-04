@@ -24,6 +24,8 @@ To use this image, you need a running instance of PostgreSQL and to configure th
 
 
 ### EXTERNAL SERVICES ###
+* MIPENGINE_URL: URL to MIPENGINE server. Default is "http://localhost:5000" .
+
 * EXAREME_URL: URL to Exareme server. Default is "http://localhost:9090" .
 
 * GALAXY_URL: URL to Workflow server. Default is "http://localhost:8090/" .

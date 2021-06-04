@@ -9,6 +9,7 @@ import com.google.gson.reflect.TypeToken;
 import eu.hbp.mip.controllers.galaxy.retrofit.RetroFitGalaxyClients;
 import eu.hbp.mip.controllers.galaxy.retrofit.RetrofitClientInstance;
 import eu.hbp.mip.models.DTOs.AlgorithmDTO;
+import eu.hbp.mip.models.DTOs.MIPEngineAlgorithmDTO;
 import eu.hbp.mip.models.galaxy.WorkflowDTO;
 import eu.hbp.mip.services.ActiveUserService;
 import eu.hbp.mip.utils.CustomResourceLoader;
@@ -42,6 +43,9 @@ public class AlgorithmsAPI {
 
     private final ActiveUserService activeUserService;
 
+    @Value("#{'${services.mipengine.algorithmsUrl}'}")
+    private String mipengineAlgorithmsUrl;
+
     @Value("#{'${services.exareme.algorithmsUrl}'}")
     private String exaremeAlgorithmsUrl;
 
@@ -64,8 +68,9 @@ public class AlgorithmsAPI {
     public ResponseEntity<List<AlgorithmDTO>> getAlgorithms() {
         Logger logger = new Logger(activeUserService.getActiveUser().getUsername(), "(GET) /algorithms");
 
-        logger.LogUserAction("Executing...");
-
+//        logger.LogUserAction("Executing...");
+        LinkedList<AlgorithmDTO> mipengineAlgorithms = getMIPEngineAlgorithms(logger);
+        logger.LogUserAction("Loaded " + mipengineAlgorithms.size() + " mipengine algorithms");
         LinkedList<AlgorithmDTO> exaremeAlgorithms = getExaremeAlgorithms(logger);
         logger.LogUserAction("Loaded " + exaremeAlgorithms.size() + " exareme algorithms");
         LinkedList<AlgorithmDTO> galaxyAlgorithms = getGalaxyWorkflows(logger);
@@ -73,12 +78,17 @@ public class AlgorithmsAPI {
 
         LinkedList<AlgorithmDTO> algorithms = new LinkedList<>();
         if (exaremeAlgorithms != null) {
-            algorithms.addAll(exaremeAlgorithms);
+//            algorithms.addAll(exaremeAlgorithms);
         } else {
             logger.LogUserAction("Getting exareme algorithms failed and returned null");
         }
+        if (mipengineAlgorithms != null) {
+            algorithms.addAll(mipengineAlgorithms);
+        } else {
+            logger.LogUserAction("Getting mipengine algorithms failed and returned null");
+        }
         if (galaxyAlgorithms != null) {
-            algorithms.addAll(galaxyAlgorithms);
+//            algorithms.addAll(galaxyAlgorithms);
         } else {
             logger.LogUserAction("Getting galaxy workflows failed and returned null");
         }
@@ -112,7 +122,6 @@ public class AlgorithmsAPI {
         try {
             StringBuilder response = new StringBuilder();
             HTTPUtil.sendGet(exaremeAlgorithmsUrl, response);
-
             algorithms = gson.fromJson(
                     response.toString(),
                     new TypeToken<LinkedList<AlgorithmDTO>>() {
@@ -122,6 +131,37 @@ public class AlgorithmsAPI {
             logger.LogUserAction("An exception occurred: " + e.getMessage());
             return null;
         }
+
+        logger.LogUserAction("Completed, returned " + algorithms.size() + " algorithms.");
+        return algorithms;
+    }
+
+    /**
+     * This method gets all the available mipengine algorithms and
+     *
+     * @return a list of AlgorithmDTOs or null if something fails
+     */
+    public LinkedList<AlgorithmDTO> getMIPEngineAlgorithms(Logger logger) {
+        LinkedList<MIPEngineAlgorithmDTO> mipEngineAlgorithms;
+        // Get MIPEngine algorithms
+        try {
+            StringBuilder response = new StringBuilder();
+            HTTPUtil.sendGet(mipengineAlgorithmsUrl, response);
+            logger.LogUserAction(response.toString());
+
+            mipEngineAlgorithms = gson.fromJson(
+                    response.toString(),
+                    new TypeToken<LinkedList<MIPEngineAlgorithmDTO>>() {
+                    }.getType()
+            );
+        } catch (IOException e) {
+            logger.LogUserAction("An exception occurred: " + e.getMessage());
+            return null;
+        }
+
+
+        LinkedList<AlgorithmDTO> algorithms = new LinkedList<>();
+        mipEngineAlgorithms.forEach(mipEngineAlgorithm -> algorithms.add(mipEngineAlgorithm.convertToAlgorithmDTO()));
 
         logger.LogUserAction("Completed, returned " + algorithms.size() + " algorithms.");
         return algorithms;

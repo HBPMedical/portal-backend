@@ -50,6 +50,9 @@ public class ExperimentService {
     @Value("#{'${services.exareme.queryExaremeUrl}'}")
     private String queryExaremeUrl;
 
+    @Value("#{'${services.mipengine.algorithmsUrl}'}")
+    private String mipengineAlgorithmsUrl;
+
     @Value("#{'${services.galaxy.galaxyUrl}'}")
     private String galaxyUrl;
 
@@ -194,7 +197,7 @@ public class ExperimentService {
             return runGalaxyWorkflow(experimentDTO, logger);
         } else {
             logger.LogUserAction("Algorithm runs on Exareme.");
-            return createExaremeExperiment(experimentDTO, logger);
+            return createExperiment(experimentDTO, logger);
         }
     }
 
@@ -219,13 +222,6 @@ public class ExperimentService {
             throw new BadRequestException("You can not run workflow algorithms transiently.");
         }
 
-        // Get the parameters
-        List<AlgorithmDTO.AlgorithmParamDTO> algorithmParameters
-                = experimentDTO.getAlgorithm().getParameters();
-
-        // Get the type and name of algorithm
-        String algorithmName = experimentDTO.getAlgorithm().getName();
-
         algorithmParametersLogging(experimentDTO, logger);
 
         if (authenticationIsEnabled) {
@@ -233,19 +229,15 @@ public class ExperimentService {
             ClaimUtils.validateAccessRightsOnDatasets(authentication, experimentDatasets, logger);
         }
 
-        String body = gson.toJson(algorithmParameters);
-        String url = queryExaremeUrl + "/" + algorithmName;
-        logger.LogUserAction("url: " + url + ", body: " + body);
-
-        logger.LogUserAction("Completed, returning: " + experimentDTO.toString());
+        logger.LogUserAction("Completed, returning: " + experimentDTO);
 
         // Results are stored in the experiment object
-        ExaremeResult exaremeResult = runExaremeExperiment(url, body, experimentDTO);
+        ExperimentResult experimentResult = runExperiment(experimentDTO, logger);
 
-        logger.LogUserAction("Experiment with uuid: " + experimentDTO.getUuid() + "gave response code: " + exaremeResult.getCode() + " and result: " + exaremeResult.getResults());
+        logger.LogUserAction("Experiment with uuid: " + experimentDTO.getUuid() + "gave response code: " + experimentResult.getCode() + " and result: " + experimentResult.getResults());
 
-        experimentDTO.setResult((exaremeResult.getCode() >= 400) ? null : exaremeResult.getResults());
-        experimentDTO.setStatus((exaremeResult.getCode() >= 400) ? ExperimentDAO.Status.error : ExperimentDAO.Status.success);
+        experimentDTO.setResult((experimentResult.getCode() >= 400) ? null : experimentResult.getResults());
+        experimentDTO.setStatus((experimentResult.getCode() >= 400) ? ExperimentDAO.Status.error : ExperimentDAO.Status.success);
 
         return experimentDTO;
     }
@@ -515,14 +507,51 @@ public class ExperimentService {
     }
 
     /**
+     * The runExperiment will run the experiment to exareme or MIPEngine.
+     *
+     * @param experimentDTO is the request with the experiment information
+     * @return the result of experiment as well as the http status that was retrieved
+     */
+    public ExperimentResult runExperiment(ExperimentDTO experimentDTO, Logger logger) {
+
+        // Algorithm type
+        String algorithmType = experimentDTO.getAlgorithm().getType();
+
+        // Run the 1st algorithm from the list
+        String algorithmName = experimentDTO.getAlgorithm().getName();
+
+        // Get the parameters
+        List<AlgorithmDTO.AlgorithmParamDTO> algorithmParameters
+                = experimentDTO.getAlgorithm().getParameters();
+
+        String body = gson.toJson(algorithmParameters);
+
+        logger.LogUserAction("Completed, returning: " + experimentDTO);
+
+
+        // Run with the appropriate engine
+        if (algorithmType.equals("mipengine")) {
+            String url =  mipengineAlgorithmsUrl + "/" + algorithmName;
+            logger.LogUserAction("url: " + url + ", body: " + body);
+            logger.LogUserAction("Algorithm runs on MIPEngine.");
+            return runMIPEngineExperiment(url, body);
+        } else {
+            String url = queryExaremeUrl + "/" + algorithmName;
+            logger.LogUserAction("url: " + url + ", body: " + body);
+            logger.LogUserAction("Algorithm runs on Exareme.");
+            return runExaremeExperiment(url, body);
+        }
+    }
+
+
+    /**
      * The runExaremeExperiment will run to exareme the experiment
      *
      * @param url           is the url that contain the results of the experiment
      * @param body          is the parameters of the algorithm
-     * @param experimentDTO is the experiment information to be executed in the exareme
      * @return the result of exareme as well as the http status that was retrieved
      */
-    public ExaremeResult runExaremeExperiment(String url, String body, ExperimentDTO experimentDTO) {
+    public ExperimentResult runExaremeExperiment(String url, String body) {
 
         StringBuilder results = new StringBuilder();
         int code;
@@ -536,7 +565,32 @@ public class ExperimentService {
         ExperimentDTO experimentDTOWithOnlyResult = JsonConverters.convertJsonStringToObject(String.valueOf(results), ExperimentDTO.class);
         List<Object> resultDTOS = experimentDTOWithOnlyResult.getResult();
 
-        return new ExaremeResult(code, resultDTOS);
+        return new ExperimentResult(code, resultDTOS);
+    }
+
+    /**
+     * The runExaremeExperiment will run to exareme the experiment
+     *
+     * @param url           is the url that contain the results of the experiment
+     * @param body          is the parameters of the algorithm
+     * @return the result of exareme as well as the http status that was retrieved
+     */
+    public ExperimentResult runMIPEngineExperiment(String url, String body) {
+
+        StringBuilder results = new StringBuilder();
+        int code;
+        try {
+            code = HTTPUtil.sendPost(url, body, results);
+        } catch (Exception e) {
+            throw new InternalServerError("Error occurred : " + e.getMessage());
+        }
+        System.out.println("----------------------------------->>>>>>>>>>>>>>>>>>>>>>");
+        System.out.println(results);
+        // Results are stored in the experiment object
+        ExperimentDTO experimentDTOWithOnlyResult = JsonConverters.convertJsonStringToObject(String.valueOf(results), ExperimentDTO.class);
+        List<Object> resultDTOS = experimentDTOWithOnlyResult.getResult();
+
+        return new ExperimentResult(code, resultDTOS);
     }
 
     /* --------------------------------------  EXAREME CALLS ---------------------------------------------------------*/
@@ -548,27 +602,15 @@ public class ExperimentService {
      * @param logger    contains username and the endpoint.
      * @return the experiment information that was retrieved from exareme
      */
-    public ExperimentDTO createExaremeExperiment(ExperimentDTO experimentDTO, Logger logger) {
+    public ExperimentDTO createExperiment(ExperimentDTO experimentDTO, Logger logger) {
 
         logger.LogUserAction("Running the algorithm...");
 
         ExperimentDAO experimentDAO = createExperimentInTheDatabase(experimentDTO, logger);
         logger.LogUserAction("Created experiment with uuid :" + experimentDAO.getUuid());
 
-        // Run the 1st algorithm from the list
-        String algorithmName = experimentDTO.getAlgorithm().getName();
 
-        // Get the parameters
-        List<AlgorithmDTO.AlgorithmParamDTO> algorithmParameters
-                = experimentDTO.getAlgorithm().getParameters();
-
-        String body = gson.toJson(algorithmParameters);
-        String url = queryExaremeUrl + "/" + algorithmName;
-        logger.LogUserAction("url: " + url + ", body: " + body);
-
-        logger.LogUserAction("Completed, returning: " + experimentDTO.toString());
-
-        logger.LogUserAction("Starting exareme execution thread");
+        logger.LogUserAction("Starting execution in thread");
         ExperimentDTO finalExperimentDTO = experimentDTO;
         new Thread(() -> {
 
@@ -576,13 +618,14 @@ public class ExperimentService {
             Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Thread named :" + Thread.currentThread().getName() + " with id :" + Thread.currentThread().getId() + " started!");
 
             try {
+
                 // Results are stored in the experiment object
-                ExaremeResult exaremeResult = runExaremeExperiment(url, body, finalExperimentDTO);
+                ExperimentResult experimentResult = runExperiment(finalExperimentDTO, logger);
 
-                Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Experiment with uuid: " + experimentDAO.getUuid() + "gave response code: " + exaremeResult.getCode() + " and result: " + exaremeResult.getResults());
+                Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Experiment with uuid: " + experimentDAO.getUuid() + "gave response code: " + experimentResult.getCode() + " and result: " + experimentResult.getResults());
 
-                experimentDAO.setResult((exaremeResult.getCode() >= 400) ? null : JsonConverters.convertObjectToJsonString(exaremeResult.getResults()));
-                experimentDAO.setStatus((exaremeResult.getCode() >= 400) ? ExperimentDAO.Status.error : ExperimentDAO.Status.success);
+                experimentDAO.setResult((experimentResult.getCode() >= 400) ? null : JsonConverters.convertObjectToJsonString(experimentResult.getResults()));
+                experimentDAO.setStatus((experimentResult.getCode() >= 400) ? ExperimentDAO.Status.error : ExperimentDAO.Status.success);
             } catch (Exception e) {
                 Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "There was an exception: " + e.getMessage());
 
@@ -988,11 +1031,11 @@ public class ExperimentService {
         return returnError;
     }
 
-    static class ExaremeResult {
+    static class ExperimentResult {
         private final int code;
         private final List<Object> results;
 
-        public ExaremeResult(int code, List<Object> results) {
+        public ExperimentResult(int code, List<Object> results) {
             this.code = code;
             this.results = results;
         }

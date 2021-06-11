@@ -23,8 +23,8 @@ DROP COLUMN model_slug;
 
 ALTER TABLE experiment RENAME algorithms TO algorithm;
 UPDATE experiment SET algorithm = (algorithm::json ->> 0);
-UPDATE experiment SET algorithmId = (algorithm::json ->> 'name');
 ALTER TABLE experiment ADD COLUMN algorithmId text;
+UPDATE experiment SET algorithmId = (algorithm::json ->> 'name');
 UPDATE experiment SET result = result::json #>>'{0,result}' WHERE (algorithm::json->>'type') <> 'workflow';
 
 ALTER TABLE experiment

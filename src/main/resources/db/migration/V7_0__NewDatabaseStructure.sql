@@ -1,3 +1,8 @@
+UPDATE experiment
+SET algorithms =
+        (
+            SELECT SUBSTR(algorithms, 2, LENGTH(algorithms) - 2)
+        );
 
 UPDATE experiment
 SET workflowstatus = 'error'
@@ -21,21 +26,27 @@ DROP COLUMN hasservererror,
 DROP COLUMN validations,
 DROP COLUMN model_slug;
 
-ALTER TABLE experiment RENAME algorithms TO algorithm;
-UPDATE experiment SET algorithm = (algorithm::json ->> 0);
-ALTER TABLE experiment ADD COLUMN algorithmId text;
-UPDATE experiment SET algorithmId = (algorithm::json ->> 'name');
-UPDATE experiment SET result = result::json #>>'{0,result}' WHERE (algorithm::json->>'type') <> 'workflow';
+ALTER TABLE experiment
+    RENAME algorithms TO algorithm;
+ALTER TABLE experiment
+ALTER COLUMN algorithm TYPE json USING algorithm::json;
+ALTER TABLE experiment
+    RENAME createdby_username TO created_by_username;
+ALTER TABLE experiment
+    RENAME workflowhistoryid TO workflow_history_id;
+ALTER TABLE experiment
+    RENAME resultsviewed TO viewed;
+ALTER TABLE experiment
+    RENAME workflowstatus TO status;
 
 ALTER TABLE experiment
-RENAME createdby_username TO created_by_username;
-ALTER TABLE experiment
-RENAME workflowhistoryid TO workflow_history_id;
-ALTER TABLE experiment
-RENAME resultsviewed TO viewed;
-ALTER TABLE experiment
-RENAME workflowstatus TO status;
+    ADD COLUMN algorithmId text;
 
+UPDATE experiment
+SET algorithmId = (algorithm ->> 'name');
+
+ALTER TABLE experiment
+ALTER COLUMN algorithm TYPE text;
 ALTER TABLE experiment
 ADD COLUMN updated timestamp without time zone;
 

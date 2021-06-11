@@ -1,0 +1,1 @@
+UPDATE experiment SET result = result::json #>>'{0,result}' WHERE (algorithm::json->>'type') <> 'workflow';

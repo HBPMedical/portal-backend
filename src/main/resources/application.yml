@@ -11,7 +11,7 @@ logging:
 
 ### AUTHENTICATION ###
 authentication:
-  enabled: false
+  enabled: true
 
 
 ### DATABASE CONFIGURATION ###

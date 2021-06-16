@@ -84,12 +84,10 @@ public class AlgorithmDTO {
                 inputData.setX(Arrays.asList(parameter.getValue().split(",")));
             if(parameter.getName().equals("y"))
                 inputData.setY(Arrays.asList(parameter.getValue().split(",")));
-            if(parameter.getName().equals("dataset"))
+            if(parameter.getName().equals("datasets"))
                 inputData.setDatasets(Arrays.asList(parameter.getValue().split(",")));
             if(parameter.getName().equals("pathology"))
                 inputData.setPathology(parameter.getValue());
-            if(parameter.getName().equals("filter"))
-                inputData.setFilters(null);
         });
         mipEngineBody.setInputdata(inputData);
         return mipEngineBody;

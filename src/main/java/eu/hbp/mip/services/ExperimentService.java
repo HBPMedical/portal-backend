@@ -509,13 +509,22 @@ public class ExperimentService {
 
     private List<Object> formattingMIPEngienResult(String result) {
         List<List<String>> resultJson = JsonConverters.convertJsonStringToObject(result, new ArrayList<ArrayList<String>>().getClass());
-        List<Object> finalObject = new ArrayList<>();
+        String schema_json = "{\"fields\":[{\"type\":\"string\",\"name\":\"node\"},{\"type\":\"number\",\"name\":\"row-id\"},{\"type\":\"number\",\"name\":\"alzheimerbroadcategory_bin\"}]}";
+        LinkedTreeMap<String,List<Object>> schema = JsonConverters.convertJsonStringToObject(schema_json, new LinkedTreeMap<String,ArrayList<Object>>().getClass());
+
+
+        LinkedTreeMap<String,Object> data_data = new LinkedTreeMap<>();
+        data_data.put("data", resultJson);
+        data_data.put("profile", "tabular-data-resource");
+        data_data.put("schema", schema);
+        data_data.put("name","Logistic Regression Stuff");
+
         LinkedTreeMap<String,Object> data = new LinkedTreeMap<>();
-        data.put("data", resultJson);
-        data.put("type", "application/json");
+        data.put("data", data_data);
+        data.put("type", "application/vnd.dataresource+json");
+        List<Object> finalObject = new ArrayList<>();
         finalObject.add(data);
-        List<Object> result_kappa = finalObject;
-        return result_kappa;
+        return finalObject;
     }
 
     /**
@@ -592,6 +601,7 @@ public class ExperimentService {
         } catch (Exception e) {
             throw new InternalServerError("Error occurred : " + e.getMessage());
         }
+        System.out.println(results);
         // Results are stored in the experiment object
         List<Object> resultDTOS = formattingMIPEngienResult(String.valueOf(results));
 

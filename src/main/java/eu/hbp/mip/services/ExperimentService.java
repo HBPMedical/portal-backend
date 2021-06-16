@@ -17,6 +17,7 @@ import eu.hbp.mip.models.DAOs.ExperimentDAO;
 import eu.hbp.mip.models.DAOs.UserDAO;
 import eu.hbp.mip.models.DTOs.AlgorithmDTO;
 import eu.hbp.mip.models.DTOs.ExperimentDTO;
+import eu.hbp.mip.models.DTOs.MIPEngineBody;
 import eu.hbp.mip.models.galaxy.GalaxyWorkflowResult;
 import eu.hbp.mip.models.galaxy.PostWorkflowToGalaxyDtoResponse;
 import eu.hbp.mip.repositories.ExperimentRepository;
@@ -506,6 +507,17 @@ public class ExperimentService {
         return JsonConverters.convertObjectToJsonString(finalJsonObject);
     }
 
+    private List<Object> formattingMIPEngienResult(String result) {
+        List<List<String>> resultJson = JsonConverters.convertJsonStringToObject(result, new ArrayList<ArrayList<String>>().getClass());
+        List<Object> finalObject = new ArrayList<>();
+        LinkedTreeMap<String,Object> data = new LinkedTreeMap<>();
+        data.put("data", resultJson);
+        data.put("type", "application/json");
+        finalObject.add(data);
+        List<Object> result_kappa = finalObject;
+        return result_kappa;
+    }
+
     /**
      * The runExperiment will run the experiment to exareme or MIPEngine.
      *
@@ -520,22 +532,18 @@ public class ExperimentService {
         // Run the 1st algorithm from the list
         String algorithmName = experimentDTO.getAlgorithm().getName();
 
-        // Get the parameters
-        List<AlgorithmDTO.AlgorithmParamDTO> algorithmParameters
-                = experimentDTO.getAlgorithm().getParameters();
-
-        String body = gson.toJson(algorithmParameters);
-
-        logger.LogUserAction("Completed, returning: " + experimentDTO);
-
-
         // Run with the appropriate engine
         if (algorithmType.equals("mipengine")) {
+            MIPEngineBody mipEngineBody = experimentDTO.getAlgorithm().convertToMIPEngineBody();
+            String body = gson.toJson(mipEngineBody);
             String url =  mipengineAlgorithmsUrl + "/" + algorithmName;
             logger.LogUserAction("url: " + url + ", body: " + body);
             logger.LogUserAction("Algorithm runs on MIPEngine.");
             return runMIPEngineExperiment(url, body);
         } else {
+            List<AlgorithmDTO.AlgorithmParamDTO> algorithmParameters
+                    = experimentDTO.getAlgorithm().getParameters();
+            String body = gson.toJson(algorithmParameters);
             String url = queryExaremeUrl + "/" + algorithmName;
             logger.LogUserAction("url: " + url + ", body: " + body);
             logger.LogUserAction("Algorithm runs on Exareme.");
@@ -584,11 +592,8 @@ public class ExperimentService {
         } catch (Exception e) {
             throw new InternalServerError("Error occurred : " + e.getMessage());
         }
-        System.out.println("----------------------------------->>>>>>>>>>>>>>>>>>>>>>");
-        System.out.println(results);
         // Results are stored in the experiment object
-        ExperimentDTO experimentDTOWithOnlyResult = JsonConverters.convertJsonStringToObject(String.valueOf(results), ExperimentDTO.class);
-        List<Object> resultDTOS = experimentDTOWithOnlyResult.getResult();
+        List<Object> resultDTOS = formattingMIPEngienResult(String.valueOf(results));
 
         return new ExperimentResult(code, resultDTOS);
     }

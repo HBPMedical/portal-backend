@@ -25,7 +25,7 @@ public class MIPEngineAlgorithmDTO {
     private String type;
 
     @SerializedName("parameters")
-    private Object parameters;
+    private InputDataParamDTO parameters;
 
     @SerializedName("crossvalidation")
     private String crossvalidation;
@@ -57,6 +57,7 @@ public class MIPEngineAlgorithmDTO {
 
         @SerializedName("desc")
         private String desc;
+
         public AlgorithmDTO.AlgorithmParamDTO convertToAlgorithmParamDTO(String name) throws Exception {
             AlgorithmDTO.AlgorithmParamDTO algorithmParamDTO = new AlgorithmDTO.AlgorithmParamDTO();
             algorithmParamDTO.setName(name);
@@ -67,10 +68,6 @@ public class MIPEngineAlgorithmDTO {
                 algorithmParamDTO.setValueType(this.types.get(0));
             }
             else{
-                if(stattypes == null){
-                    System.out.println("Dsafasfads------------------------->>>>>>>>>>>>>>>");
-                    System.out.println(name);
-                }
                 algorithmParamDTO.setType("column");
                 algorithmParamDTO.setColumnValuesSQLType(String.join(", ", this.types));
                 algorithmParamDTO.setColumnValuesIsCategorical(getColumnValuesIsCategorical(this.stattypes));

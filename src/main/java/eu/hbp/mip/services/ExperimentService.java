@@ -544,8 +544,8 @@ public class ExperimentService {
         // Run with the appropriate engine
         if (algorithmType.equals("mipengine")) {
             MIPEngineBody mipEngineBody = experimentDTO.getAlgorithm().convertToMIPEngineBody();
-            String body = gson.toJson(mipEngineBody);
-            String url =  mipengineAlgorithmsUrl + "/" + algorithmName;
+            String body = JsonConverters.convertObjectToJsonString(mipEngineBody);
+            String url =  mipengineAlgorithmsUrl + "/" + algorithmName.toLowerCase();
             logger.LogUserAction("url: " + url + ", body: " + body);
             logger.LogUserAction("Algorithm runs on MIPEngine.");
             return runMIPEngineExperiment(url, body);
@@ -601,7 +601,6 @@ public class ExperimentService {
         } catch (Exception e) {
             throw new InternalServerError("Error occurred : " + e.getMessage());
         }
-        System.out.println(results);
         // Results are stored in the experiment object
         List<Object> resultDTOS = formattingMIPEngienResult(String.valueOf(results));
 

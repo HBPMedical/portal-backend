@@ -22,7 +22,7 @@ public class MIPEngineBody {
         @SerializedName("datasets")
         private List<String> datasets;
         @SerializedName("filters")
-        private String filters;
+        private AlgorithmDTO.Filters filters;
         @SerializedName("x")
         private List<String> x;
         @SerializedName("y")

@@ -97,7 +97,7 @@ public class MIPEngineAlgorithmDTO {
     public AlgorithmDTO convertToAlgorithmDTO()
     {
         AlgorithmDTO algorithmDTO = new AlgorithmDTO();
-        algorithmDTO.setName(this.name);
+        algorithmDTO.setName(this.name.toUpperCase());
         algorithmDTO.setLabel(this.label);
         algorithmDTO.setDesc(this.desc);
         algorithmDTO.setType("mipengine");

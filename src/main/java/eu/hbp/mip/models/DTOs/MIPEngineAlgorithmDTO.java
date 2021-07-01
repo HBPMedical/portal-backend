@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -62,10 +63,16 @@ public class MIPEngineAlgorithmDTO {
             AlgorithmDTO.AlgorithmParamDTO algorithmParamDTO = new AlgorithmDTO.AlgorithmParamDTO();
             algorithmParamDTO.setName(name);
             algorithmParamDTO.setDesc(this.desc);
-            algorithmParamDTO.setLabel(this.label);
-            if(name.equals("datasets") || name.equals("filter") || name.equals("pathology")){
-                algorithmParamDTO.setType(name.equals("datasets")? "dataset":name);
+            if(name.equals("datasets") || name.equals("filters") || name.equals("pathology")){
                 algorithmParamDTO.setValueType(this.types.get(0));
+                if(name.equals("filters")){
+                    algorithmParamDTO.setName("filter");
+                    algorithmParamDTO.setType("filter");
+                }
+                if(name.equals("datasets")){
+                    algorithmParamDTO.setName("dataset");
+                    algorithmParamDTO.setType("dataset");
+                }
             }
             else{
                 algorithmParamDTO.setType("column");
@@ -75,6 +82,9 @@ public class MIPEngineAlgorithmDTO {
             algorithmParamDTO.setValue("");
             algorithmParamDTO.setValueNotBlank(this.notblank);
             algorithmParamDTO.setValueMultiple(this.multiple);
+            String[] hidden = {"x","y","dataset", "filter","pathology","centers","formula"};
+            algorithmParamDTO.setLabel(Arrays.asList(hidden).contains(algorithmParamDTO.getName()) ? algorithmParamDTO.getName():this.label);
+
             return algorithmParamDTO;
         }
         private String getColumnValuesIsCategorical(List<String> stattypes) throws Exception {

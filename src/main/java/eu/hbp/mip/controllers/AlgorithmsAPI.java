@@ -68,7 +68,7 @@ public class AlgorithmsAPI {
     public ResponseEntity<List<AlgorithmDTO>> getAlgorithms() {
         Logger logger = new Logger(activeUserService.getActiveUser().getUsername(), "(GET) /algorithms");
 
-//        logger.LogUserAction("Executing...");
+        logger.LogUserAction("Executing...");
         LinkedList<AlgorithmDTO> mipengineAlgorithms = getMIPEngineAlgorithms(logger);
         logger.LogUserAction("Loaded " + mipengineAlgorithms.size() + " mipengine algorithms");
         LinkedList<AlgorithmDTO> exaremeAlgorithms = getExaremeAlgorithms(logger);
@@ -78,7 +78,7 @@ public class AlgorithmsAPI {
 
         LinkedList<AlgorithmDTO> algorithms = new LinkedList<>();
         if (exaremeAlgorithms != null) {
-//            algorithms.addAll(exaremeAlgorithms);
+            algorithms.addAll(exaremeAlgorithms);
         } else {
             logger.LogUserAction("Getting exareme algorithms failed and returned null");
         }

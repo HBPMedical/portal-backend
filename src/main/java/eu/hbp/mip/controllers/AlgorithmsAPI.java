@@ -78,7 +78,11 @@ public class AlgorithmsAPI {
 
         LinkedList<AlgorithmDTO> algorithms = new LinkedList<>();
         if (exaremeAlgorithms != null) {
-            algorithms.addAll(exaremeAlgorithms);
+            //algorithms.addAll(exaremeAlgorithms);
+            exaremeAlgorithms.forEach(algorithmDTO -> {
+                if(algorithmDTO.getName().equals("LOGISTIC_REGRESSION"))
+                    algorithms.add(algorithmDTO);
+            });
         } else {
             logger.LogUserAction("Getting exareme algorithms failed and returned null");
         }

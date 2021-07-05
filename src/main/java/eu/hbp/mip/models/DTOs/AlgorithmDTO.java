@@ -98,7 +98,7 @@ public class AlgorithmDTO {
 
     @Getter
     @Setter
-    public static class Filters
+    public static class Filter
     {
         @SerializedName("condition")
         private String condition;
@@ -109,7 +109,7 @@ public class AlgorithmDTO {
         @SerializedName("valid")
         private boolean valid;
 
-        public Filters(String condition, List<Object> rules, boolean valid) {
+        public Filter(String condition, List<Object> rules, boolean valid) {
             this.condition = condition;
             this.rules = rules;
             this.valid = valid;
@@ -121,36 +121,42 @@ public class AlgorithmDTO {
     {
         MIPEngineBody mipEngineBody = new MIPEngineBody();
         MIPEngineBody.InputData inputData = new MIPEngineBody.InputData();
+        Hashtable<String, Object> mipEngineParameters = new Hashtable<>();
 
         List<Object> rules = new ArrayList<>();
         this.parameters.forEach(parameter -> {
+
             if(parameter.getName().equals("x")) {
+                System.out.println("x");
                 List<String> x = Arrays.asList(parameter.getValue().split(","));
                 x.forEach(column -> rules.add(new Rule(column, parameter.getColumnValuesSQLType(), "is_not_null", null)));
                 inputData.setX(x);
             }
-            if(parameter.getName().equals("y")) {
+            else if(parameter.getName().equals("y")) {
                 List<String> y = Arrays.asList(parameter.getValue().split(","));
                 y.forEach(column -> rules.add(new Rule(column, parameter.getColumnValuesSQLType(), "is_not_null", null)));
                 inputData.setY(y);
             }
-            if(parameter.getName().equals("dataset")){
+            else if(parameter.getName().equals("dataset")){
                 List<String> datasets = Arrays.asList(parameter.getValue().split(","));
                 rules.add(new Rule("dataset","string", "in", datasets));
                 inputData.setDatasets(datasets);
             }
-            String pathology;
-            if(parameter.getName().equals("pathology"))
+            else if(parameter.getName().equals("pathology"))
                 inputData.setPathology(parameter.getValue());
 
-            if(parameter.getName().equals("filter")){
+            else if(parameter.getName().equals("filter")){
                 if (parameter.getValue() != "")
-                    rules.add(JsonConverters.convertJsonStringToObject(parameter.getValue(), Filters.class));
+                    rules.add(JsonConverters.convertJsonStringToObject(parameter.getValue(), Filter.class));
+            }
+            else{
+                mipEngineParameters.put(parameter.getName(), Arrays.asList(parameter.getValue().split(",")));
             }
         });
-        Filters filters = new Filters("AND", rules, true);
-        inputData.setFilters(filters);
+        Filter filter = new Filter("AND", rules, true);
+        inputData.setFilters(filter);
         mipEngineBody.setInputdata(inputData);
+        mipEngineBody.setParameters(mipEngineParameters);
         return mipEngineBody;
     }
 }

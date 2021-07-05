@@ -1,6 +1,7 @@
 package eu.hbp.mip.models.DTOs;
 
 import com.google.gson.annotations.SerializedName;
+import eu.hbp.mip.utils.JsonConverters;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -26,13 +27,61 @@ public class MIPEngineAlgorithmDTO {
     private String type;
 
     @SerializedName("parameters")
-    private InputDataParamDTO parameters;
+    private Hashtable<String, ParameterDTO> parameters;
 
     @SerializedName("crossvalidation")
     private String crossvalidation;
 
     @SerializedName("inputdata")
     private Hashtable<String, InputDataParamDTO> inputdata;
+
+    @Getter
+    @Setter
+    public static class ParameterDTO {
+
+        @SerializedName("label")
+        private String label;
+
+        @SerializedName("notblank")
+        private String notblank;
+
+        @SerializedName("multiple")
+        private String multiple;
+
+        @SerializedName("types")
+        private String type;
+
+        @SerializedName("desc")
+        private String desc;
+
+        @SerializedName("min")
+        private String min;
+
+        @SerializedName("max")
+        private String max;
+
+        @SerializedName("default_value")
+        private String default_value;
+
+        @SerializedName("enums")
+        private List<String> enums;
+
+        public AlgorithmDTO.AlgorithmParamDTO convertToAlgorithmParamDTO(String name) throws Exception {
+            AlgorithmDTO.AlgorithmParamDTO algorithmParamDTO = new AlgorithmDTO.AlgorithmParamDTO();
+            algorithmParamDTO.setName(name);
+            algorithmParamDTO.setDesc(this.desc);
+            algorithmParamDTO.setValueType(this.type);
+            algorithmParamDTO.setType("other");
+            algorithmParamDTO.setDefaultValue(this.default_value);
+            algorithmParamDTO.setValueNotBlank(this.notblank);
+            algorithmParamDTO.setLabel(this.label);
+            algorithmParamDTO.setValueEnumerations(this.enums);
+            algorithmParamDTO.setValueMultiple(this.multiple);
+            algorithmParamDTO.setValueMin(this.min);
+            algorithmParamDTO.setValueMax(this.max);
+            return algorithmParamDTO;
+        }
+    }
 
     @Getter
     @Setter
@@ -63,16 +112,13 @@ public class MIPEngineAlgorithmDTO {
             AlgorithmDTO.AlgorithmParamDTO algorithmParamDTO = new AlgorithmDTO.AlgorithmParamDTO();
             algorithmParamDTO.setName(name);
             algorithmParamDTO.setDesc(this.desc);
-            if(name.equals("datasets") || name.equals("filters") || name.equals("pathology")){
-                algorithmParamDTO.setValueType(this.types.get(0));
-                if(name.equals("filters")){
-                    algorithmParamDTO.setName("filter");
-                    algorithmParamDTO.setType("filter");
-                }
+
+            if(name.equals("datasets") || name.equals("filter") || name.equals("pathology")){
                 if(name.equals("datasets")){
                     algorithmParamDTO.setName("dataset");
-                    algorithmParamDTO.setType("dataset");
                 }
+                algorithmParamDTO.setValueType(this.types.get(0));
+                algorithmParamDTO.setType(algorithmParamDTO.getName());
             }
             else{
                 algorithmParamDTO.setType("column");
@@ -84,7 +130,8 @@ public class MIPEngineAlgorithmDTO {
             algorithmParamDTO.setValueMultiple(this.multiple);
             String[] hidden = {"x","y","dataset", "filter","pathology","centers","formula"};
             algorithmParamDTO.setLabel(Arrays.asList(hidden).contains(algorithmParamDTO.getName()) ? algorithmParamDTO.getName():this.label);
-
+            System.out.println("-------------------------------------------------------->");
+            System.out.println(JsonConverters.convertObjectToJsonString(algorithmParamDTO));
             return algorithmParamDTO;
         }
         private String getColumnValuesIsCategorical(List<String> stattypes) throws Exception {
@@ -115,6 +162,14 @@ public class MIPEngineAlgorithmDTO {
         this.inputdata.forEach((name, inputDataParamDTO) -> {
             try {
                 AlgorithmDTO.AlgorithmParamDTO parameter = inputDataParamDTO.convertToAlgorithmParamDTO(name);
+                parameters.add(parameter);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        this.parameters.forEach((name, parameterDTO) -> {
+            try {
+                AlgorithmDTO.AlgorithmParamDTO parameter = parameterDTO.convertToAlgorithmParamDTO(name);
                 parameters.add(parameter);
             } catch (Exception e) {
                 e.printStackTrace();

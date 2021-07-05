@@ -27,6 +27,9 @@ import eu.hbp.mip.utils.Exceptions.*;
 import eu.hbp.mip.utils.HTTPUtil;
 import eu.hbp.mip.utils.JsonConverters;
 import eu.hbp.mip.utils.Logger;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
@@ -386,7 +389,7 @@ public class ExperimentService {
                         .append("\n"));
         logger.LogUserAction("Executing " + algorithmName + parametersLogMessage);
     }
-    
+
     /**
      * The getDatasetFromExperimentParameters will retrieve the dataset from the experiment parameters
      *
@@ -508,19 +511,9 @@ public class ExperimentService {
     }
 
     private List<Object> formattingMIPEngienResult(String result) {
-        List<List<String>> resultJson = JsonConverters.convertJsonStringToObject(result, new ArrayList<ArrayList<String>>().getClass());
-        String schema_json = "{\"fields\":[{\"type\":\"string\",\"name\":\"node\"},{\"type\":\"number\",\"name\":\"row-id\"},{\"type\":\"number\",\"name\":\"alzheimerbroadcategory_bin\"}]}";
-        LinkedTreeMap<String,List<Object>> schema = JsonConverters.convertJsonStringToObject(schema_json, new LinkedTreeMap<String,ArrayList<Object>>().getClass());
-
-
-        LinkedTreeMap<String,Object> data_data = new LinkedTreeMap<>();
-        data_data.put("data", resultJson);
-        data_data.put("profile", "tabular-data-resource");
-        data_data.put("schema", schema);
-        data_data.put("name","Logistic Regression Stuff");
-
+        MIPVisualization mipVisualization = JsonConverters.convertJsonStringToObject(result, MIPVisualization.class);
         LinkedTreeMap<String,Object> data = new LinkedTreeMap<>();
-        data.put("data", data_data);
+        data.put("data", mipVisualization.convertToVisualization());
         data.put("type", "application/vnd.dataresource+json");
         List<Object> finalObject = new ArrayList<>();
         finalObject.add(data);
@@ -601,6 +594,7 @@ public class ExperimentService {
         } catch (Exception e) {
             throw new InternalServerError("Error occurred : " + e.getMessage());
         }
+        System.out.println(results);
         // Results are stored in the experiment object
         List<Object> resultDTOS = formattingMIPEngienResult(String.valueOf(results));
 
@@ -1045,6 +1039,8 @@ public class ExperimentService {
         return returnError;
     }
 
+    @Getter
+    @Setter
     static class ExperimentResult {
         private final int code;
         private final List<Object> results;
@@ -1053,13 +1049,43 @@ public class ExperimentService {
             this.code = code;
             this.results = results;
         }
+    }
 
-        public int getCode() {
-            return code;
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    static class Visualization {
+        private final String title;
+        private final String profile;
+        private final List<Field> columns;
+        private final List<List<Object>> data;
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    static class MIPVisualization {
+        private final String title;
+        private final List<String> columns;
+        private final List<List<Object>> data;
+
+        public Visualization convertToVisualization() {
+            ArrayList<Field> fields = new ArrayList<>();
+            this.columns.forEach(header_name -> fields.add(new Field(header_name, "number")));
+            return new Visualization(this.title, "tabular-data-resource", fields, this.data);
         }
 
-        public List<Object> getResults() {
-            return results;
+    }
+
+    @Getter
+    @Setter
+    static class Field {
+        private final String name;
+        private final String type;
+
+        Field(String name, String type) {
+            this.name = name;
+            this.type = type;
         }
     }
 }

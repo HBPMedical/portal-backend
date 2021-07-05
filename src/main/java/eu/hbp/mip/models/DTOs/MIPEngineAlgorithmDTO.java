@@ -33,7 +33,7 @@ public class MIPEngineAlgorithmDTO {
     private String crossvalidation;
 
     @SerializedName("inputdata")
-    private Hashtable<String, InputDataParamDTO> inputdata;
+    private InputdataDTO inputdata;
 
     @Getter
     @Setter
@@ -66,26 +66,55 @@ public class MIPEngineAlgorithmDTO {
         @SerializedName("enums")
         private List<String> enums;
 
-        public AlgorithmDTO.AlgorithmParamDTO convertToAlgorithmParamDTO(String name) throws Exception {
-            AlgorithmDTO.AlgorithmParamDTO algorithmParamDTO = new AlgorithmDTO.AlgorithmParamDTO();
-            algorithmParamDTO.setName(name);
-            algorithmParamDTO.setDesc(this.desc);
-            algorithmParamDTO.setValueType(this.type);
-            algorithmParamDTO.setType("other");
-            algorithmParamDTO.setDefaultValue(this.default_value);
-            algorithmParamDTO.setValueNotBlank(this.notblank);
-            algorithmParamDTO.setLabel(this.label);
-            algorithmParamDTO.setValueEnumerations(this.enums);
-            algorithmParamDTO.setValueMultiple(this.multiple);
-            algorithmParamDTO.setValueMin(this.min);
-            algorithmParamDTO.setValueMax(this.max);
-            return algorithmParamDTO;
+        public ExaremeAlgorithmRequestDTO convertToexaremeAlgorithmRequestDTO(String name) throws Exception {
+            ExaremeAlgorithmRequestDTO exaremeAlgorithmRequestDTO = new ExaremeAlgorithmRequestDTO();
+            exaremeAlgorithmRequestDTO.setName(name);
+            exaremeAlgorithmRequestDTO.setDesc(this.desc);
+            exaremeAlgorithmRequestDTO.setValueType(this.type);
+            exaremeAlgorithmRequestDTO.setType("other");
+            exaremeAlgorithmRequestDTO.setDefaultValue(this.default_value);
+            exaremeAlgorithmRequestDTO.setValueNotBlank(this.notblank);
+            exaremeAlgorithmRequestDTO.setLabel(this.label);
+            exaremeAlgorithmRequestDTO.setValueEnumerations(this.enums);
+            exaremeAlgorithmRequestDTO.setValueMultiple(this.multiple);
+            exaremeAlgorithmRequestDTO.setValueMin(this.min);
+            exaremeAlgorithmRequestDTO.setValueMax(this.max);
+            return exaremeAlgorithmRequestDTO;
         }
     }
 
     @Getter
     @Setter
-    public static class InputDataParamDTO {
+    public static class InputdataDTO {
+        @SerializedName("x")
+        private InputDataDetailDTO x;
+
+        @SerializedName("y")
+        private InputDataDetailDTO y;
+
+        @SerializedName("pathology")
+        private InputDataDetailDTO pathology;
+
+        @SerializedName("datasets")
+        private InputDataDetailDTO datasets;
+
+        @SerializedName("filter")
+        private InputDataDetailDTO filter;
+
+        public List<ExaremeAlgorithmRequestDTO> convertToAlgorithmRequestDTOs() throws Exception {
+            List<ExaremeAlgorithmRequestDTO> exaremeAlgorithmRequestDTOS = new ArrayList<>();
+            exaremeAlgorithmRequestDTOS.add(this.x.convertToExaremeAlgorithmRequestDTO("x"));
+            exaremeAlgorithmRequestDTOS.add(this.y.convertToExaremeAlgorithmRequestDTO("y"));
+            exaremeAlgorithmRequestDTOS.add(this.x.convertToExaremeAlgorithmRequestDTO("pathology"));
+            exaremeAlgorithmRequestDTOS.add(this.datasets.convertToExaremeAlgorithmRequestDTO("dataset"));
+            exaremeAlgorithmRequestDTOS.add(this.filter.convertToExaremeAlgorithmRequestDTO("filter"));
+            return exaremeAlgorithmRequestDTOS;
+        }
+    }
+
+    @Getter
+    @Setter
+    public static class InputDataDetailDTO {
 
         @SerializedName("stattypes")
         private List<String> stattypes;
@@ -108,32 +137,27 @@ public class MIPEngineAlgorithmDTO {
         @SerializedName("desc")
         private String desc;
 
-        public AlgorithmDTO.AlgorithmParamDTO convertToAlgorithmParamDTO(String name) throws Exception {
-            AlgorithmDTO.AlgorithmParamDTO algorithmParamDTO = new AlgorithmDTO.AlgorithmParamDTO();
-            algorithmParamDTO.setName(name);
-            algorithmParamDTO.setDesc(this.desc);
-
-            if(name.equals("datasets") || name.equals("filter") || name.equals("pathology")){
-                if(name.equals("datasets")){
-                    algorithmParamDTO.setName("dataset");
-                }
-                algorithmParamDTO.setValueType(this.types.get(0));
-                algorithmParamDTO.setType(algorithmParamDTO.getName());
+        public ExaremeAlgorithmRequestDTO convertToExaremeAlgorithmRequestDTO(String name) throws Exception {
+            ExaremeAlgorithmRequestDTO exaremeAlgorithmRequestDTO = new ExaremeAlgorithmRequestDTO();
+            exaremeAlgorithmRequestDTO.setName(name);
+            exaremeAlgorithmRequestDTO.setDesc(this.desc);
+            exaremeAlgorithmRequestDTO.setValue("");
+            exaremeAlgorithmRequestDTO.setValueNotBlank(this.notblank);
+            exaremeAlgorithmRequestDTO.setValueMultiple(this.multiple);
+            String[] hidden = {"x","y","dataset", "filter","pathology","centers","formula"};
+            exaremeAlgorithmRequestDTO.setLabel(Arrays.asList(hidden).contains(exaremeAlgorithmRequestDTO.getName()) ? exaremeAlgorithmRequestDTO.getName():this.label);
+            if(name.equals("dataset") || name.equals("filter") || name.equals("pathology")){
+                exaremeAlgorithmRequestDTO.setValueType(this.types.get(0));
+                exaremeAlgorithmRequestDTO.setType(exaremeAlgorithmRequestDTO.getName());
             }
             else{
-                algorithmParamDTO.setType("column");
-                algorithmParamDTO.setColumnValuesSQLType(String.join(", ", this.types));
-                algorithmParamDTO.setColumnValuesIsCategorical(getColumnValuesIsCategorical(this.stattypes));
+                exaremeAlgorithmRequestDTO.setType("column");
+                exaremeAlgorithmRequestDTO.setColumnValuesSQLType(String.join(", ", this.types));
+                exaremeAlgorithmRequestDTO.setColumnValuesIsCategorical(getColumnValuesIsCategorical(this.stattypes));
             }
-            algorithmParamDTO.setValue("");
-            algorithmParamDTO.setValueNotBlank(this.notblank);
-            algorithmParamDTO.setValueMultiple(this.multiple);
-            String[] hidden = {"x","y","dataset", "filter","pathology","centers","formula"};
-            algorithmParamDTO.setLabel(Arrays.asList(hidden).contains(algorithmParamDTO.getName()) ? algorithmParamDTO.getName():this.label);
-            System.out.println("-------------------------------------------------------->");
-            System.out.println(JsonConverters.convertObjectToJsonString(algorithmParamDTO));
-            return algorithmParamDTO;
+            return exaremeAlgorithmRequestDTO;
         }
+
         private String getColumnValuesIsCategorical(List<String> stattypes) throws Exception {
 
             if (stattypes.contains("nominal") && stattypes.contains("numerical")){
@@ -151,31 +175,28 @@ public class MIPEngineAlgorithmDTO {
         }
     }
 
-    public AlgorithmDTO convertToAlgorithmDTO()
+    public ExaremeAlgorithmDTO convertToAlgorithmDTO()
     {
-        AlgorithmDTO algorithmDTO = new AlgorithmDTO();
-        algorithmDTO.setName(this.name.toUpperCase());
-        algorithmDTO.setLabel(this.label);
-        algorithmDTO.setDesc(this.desc);
-        algorithmDTO.setType("mipengine");
-        List<AlgorithmDTO.AlgorithmParamDTO> parameters = new ArrayList<>();
-        this.inputdata.forEach((name, inputDataParamDTO) -> {
-            try {
-                AlgorithmDTO.AlgorithmParamDTO parameter = inputDataParamDTO.convertToAlgorithmParamDTO(name);
-                parameters.add(parameter);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+        ExaremeAlgorithmDTO exaremeAlgorithmDTO = new ExaremeAlgorithmDTO();
+        exaremeAlgorithmDTO.setName(this.name.toUpperCase());
+        exaremeAlgorithmDTO.setLabel(this.label);
+        exaremeAlgorithmDTO.setDesc(this.desc);
+        exaremeAlgorithmDTO.setType("mipengine");
+        List<ExaremeAlgorithmRequestDTO> parameters = new ArrayList<>();
+        try {
+            parameters.addAll(this.inputdata.convertToAlgorithmRequestDTOs());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         this.parameters.forEach((name, parameterDTO) -> {
             try {
-                AlgorithmDTO.AlgorithmParamDTO parameter = parameterDTO.convertToAlgorithmParamDTO(name);
+                ExaremeAlgorithmRequestDTO parameter = parameterDTO.convertToexaremeAlgorithmRequestDTO(name);
                 parameters.add(parameter);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         });
-        algorithmDTO.setParameters(parameters);
-        return algorithmDTO;
+        exaremeAlgorithmDTO.setParameters(parameters);
+        return exaremeAlgorithmDTO;
     }
 }

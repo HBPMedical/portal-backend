@@ -1,6 +1,7 @@
 package eu.hbp.mip.models.DTOs;
 
 import com.google.gson.annotations.SerializedName;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,7 +10,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class MIPEngineBody {
+public class MIPEngineExperimentDTO {
     @SerializedName("inputdata")
     private InputData inputdata;
     @SerializedName("parameters")
@@ -23,10 +24,25 @@ public class MIPEngineBody {
         @SerializedName("datasets")
         private List<String> datasets;
         @SerializedName("filters")
-        private AlgorithmDTO.Filter filters;
+        private Filter filters;
         @SerializedName("x")
         private List<String> x;
         @SerializedName("y")
         private List<String> y;
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    public static class Filter
+    {
+        @SerializedName("condition")
+        private String condition;
+
+        @SerializedName("rules")
+        private List<Object> rules;
+
+        @SerializedName("valid")
+        private boolean valid;
     }
 }

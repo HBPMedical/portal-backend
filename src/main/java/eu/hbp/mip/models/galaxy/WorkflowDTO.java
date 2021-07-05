@@ -2,7 +2,8 @@ package eu.hbp.mip.models.galaxy;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
-import eu.hbp.mip.models.DTOs.AlgorithmDTO;
+import eu.hbp.mip.models.DTOs.ExaremeAlgorithmDTO;
+import eu.hbp.mip.models.DTOs.ExaremeAlgorithmRequestDTO;
 
 import java.util.*;
 
@@ -103,29 +104,29 @@ public class WorkflowDTO {
         }
     }
 
-    public AlgorithmDTO convertToAlgorithmDTO() {
+    public ExaremeAlgorithmDTO convertToAlgorithmDTO() {
 
-        AlgorithmDTO algorithmDTO = new AlgorithmDTO();
+        ExaremeAlgorithmDTO exaremeAlgorithmDTO = new ExaremeAlgorithmDTO();
 
         // Transfer workflow information
-        algorithmDTO.setName(id);
-        algorithmDTO.setDesc("");
-        algorithmDTO.setLabel(name);
-        algorithmDTO.setType("workflow");
+        exaremeAlgorithmDTO.setName(id);
+        exaremeAlgorithmDTO.setDesc("");
+        exaremeAlgorithmDTO.setLabel(name);
+        exaremeAlgorithmDTO.setType("workflow");
 
         // Transfer workflow parameters information
-        List<AlgorithmDTO.AlgorithmParamDTO> algorithmParams = new LinkedList<>();
+        List<ExaremeAlgorithmRequestDTO> algorithmParams = new LinkedList<>();
         Gson gson = new Gson();
         for (Map.Entry<String, WorkflowInputDTO> workflowInput : getInputs().entrySet()) {
 
             // Convert the annotation to algorithm Parameter
-            AlgorithmDTO.AlgorithmParamDTO algorithmParam;
+            ExaremeAlgorithmRequestDTO algorithmParam;
             if (steps.get(workflowInput.getKey()).getAnnotation() != null) {
                 algorithmParam = gson.fromJson(steps.get(workflowInput.getKey()).getAnnotation(),
-                        AlgorithmDTO.AlgorithmParamDTO.class);
+                        ExaremeAlgorithmRequestDTO.class);
             } else {
                 // If annotation is not provided, auto-fill some information
-                algorithmParam = new AlgorithmDTO.AlgorithmParamDTO();
+                algorithmParam = new ExaremeAlgorithmRequestDTO();
                 // When the constraints are not known, set the most relaxed constraints
                 algorithmParam.setDesc("");
                 algorithmParam.setValue("");
@@ -154,9 +155,9 @@ public class WorkflowDTO {
 
             algorithmParams.add(algorithmParam);
         }
-        algorithmDTO.setParameters(algorithmParams);
+        exaremeAlgorithmDTO.setParameters(algorithmParams);
 
-        return algorithmDTO;
+        return exaremeAlgorithmDTO;
     }
 
 }

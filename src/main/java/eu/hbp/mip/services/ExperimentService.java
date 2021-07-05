@@ -15,9 +15,7 @@ import eu.hbp.mip.controllers.galaxy.retrofit.RetroFitGalaxyClients;
 import eu.hbp.mip.controllers.galaxy.retrofit.RetrofitClientInstance;
 import eu.hbp.mip.models.DAOs.ExperimentDAO;
 import eu.hbp.mip.models.DAOs.UserDAO;
-import eu.hbp.mip.models.DTOs.AlgorithmDTO;
-import eu.hbp.mip.models.DTOs.ExperimentDTO;
-import eu.hbp.mip.models.DTOs.MIPEngineBody;
+import eu.hbp.mip.models.DTOs.*;
 import eu.hbp.mip.models.galaxy.GalaxyWorkflowResult;
 import eu.hbp.mip.models.galaxy.PostWorkflowToGalaxyDtoResponse;
 import eu.hbp.mip.repositories.ExperimentRepository;
@@ -27,9 +25,6 @@ import eu.hbp.mip.utils.Exceptions.*;
 import eu.hbp.mip.utils.HTTPUtil;
 import eu.hbp.mip.utils.JsonConverters;
 import eu.hbp.mip.utils.Logger;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
@@ -236,12 +231,12 @@ public class ExperimentService {
         logger.LogUserAction("Completed, returning: " + experimentDTO);
 
         // Results are stored in the experiment object
-        ExperimentResult experimentResult = runExperiment(experimentDTO, logger);
+        ExaremeAlgorithmResultDTO exaremeAlgorithmResultDTO = runExperiment(experimentDTO, logger);
 
-        logger.LogUserAction("Experiment with uuid: " + experimentDTO.getUuid() + "gave response code: " + experimentResult.getCode() + " and result: " + experimentResult.getResults());
+        logger.LogUserAction("Experiment with uuid: " + experimentDTO.getUuid() + "gave response code: " + exaremeAlgorithmResultDTO.getCode() + " and result: " + exaremeAlgorithmResultDTO.getResults());
 
-        experimentDTO.setResult((experimentResult.getCode() >= 400) ? null : experimentResult.getResults());
-        experimentDTO.setStatus((experimentResult.getCode() >= 400) ? ExperimentDAO.Status.error : ExperimentDAO.Status.success);
+        experimentDTO.setResult((exaremeAlgorithmResultDTO.getCode() >= 400) ? null : exaremeAlgorithmResultDTO.getResults());
+        experimentDTO.setStatus((exaremeAlgorithmResultDTO.getCode() >= 400) ? ExperimentDAO.Status.error : ExperimentDAO.Status.success);
 
         return experimentDTO;
     }
@@ -400,7 +395,7 @@ public class ExperimentService {
     private String getDatasetFromExperimentParameters(ExperimentDTO experimentDTO, Logger logger) {
 
         String experimentDatasets = null;
-        for (AlgorithmDTO.AlgorithmParamDTO parameter : experimentDTO.getAlgorithm().getParameters()) {
+        for (ExaremeAlgorithmRequestDTO parameter : experimentDTO.getAlgorithm().getParameters()) {
             if (parameter.getLabel().equals("dataset")) {
                 experimentDatasets = parameter.getValue();
                 break;
@@ -510,14 +505,14 @@ public class ExperimentService {
         return JsonConverters.convertObjectToJsonString(finalJsonObject);
     }
 
-    private List<Object> formattingMIPEngienResult(String result) {
-        MIPVisualization mipVisualization = JsonConverters.convertJsonStringToObject(result, MIPVisualization.class);
+    private ExaremeAlgorithmResultDTO convertMIPEngineResultToExaremeAlgorithmResult(int code, String result) {
+        MIPEngineAlgorithmResultDTO mipVisualization = JsonConverters.convertJsonStringToObject(result, MIPEngineAlgorithmResultDTO.class);
         LinkedTreeMap<String,Object> data = new LinkedTreeMap<>();
         data.put("data", mipVisualization.convertToVisualization());
         data.put("type", "application/vnd.dataresource+json");
         List<Object> finalObject = new ArrayList<>();
         finalObject.add(data);
-        return finalObject;
+        return new ExaremeAlgorithmResultDTO(code, finalObject);
     }
 
     /**
@@ -526,7 +521,7 @@ public class ExperimentService {
      * @param experimentDTO is the request with the experiment information
      * @return the result of experiment as well as the http status that was retrieved
      */
-    public ExperimentResult runExperiment(ExperimentDTO experimentDTO, Logger logger) {
+    public ExaremeAlgorithmResultDTO runExperiment(ExperimentDTO experimentDTO, Logger logger) {
 
         // Algorithm type
         String algorithmType = experimentDTO.getAlgorithm().getType();
@@ -536,14 +531,14 @@ public class ExperimentService {
 
         // Run with the appropriate engine
         if (algorithmType.equals("mipengine")) {
-            MIPEngineBody mipEngineBody = experimentDTO.getAlgorithm().convertToMIPEngineBody();
-            String body = JsonConverters.convertObjectToJsonString(mipEngineBody);
+            MIPEngineExperimentDTO mipEngineExperimentDTO = experimentDTO.getAlgorithm().convertToMIPEngineBody();
+            String body = JsonConverters.convertObjectToJsonString(mipEngineExperimentDTO);
             String url =  mipengineAlgorithmsUrl + "/" + algorithmName.toLowerCase();
             logger.LogUserAction("url: " + url + ", body: " + body);
             logger.LogUserAction("Algorithm runs on MIPEngine.");
             return runMIPEngineExperiment(url, body);
         } else {
-            List<AlgorithmDTO.AlgorithmParamDTO> algorithmParameters
+            List<ExaremeAlgorithmRequestDTO> algorithmParameters
                     = experimentDTO.getAlgorithm().getParameters();
             String body = gson.toJson(algorithmParameters);
             String url = queryExaremeUrl + "/" + algorithmName;
@@ -561,7 +556,7 @@ public class ExperimentService {
      * @param body          is the parameters of the algorithm
      * @return the result of exareme as well as the http status that was retrieved
      */
-    public ExperimentResult runExaremeExperiment(String url, String body) {
+    public ExaremeAlgorithmResultDTO runExaremeExperiment(String url, String body) {
 
         StringBuilder results = new StringBuilder();
         int code;
@@ -572,10 +567,12 @@ public class ExperimentService {
         }
 
         // Results are stored in the experiment object
-        ExperimentDTO experimentDTOWithOnlyResult = JsonConverters.convertJsonStringToObject(String.valueOf(results), ExperimentDTO.class);
-        List<Object> resultDTOS = experimentDTOWithOnlyResult.getResult();
+        ExaremeAlgorithmResultDTO exaremeResult = JsonConverters.convertJsonStringToObject(
+                String.valueOf(results), ExaremeAlgorithmResultDTO.class
+        );
+        exaremeResult.setCode(code);
 
-        return new ExperimentResult(code, resultDTOS);
+        return exaremeResult;
     }
 
     /**
@@ -585,7 +582,7 @@ public class ExperimentService {
      * @param body          is the parameters of the algorithm
      * @return the result of exareme as well as the http status that was retrieved
      */
-    public ExperimentResult runMIPEngineExperiment(String url, String body) {
+    public ExaremeAlgorithmResultDTO runMIPEngineExperiment(String url, String body) {
 
         StringBuilder results = new StringBuilder();
         int code;
@@ -596,9 +593,7 @@ public class ExperimentService {
         }
         System.out.println(results);
         // Results are stored in the experiment object
-        List<Object> resultDTOS = formattingMIPEngienResult(String.valueOf(results));
-
-        return new ExperimentResult(code, resultDTOS);
+        return convertMIPEngineResultToExaremeAlgorithmResult(code, String.valueOf(results));
     }
 
     /* --------------------------------------  EXAREME CALLS ---------------------------------------------------------*/
@@ -628,12 +623,12 @@ public class ExperimentService {
             try {
 
                 // Results are stored in the experiment object
-                ExperimentResult experimentResult = runExperiment(finalExperimentDTO, logger);
+                ExaremeAlgorithmResultDTO exaremeAlgorithmResultDTO = runExperiment(finalExperimentDTO, logger);
 
-                Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Experiment with uuid: " + experimentDAO.getUuid() + "gave response code: " + experimentResult.getCode() + " and result: " + experimentResult.getResults());
+                Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Experiment with uuid: " + experimentDAO.getUuid() + "gave response code: " + exaremeAlgorithmResultDTO.getCode() + " and result: " + exaremeAlgorithmResultDTO.getResults());
 
-                experimentDAO.setResult((experimentResult.getCode() >= 400) ? null : JsonConverters.convertObjectToJsonString(experimentResult.getResults()));
-                experimentDAO.setStatus((experimentResult.getCode() >= 400) ? ExperimentDAO.Status.error : ExperimentDAO.Status.success);
+                experimentDAO.setResult((exaremeAlgorithmResultDTO.getCode() >= 400) ? null : JsonConverters.convertObjectToJsonString(exaremeAlgorithmResultDTO.getResults()));
+                experimentDAO.setStatus((exaremeAlgorithmResultDTO.getCode() >= 400) ? ExperimentDAO.Status.error : ExperimentDAO.Status.success);
             } catch (Exception e) {
                 Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "There was an exception: " + e.getMessage());
 
@@ -667,13 +662,13 @@ public class ExperimentService {
         String workflowId = experimentDTO.getAlgorithm().getName();
 
         // Get the parameters
-        List<AlgorithmDTO.AlgorithmParamDTO> algorithmParameters
+        List<ExaremeAlgorithmRequestDTO> algorithmParameters
                 = experimentDTO.getAlgorithm().getParameters();
 
         // Convert the parameters to workflow parameters
         HashMap<String, String> algorithmParamsIncludingEmpty = new HashMap<>();
         if (algorithmParameters != null) {
-            for (AlgorithmDTO.AlgorithmParamDTO param : algorithmParameters) {
+            for (ExaremeAlgorithmRequestDTO param : algorithmParameters) {
                 algorithmParamsIncludingEmpty.put(param.getName(), param.getValue());
             }
         }
@@ -1037,55 +1032,5 @@ public class ExperimentService {
         Logger.LogExperimentAction(experimentName, experimentId, "Completed successfully!");
 
         return returnError;
-    }
-
-    @Getter
-    @Setter
-    static class ExperimentResult {
-        private final int code;
-        private final List<Object> results;
-
-        public ExperimentResult(int code, List<Object> results) {
-            this.code = code;
-            this.results = results;
-        }
-    }
-
-    @Getter
-    @Setter
-    @AllArgsConstructor
-    static class Visualization {
-        private final String title;
-        private final String profile;
-        private final List<Field> columns;
-        private final List<List<Object>> data;
-    }
-
-    @Getter
-    @Setter
-    @AllArgsConstructor
-    static class MIPVisualization {
-        private final String title;
-        private final List<String> columns;
-        private final List<List<Object>> data;
-
-        public Visualization convertToVisualization() {
-            ArrayList<Field> fields = new ArrayList<>();
-            this.columns.forEach(header_name -> fields.add(new Field(header_name, "number")));
-            return new Visualization(this.title, "tabular-data-resource", fields, this.data);
-        }
-
-    }
-
-    @Getter
-    @Setter
-    static class Field {
-        private final String name;
-        private final String type;
-
-        Field(String name, String type) {
-            this.name = name;
-            this.type = type;
-        }
     }
 }

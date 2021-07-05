@@ -8,7 +8,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import eu.hbp.mip.controllers.galaxy.retrofit.RetroFitGalaxyClients;
 import eu.hbp.mip.controllers.galaxy.retrofit.RetrofitClientInstance;
-import eu.hbp.mip.models.DTOs.AlgorithmDTO;
+import eu.hbp.mip.models.DTOs.ExaremeAlgorithmDTO;
 import eu.hbp.mip.models.DTOs.MIPEngineAlgorithmDTO;
 import eu.hbp.mip.models.galaxy.WorkflowDTO;
 import eu.hbp.mip.services.ActiveUserService;
@@ -65,24 +65,20 @@ public class AlgorithmsAPI {
 
     @ApiOperation(value = "List all algorithms", response = String.class)
     @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<List<AlgorithmDTO>> getAlgorithms() {
+    public ResponseEntity<List<ExaremeAlgorithmDTO>> getAlgorithms() {
         Logger logger = new Logger(activeUserService.getActiveUser().getUsername(), "(GET) /algorithms");
 
         logger.LogUserAction("Executing...");
-        LinkedList<AlgorithmDTO> mipengineAlgorithms = getMIPEngineAlgorithms(logger);
+        LinkedList<ExaremeAlgorithmDTO> mipengineAlgorithms = getMIPEngineAlgorithms(logger);
         logger.LogUserAction("Loaded " + mipengineAlgorithms.size() + " mipengine algorithms");
-        LinkedList<AlgorithmDTO> exaremeAlgorithms = getExaremeAlgorithms(logger);
+        LinkedList<ExaremeAlgorithmDTO> exaremeAlgorithms = getExaremeAlgorithms(logger);
         logger.LogUserAction("Loaded " + exaremeAlgorithms.size() + " exareme algorithms");
-        LinkedList<AlgorithmDTO> galaxyAlgorithms = getGalaxyWorkflows(logger);
+        LinkedList<ExaremeAlgorithmDTO> galaxyAlgorithms = getGalaxyWorkflows(logger);
         logger.LogUserAction("Loaded " + galaxyAlgorithms.size() + " galaxy algorithms");
 
-        LinkedList<AlgorithmDTO> algorithms = new LinkedList<>();
+        LinkedList<ExaremeAlgorithmDTO> algorithms = new LinkedList<>();
         if (exaremeAlgorithms != null) {
-            //algorithms.addAll(exaremeAlgorithms);
-            exaremeAlgorithms.forEach(algorithmDTO -> {
-                if(algorithmDTO.getName().equals("LOGISTIC_REGRESSION"))
-                    algorithms.add(algorithmDTO);
-            });
+            algorithms.addAll(exaremeAlgorithms);
         } else {
             logger.LogUserAction("Getting exareme algorithms failed and returned null");
         }
@@ -92,7 +88,7 @@ public class AlgorithmsAPI {
             logger.LogUserAction("Getting mipengine algorithms failed and returned null");
         }
         if (galaxyAlgorithms != null) {
-//            algorithms.addAll(galaxyAlgorithms);
+            algorithms.addAll(galaxyAlgorithms);
         } else {
             logger.LogUserAction("Getting galaxy workflows failed and returned null");
         }
@@ -105,8 +101,8 @@ public class AlgorithmsAPI {
         }
 
         // Remove any disabled algorithm
-        LinkedList<AlgorithmDTO> allowedAlgorithms = new LinkedList<>();
-        for (AlgorithmDTO algorithm : algorithms) {
+        LinkedList<ExaremeAlgorithmDTO> allowedAlgorithms = new LinkedList<>();
+        for (ExaremeAlgorithmDTO algorithm : algorithms) {
             if (!disabledAlgorithms.contains(algorithm.getName())) {
                 allowedAlgorithms.add(algorithm);
             }
@@ -120,15 +116,15 @@ public class AlgorithmsAPI {
      *
      * @return a list of AlgorithmDTOs or null if something fails
      */
-    public LinkedList<AlgorithmDTO> getExaremeAlgorithms(Logger logger) {
-        LinkedList<AlgorithmDTO> algorithms;
+    public LinkedList<ExaremeAlgorithmDTO> getExaremeAlgorithms(Logger logger) {
+        LinkedList<ExaremeAlgorithmDTO> algorithms;
         // Get exareme algorithms
         try {
             StringBuilder response = new StringBuilder();
             HTTPUtil.sendGet(exaremeAlgorithmsUrl, response);
             algorithms = gson.fromJson(
                     response.toString(),
-                    new TypeToken<LinkedList<AlgorithmDTO>>() {
+                    new TypeToken<LinkedList<ExaremeAlgorithmDTO>>() {
                     }.getType()
             );
         } catch (IOException e) {
@@ -145,7 +141,7 @@ public class AlgorithmsAPI {
      *
      * @return a list of AlgorithmDTOs or null if something fails
      */
-    public LinkedList<AlgorithmDTO> getMIPEngineAlgorithms(Logger logger) {
+    public LinkedList<ExaremeAlgorithmDTO> getMIPEngineAlgorithms(Logger logger) {
         LinkedList<MIPEngineAlgorithmDTO> mipEngineAlgorithms;
         // Get MIPEngine algorithms
         try {
@@ -163,8 +159,7 @@ public class AlgorithmsAPI {
             return null;
         }
 
-
-        LinkedList<AlgorithmDTO> algorithms = new LinkedList<>();
+        LinkedList<ExaremeAlgorithmDTO> algorithms = new LinkedList<>();
         mipEngineAlgorithms.forEach(mipEngineAlgorithm -> algorithms.add(mipEngineAlgorithm.convertToAlgorithmDTO()));
 
         logger.LogUserAction("Completed, returned " + algorithms.size() + " algorithms.");
@@ -176,7 +171,7 @@ public class AlgorithmsAPI {
      *
      * @return a list of AlgorithmDTOs or null if something fails
      */
-    public LinkedList<AlgorithmDTO> getGalaxyWorkflows(Logger logger) {
+    public LinkedList<ExaremeAlgorithmDTO> getGalaxyWorkflows(Logger logger) {
         List<Workflow> workflowList;
         try {
             // Get all the workflows with the galaxy client
@@ -215,7 +210,7 @@ public class AlgorithmsAPI {
         logger.LogUserAction("Workflows fetched: " + workflows.size());
 
         // Convert the workflows to algorithms
-        LinkedList<AlgorithmDTO> algorithms = new LinkedList<>();
+        LinkedList<ExaremeAlgorithmDTO> algorithms = new LinkedList<>();
         for (WorkflowDTO workflow : workflows) {
             logger.LogUserAction("Converting workflow: " + workflow);
 

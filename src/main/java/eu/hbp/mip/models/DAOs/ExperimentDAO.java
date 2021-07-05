@@ -3,7 +3,7 @@ package eu.hbp.mip.models.DAOs;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
-import eu.hbp.mip.models.DTOs.AlgorithmDTO;
+import eu.hbp.mip.models.DTOs.ExaremeAlgorithmDTO;
 import eu.hbp.mip.models.DTOs.ExperimentDTO;
 import eu.hbp.mip.utils.JsonConverters;
 import io.swagger.annotations.ApiModel;
@@ -98,7 +98,7 @@ public class ExperimentDAO {
     public ExperimentDTO convertToDTO(boolean includeResult)
     {
         ExperimentDTO experimentDTO = new ExperimentDTO();
-        experimentDTO.setAlgorithm(JsonConverters.convertJsonStringToObject(this.algorithm, AlgorithmDTO.class));
+        experimentDTO.setAlgorithm(JsonConverters.convertJsonStringToObject(this.algorithm, ExaremeAlgorithmDTO.class));
         experimentDTO.setCreated(this.created);
         experimentDTO.setUpdated(this.updated);
         experimentDTO.setFinished(this.finished);

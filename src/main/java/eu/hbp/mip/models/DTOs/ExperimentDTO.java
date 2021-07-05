@@ -22,10 +22,12 @@ public class ExperimentDTO {
     private Date finished;
     private Boolean shared;
     private Boolean viewed;
+    // Result is a list of objects because there is a limitation that java has in types.
+    // Exareme has result in the type of a List<HashMap<String, Object>>
+    // Galaxy has result in the type of a List<HashMap<String, List<Object>>>
+    //And there is no generic type that describes either an object or a list of objects
     private List<Object> result;
     private ExperimentDAO.Status status;
-    private AlgorithmDTO algorithm;
+    private ExaremeAlgorithmDTO algorithm;
 
-    public ExperimentDTO() {
-    }
 }

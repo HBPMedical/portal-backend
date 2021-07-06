@@ -10,7 +10,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class MIPEngineExperimentDTO {
+public class MIPEngineAlgorithmRequestDTO {
     @SerializedName("inputdata")
     private InputData inputdata;
     @SerializedName("parameters")

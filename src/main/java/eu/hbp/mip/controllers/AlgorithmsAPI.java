@@ -28,7 +28,6 @@ import retrofit2.Response;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 import static eu.hbp.mip.utils.InputStreamConverter.convertInputStreamToString;
@@ -69,25 +68,25 @@ public class AlgorithmsAPI {
         Logger logger = new Logger(activeUserService.getActiveUser().getUsername(), "(GET) /algorithms");
 
         logger.LogUserAction("Executing...");
-        LinkedList<ExaremeAlgorithmDTO> mipengineAlgorithms = getMIPEngineAlgorithms(logger);
+        ArrayList<ExaremeAlgorithmDTO> mipengineAlgorithms = getMIPEngineAlgorithms(logger);
         logger.LogUserAction("Loaded " + mipengineAlgorithms.size() + " mipengine algorithms");
-        LinkedList<ExaremeAlgorithmDTO> exaremeAlgorithms = getExaremeAlgorithms(logger);
+        ArrayList<ExaremeAlgorithmDTO> exaremeAlgorithms = getExaremeAlgorithms(logger);
         logger.LogUserAction("Loaded " + exaremeAlgorithms.size() + " exareme algorithms");
-        LinkedList<ExaremeAlgorithmDTO> galaxyAlgorithms = getGalaxyWorkflows(logger);
+        ArrayList<ExaremeAlgorithmDTO> galaxyAlgorithms = getGalaxyWorkflows(logger);
         logger.LogUserAction("Loaded " + galaxyAlgorithms.size() + " galaxy algorithms");
 
-        LinkedList<ExaremeAlgorithmDTO> algorithms = new LinkedList<>();
-        if (exaremeAlgorithms != null) {
+        ArrayList<ExaremeAlgorithmDTO> algorithms = new ArrayList<>();
+        if (!exaremeAlgorithms.isEmpty()) {
             algorithms.addAll(exaremeAlgorithms);
         } else {
             logger.LogUserAction("Getting exareme algorithms failed and returned null");
         }
-        if (mipengineAlgorithms != null) {
+        if (!mipengineAlgorithms.isEmpty()) {
             algorithms.addAll(mipengineAlgorithms);
         } else {
             logger.LogUserAction("Getting mipengine algorithms failed and returned null");
         }
-        if (galaxyAlgorithms != null) {
+        if (!galaxyAlgorithms.isEmpty()) {
             algorithms.addAll(galaxyAlgorithms);
         } else {
             logger.LogUserAction("Getting galaxy workflows failed and returned null");
@@ -101,7 +100,7 @@ public class AlgorithmsAPI {
         }
 
         // Remove any disabled algorithm
-        LinkedList<ExaremeAlgorithmDTO> allowedAlgorithms = new LinkedList<>();
+        ArrayList<ExaremeAlgorithmDTO> allowedAlgorithms = new ArrayList<>();
         for (ExaremeAlgorithmDTO algorithm : algorithms) {
             if (!disabledAlgorithms.contains(algorithm.getName())) {
                 allowedAlgorithms.add(algorithm);
@@ -116,15 +115,15 @@ public class AlgorithmsAPI {
      *
      * @return a list of AlgorithmDTOs or null if something fails
      */
-    public LinkedList<ExaremeAlgorithmDTO> getExaremeAlgorithms(Logger logger) {
-        LinkedList<ExaremeAlgorithmDTO> algorithms;
+    public ArrayList<ExaremeAlgorithmDTO> getExaremeAlgorithms(Logger logger) {
+        ArrayList<ExaremeAlgorithmDTO> algorithms;
         // Get exareme algorithms
         try {
             StringBuilder response = new StringBuilder();
             HTTPUtil.sendGet(exaremeAlgorithmsUrl, response);
             algorithms = gson.fromJson(
                     response.toString(),
-                    new TypeToken<LinkedList<ExaremeAlgorithmDTO>>() {
+                    new TypeToken<ArrayList<ExaremeAlgorithmDTO>>() {
                     }.getType()
             );
         } catch (IOException e) {
@@ -141,8 +140,8 @@ public class AlgorithmsAPI {
      *
      * @return a list of AlgorithmDTOs or null if something fails
      */
-    public LinkedList<ExaremeAlgorithmDTO> getMIPEngineAlgorithms(Logger logger) {
-        LinkedList<MIPEngineAlgorithmDTO> mipEngineAlgorithms;
+    public ArrayList<ExaremeAlgorithmDTO> getMIPEngineAlgorithms(Logger logger) {
+        ArrayList<MIPEngineAlgorithmDTO> mipEngineAlgorithms;
         // Get MIPEngine algorithms
         try {
             StringBuilder response = new StringBuilder();
@@ -151,7 +150,7 @@ public class AlgorithmsAPI {
 
             mipEngineAlgorithms = gson.fromJson(
                     response.toString(),
-                    new TypeToken<LinkedList<MIPEngineAlgorithmDTO>>() {
+                    new TypeToken<ArrayList<MIPEngineAlgorithmDTO>>() {
                     }.getType()
             );
         } catch (IOException e) {
@@ -159,7 +158,7 @@ public class AlgorithmsAPI {
             return null;
         }
 
-        LinkedList<ExaremeAlgorithmDTO> algorithms = new LinkedList<>();
+        ArrayList<ExaremeAlgorithmDTO> algorithms = new ArrayList<>();
         mipEngineAlgorithms.forEach(mipEngineAlgorithm -> algorithms.add(mipEngineAlgorithm.convertToAlgorithmDTO()));
 
         logger.LogUserAction("Completed, returned " + algorithms.size() + " algorithms.");
@@ -171,7 +170,7 @@ public class AlgorithmsAPI {
      *
      * @return a list of AlgorithmDTOs or null if something fails
      */
-    public LinkedList<ExaremeAlgorithmDTO> getGalaxyWorkflows(Logger logger) {
+    public ArrayList<ExaremeAlgorithmDTO> getGalaxyWorkflows(Logger logger) {
         List<Workflow> workflowList;
         try {
             // Get all the workflows with the galaxy client
@@ -185,7 +184,7 @@ public class AlgorithmsAPI {
         }
 
         // Get the workflow details with the custom client to receive them as a WorkflowDTO
-        List<WorkflowDTO> workflows = new LinkedList<>();
+        List<WorkflowDTO> workflows = new ArrayList<>();
         // Create the request client
         RetroFitGalaxyClients service = RetrofitClientInstance.getRetrofitInstance().create(RetroFitGalaxyClients.class);
         for (Workflow workflow : workflowList) {
@@ -210,7 +209,7 @@ public class AlgorithmsAPI {
         logger.LogUserAction("Workflows fetched: " + workflows.size());
 
         // Convert the workflows to algorithms
-        LinkedList<ExaremeAlgorithmDTO> algorithms = new LinkedList<>();
+        ArrayList<ExaremeAlgorithmDTO> algorithms = new ArrayList<>();
         for (WorkflowDTO workflow : workflows) {
             logger.LogUserAction("Converting workflow: " + workflow);
 

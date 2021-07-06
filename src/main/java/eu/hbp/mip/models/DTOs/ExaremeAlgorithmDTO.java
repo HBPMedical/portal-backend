@@ -25,13 +25,13 @@ public class ExaremeAlgorithmDTO {
     private String type;
 
     @SerializedName("parameters")
-    private List<ExaremeAlgorithmRequestDTO> parameters;
+    private List<ExaremeAlgorithmRequestParamDTO> parameters;
 
 
     @Getter
     @Setter
     @AllArgsConstructor
-    class Rule
+    static class Rule
     {
         @SerializedName("id")
         private String id;
@@ -45,45 +45,47 @@ public class ExaremeAlgorithmDTO {
         @SerializedName("value")
         private Object value;
     }
-    public MIPEngineExperimentDTO convertToMIPEngineBody()
+    public MIPEngineAlgorithmRequestDTO convertToMIPEngineBody()
     {
-        MIPEngineExperimentDTO mipEngineExperimentDTO = new MIPEngineExperimentDTO();
-        MIPEngineExperimentDTO.InputData inputData = new MIPEngineExperimentDTO.InputData();
-        Hashtable<String, Object> mipEngineParameters = new Hashtable<>();
+        MIPEngineAlgorithmRequestDTO mipEngineAlgorithmRequestDTO = new MIPEngineAlgorithmRequestDTO();
+        MIPEngineAlgorithmRequestDTO.InputData inputData = new MIPEngineAlgorithmRequestDTO.InputData();
+        HashMap<String, Object> mipEngineParameters = new HashMap<>();
 
         List<Object> rules = new ArrayList<>();
         this.parameters.forEach(parameter -> {
 
-            if(parameter.getName().equals("x")) {
-                List<String> x = Arrays.asList(parameter.getValue().split(","));
-                x.forEach(column -> rules.add(new Rule(column, parameter.getColumnValuesSQLType(), "is_not_null", null)));
-                inputData.setX(x);
-            }
-            else if(parameter.getName().equals("y")) {
-                List<String> y = Arrays.asList(parameter.getValue().split(","));
-                y.forEach(column -> rules.add(new Rule(column, parameter.getColumnValuesSQLType(), "is_not_null", null)));
-                inputData.setY(y);
-            }
-            else if(parameter.getName().equals("dataset")){
-                List<String> datasets = Arrays.asList(parameter.getValue().split(","));
-                rules.add(new Rule("dataset","string", "in", datasets));
-                inputData.setDatasets(datasets);
-            }
-            else if(parameter.getName().equals("pathology"))
-                inputData.setPathology(parameter.getValue());
-
-            else if(parameter.getName().equals("filter")){
-                if (parameter.getValue() != "")
-                    rules.add(JsonConverters.convertJsonStringToObject(parameter.getValue(), MIPEngineExperimentDTO.Filter.class));
-            }
-            else{
-                mipEngineParameters.put(parameter.getName(), Arrays.asList(parameter.getValue().split(",")));
+            switch (parameter.getName()) {
+                case "x":
+                    List<String> x = Arrays.asList(parameter.getValue().split(","));
+                    x.forEach(column -> rules.add(new Rule(column, parameter.getColumnValuesSQLType(), "is_not_null", null)));
+                    inputData.setX(x);
+                    break;
+                case "y":
+                    List<String> y = Arrays.asList(parameter.getValue().split(","));
+                    y.forEach(column -> rules.add(new Rule(column, parameter.getColumnValuesSQLType(), "is_not_null", null)));
+                    inputData.setY(y);
+                    break;
+                case "dataset":
+                    List<String> datasets = Arrays.asList(parameter.getValue().split(","));
+                    rules.add(new Rule("dataset", "string", "in", datasets));
+                    inputData.setDatasets(datasets);
+                    break;
+                case "pathology":
+                    inputData.setPathology(parameter.getValue());
+                    break;
+                case "filter":
+                    if (!parameter.getValue().equals(""))
+                        rules.add(JsonConverters.convertJsonStringToObject(parameter.getValue(), MIPEngineAlgorithmRequestDTO.Filter.class));
+                    break;
+                default:
+                    mipEngineParameters.put(parameter.getName(), Arrays.asList(parameter.getValue().split(",")));
+                    break;
             }
         });
-        MIPEngineExperimentDTO.Filter filter = new MIPEngineExperimentDTO.Filter("AND", rules, true);
+        MIPEngineAlgorithmRequestDTO.Filter filter = new MIPEngineAlgorithmRequestDTO.Filter("AND", rules, true);
         inputData.setFilters(filter);
-        mipEngineExperimentDTO.setInputdata(inputData);
-        mipEngineExperimentDTO.setParameters(mipEngineParameters);
-        return mipEngineExperimentDTO;
+        mipEngineAlgorithmRequestDTO.setInputdata(inputData);
+        mipEngineAlgorithmRequestDTO.setParameters(mipEngineParameters);
+        return mipEngineAlgorithmRequestDTO;
     }
 }

@@ -6,9 +6,10 @@ import lombok.Setter;
 
 import java.util.List;
 
+//The request of an exareme algorithm is a list of ExaremeAlgorithmRequestParamDTOs.
 @Getter
 @Setter
-public class ExaremeAlgorithmRequestDTO {
+public class ExaremeAlgorithmRequestParamDTO {
     @SerializedName("name")
     private String name;
 

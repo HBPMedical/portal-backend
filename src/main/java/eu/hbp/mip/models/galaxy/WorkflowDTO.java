@@ -3,7 +3,7 @@ package eu.hbp.mip.models.galaxy;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import eu.hbp.mip.models.DTOs.ExaremeAlgorithmDTO;
-import eu.hbp.mip.models.DTOs.ExaremeAlgorithmRequestDTO;
+import eu.hbp.mip.models.DTOs.ExaremeAlgorithmRequestParamDTO;
 
 import java.util.*;
 
@@ -115,18 +115,18 @@ public class WorkflowDTO {
         exaremeAlgorithmDTO.setType("workflow");
 
         // Transfer workflow parameters information
-        List<ExaremeAlgorithmRequestDTO> algorithmParams = new LinkedList<>();
+        List<ExaremeAlgorithmRequestParamDTO> algorithmParams = new LinkedList<>();
         Gson gson = new Gson();
         for (Map.Entry<String, WorkflowInputDTO> workflowInput : getInputs().entrySet()) {
 
             // Convert the annotation to algorithm Parameter
-            ExaremeAlgorithmRequestDTO algorithmParam;
+            ExaremeAlgorithmRequestParamDTO algorithmParam;
             if (steps.get(workflowInput.getKey()).getAnnotation() != null) {
                 algorithmParam = gson.fromJson(steps.get(workflowInput.getKey()).getAnnotation(),
-                        ExaremeAlgorithmRequestDTO.class);
+                        ExaremeAlgorithmRequestParamDTO.class);
             } else {
                 // If annotation is not provided, auto-fill some information
-                algorithmParam = new ExaremeAlgorithmRequestDTO();
+                algorithmParam = new ExaremeAlgorithmRequestParamDTO();
                 // When the constraints are not known, set the most relaxed constraints
                 algorithmParam.setDesc("");
                 algorithmParam.setValue("");

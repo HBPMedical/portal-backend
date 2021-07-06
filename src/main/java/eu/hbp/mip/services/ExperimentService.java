@@ -395,7 +395,7 @@ public class ExperimentService {
     private String getDatasetFromExperimentParameters(ExperimentDTO experimentDTO, Logger logger) {
 
         String experimentDatasets = null;
-        for (ExaremeAlgorithmRequestDTO parameter : experimentDTO.getAlgorithm().getParameters()) {
+        for (ExaremeAlgorithmRequestParamDTO parameter : experimentDTO.getAlgorithm().getParameters()) {
             if (parameter.getLabel().equals("dataset")) {
                 experimentDatasets = parameter.getValue();
                 break;
@@ -531,14 +531,14 @@ public class ExperimentService {
 
         // Run with the appropriate engine
         if (algorithmType.equals("mipengine")) {
-            MIPEngineExperimentDTO mipEngineExperimentDTO = experimentDTO.getAlgorithm().convertToMIPEngineBody();
-            String body = JsonConverters.convertObjectToJsonString(mipEngineExperimentDTO);
+            MIPEngineAlgorithmRequestDTO mipEngineAlgorithmRequestDTO = experimentDTO.getAlgorithm().convertToMIPEngineBody();
+            String body = JsonConverters.convertObjectToJsonString(mipEngineAlgorithmRequestDTO);
             String url =  mipengineAlgorithmsUrl + "/" + algorithmName.toLowerCase();
             logger.LogUserAction("url: " + url + ", body: " + body);
             logger.LogUserAction("Algorithm runs on MIPEngine.");
             return runMIPEngineExperiment(url, body);
         } else {
-            List<ExaremeAlgorithmRequestDTO> algorithmParameters
+            List<ExaremeAlgorithmRequestParamDTO> algorithmParameters
                     = experimentDTO.getAlgorithm().getParameters();
             String body = gson.toJson(algorithmParameters);
             String url = queryExaremeUrl + "/" + algorithmName;
@@ -636,7 +636,7 @@ public class ExperimentService {
             }
 
             finishExperiment(experimentDAO, logger);
-            Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Finished the experiment: " + experimentDAO.toString());
+            Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Finished the experiment: " + experimentDAO);
         }).start();
         experimentDTO = experimentDAO.convertToDTO(true);
         return experimentDTO;
@@ -662,13 +662,13 @@ public class ExperimentService {
         String workflowId = experimentDTO.getAlgorithm().getName();
 
         // Get the parameters
-        List<ExaremeAlgorithmRequestDTO> algorithmParameters
+        List<ExaremeAlgorithmRequestParamDTO> algorithmParameters
                 = experimentDTO.getAlgorithm().getParameters();
 
         // Convert the parameters to workflow parameters
         HashMap<String, String> algorithmParamsIncludingEmpty = new HashMap<>();
         if (algorithmParameters != null) {
-            for (ExaremeAlgorithmRequestDTO param : algorithmParameters) {
+            for (ExaremeAlgorithmRequestParamDTO param : algorithmParameters) {
                 algorithmParamsIncludingEmpty.put(param.getName(), param.getValue());
             }
         }

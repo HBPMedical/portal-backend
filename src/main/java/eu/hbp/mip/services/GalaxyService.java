@@ -20,6 +20,7 @@ import eu.hbp.mip.models.galaxy.GalaxyWorkflowResult;
 import eu.hbp.mip.models.galaxy.PostWorkflowToGalaxyDtoResponse;
 import eu.hbp.mip.repositories.ExperimentRepository;
 import eu.hbp.mip.utils.Exceptions.BadRequestException;
+import eu.hbp.mip.utils.Exceptions.InternalServerError;
 import eu.hbp.mip.utils.JsonConverters;
 import eu.hbp.mip.utils.Logger;
 import org.codehaus.jettison.json.JSONException;
@@ -364,6 +365,7 @@ public class GalaxyService {
                     sleep(2000);
                 } catch (InterruptedException e) {
                     Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Sleep was disrupted: " + e.getMessage());
+                    throw new InternalServerError(e.getMessage());
                 }
 
                 Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Fetching status for experiment Id: " + experimentDAO.getUuid());

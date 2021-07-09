@@ -1,13 +1,11 @@
 package eu.hbp.mip.models.DTOs;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.util.List;
 
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 public class ExaremeAlgorithmResultDTO {
     private int code;

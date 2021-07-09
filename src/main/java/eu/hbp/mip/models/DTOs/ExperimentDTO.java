@@ -2,15 +2,17 @@ package eu.hbp.mip.models.DTOs;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import eu.hbp.mip.models.DAOs.ExperimentDAO;
-import lombok.Getter;
-import lombok.Setter;
+import eu.hbp.mip.utils.JsonConverters;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ExperimentDTO {
 
@@ -30,4 +32,23 @@ public class ExperimentDTO {
     private ExperimentDAO.Status status;
     private ExaremeAlgorithmDTO algorithm;
 
+    public ExperimentDTO(){
+
+    }
+    public ExperimentDTO(boolean includeResult, ExperimentDAO experimentDAO)
+    {
+        this.algorithm = JsonConverters.convertJsonStringToObject(experimentDAO.getAlgorithm(), ExaremeAlgorithmDTO.class);
+        this.created = experimentDAO.getCreated();
+        this.updated = experimentDAO.getUpdated();
+        this.finished = experimentDAO.getFinished();
+        this.createdBy = experimentDAO.getCreatedBy().getUsername();
+        this.name = experimentDAO.getName();
+        if(includeResult){
+            this.result = JsonConverters.convertJsonStringToObject(String.valueOf(experimentDAO.getResult()),  new ArrayList<>().getClass());
+        }
+        this.status = experimentDAO.getStatus();
+        this.uuid = experimentDAO.getUuid();
+        this.shared = experimentDAO.isShared();
+        this.viewed = experimentDAO.isViewed();
+    }
 }

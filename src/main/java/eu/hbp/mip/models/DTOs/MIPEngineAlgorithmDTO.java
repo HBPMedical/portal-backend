@@ -1,17 +1,14 @@
 package eu.hbp.mip.models.DTOs;
 
 import com.google.gson.annotations.SerializedName;
-import eu.hbp.mip.utils.Exceptions.InternalServerError;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
 
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
 public class MIPEngineAlgorithmDTO {
 
     @SerializedName("name")
@@ -27,17 +24,17 @@ public class MIPEngineAlgorithmDTO {
     private String type;
 
     @SerializedName("parameters")
-    private Hashtable<String, ParameterDTO> parameters;
+    private Hashtable<String, MIPEngineAlgorithmParameterDTO> parameters;
 
     @SerializedName("crossvalidation")
     private String crossvalidation;
 
     @SerializedName("inputdata")
-    private InputdataDTO inputdata;
+    private MIPEngineAlgorithmInputdataDTO inputdata;
 
-    @Getter
-    @Setter
-    public static class ParameterDTO {
+    @Data
+    @AllArgsConstructor
+    public static class MIPEngineAlgorithmParameterDTO {
 
         @SerializedName("label")
         private String label;
@@ -65,56 +62,30 @@ public class MIPEngineAlgorithmDTO {
 
         @SerializedName("enums")
         private List<String> enums;
-
-        public ExaremeAlgorithmRequestParamDTO convertToexaremeAlgorithmRequestDTO(String name){
-            ExaremeAlgorithmRequestParamDTO exaremeAlgorithmRequestParamDTO = new ExaremeAlgorithmRequestParamDTO();
-            exaremeAlgorithmRequestParamDTO.setName(name);
-            exaremeAlgorithmRequestParamDTO.setDesc(this.desc);
-            exaremeAlgorithmRequestParamDTO.setValueType(this.type);
-            exaremeAlgorithmRequestParamDTO.setType("other");
-            exaremeAlgorithmRequestParamDTO.setDefaultValue(this.default_value);
-            exaremeAlgorithmRequestParamDTO.setValueNotBlank(this.notblank);
-            exaremeAlgorithmRequestParamDTO.setLabel(this.label);
-            exaremeAlgorithmRequestParamDTO.setValueEnumerations(this.enums);
-            exaremeAlgorithmRequestParamDTO.setValueMultiple(this.multiple);
-            exaremeAlgorithmRequestParamDTO.setValueMin(this.min);
-            exaremeAlgorithmRequestParamDTO.setValueMax(this.max);
-            return exaremeAlgorithmRequestParamDTO;
-        }
     }
 
-    @Getter
-    @Setter
-    public static class InputdataDTO {
+    @Data
+    @AllArgsConstructor
+    public static class MIPEngineAlgorithmInputdataDTO {
         @SerializedName("x")
-        private InputDataDetailDTO x;
+        private MIPEngineAlgorithmInputDataDetailDTO x;
 
         @SerializedName("y")
-        private InputDataDetailDTO y;
+        private MIPEngineAlgorithmInputDataDetailDTO y;
 
         @SerializedName("pathology")
-        private InputDataDetailDTO pathology;
+        private MIPEngineAlgorithmInputDataDetailDTO pathology;
 
         @SerializedName("datasets")
-        private InputDataDetailDTO datasets;
+        private MIPEngineAlgorithmInputDataDetailDTO datasets;
 
         @SerializedName("filter")
-        private InputDataDetailDTO filter;
-
-        public List<ExaremeAlgorithmRequestParamDTO> convertToAlgorithmRequestParamDTOs(){
-            List<ExaremeAlgorithmRequestParamDTO> exaremeAlgorithmRequestParamDTOS = new ArrayList<>();
-            exaremeAlgorithmRequestParamDTOS.add(this.x.convertToExaremeAlgorithmRequestDTO("x"));
-            exaremeAlgorithmRequestParamDTOS.add(this.y.convertToExaremeAlgorithmRequestDTO("y"));
-            exaremeAlgorithmRequestParamDTOS.add(this.pathology.convertToExaremeAlgorithmRequestDTO("pathology"));
-            exaremeAlgorithmRequestParamDTOS.add(this.datasets.convertToExaremeAlgorithmRequestDTO("dataset"));
-            exaremeAlgorithmRequestParamDTOS.add(this.filter.convertToExaremeAlgorithmRequestDTO("filter"));
-            return exaremeAlgorithmRequestParamDTOS;
-        }
+        private MIPEngineAlgorithmInputDataDetailDTO filter;
     }
 
-    @Getter
-    @Setter
-    public static class InputDataDetailDTO {
+    @Data
+    @AllArgsConstructor
+    public static class MIPEngineAlgorithmInputDataDetailDTO {
 
         @SerializedName("stattypes")
         private List<String> stattypes;
@@ -136,58 +107,5 @@ public class MIPEngineAlgorithmDTO {
 
         @SerializedName("desc")
         private String desc;
-
-        public ExaremeAlgorithmRequestParamDTO convertToExaremeAlgorithmRequestDTO(String name){
-            ExaremeAlgorithmRequestParamDTO exaremeAlgorithmRequestParamDTO = new ExaremeAlgorithmRequestParamDTO();
-            exaremeAlgorithmRequestParamDTO.setName(name);
-            exaremeAlgorithmRequestParamDTO.setDesc(this.desc);
-            exaremeAlgorithmRequestParamDTO.setValue("");
-            exaremeAlgorithmRequestParamDTO.setValueNotBlank(this.notblank);
-            exaremeAlgorithmRequestParamDTO.setValueMultiple(this.multiple);
-            String[] hidden = {"x","y","dataset", "filter","pathology","centers","formula"};
-            exaremeAlgorithmRequestParamDTO.setLabel(Arrays.asList(hidden).contains(exaremeAlgorithmRequestParamDTO.getName()) ? exaremeAlgorithmRequestParamDTO.getName():this.label);
-            if(name.equals("dataset") || name.equals("filter") || name.equals("pathology")){
-                exaremeAlgorithmRequestParamDTO.setValueType(this.types.get(0));
-                exaremeAlgorithmRequestParamDTO.setType(exaremeAlgorithmRequestParamDTO.getName());
-            }
-            else{
-                exaremeAlgorithmRequestParamDTO.setType("column");
-                exaremeAlgorithmRequestParamDTO.setColumnValuesSQLType(String.join(", ", this.types));
-                exaremeAlgorithmRequestParamDTO.setColumnValuesIsCategorical(getColumnValuesIsCategorical(this.stattypes));
-            }
-            return exaremeAlgorithmRequestParamDTO;
-        }
-
-        private String getColumnValuesIsCategorical(List<String> stattypes){
-
-            if (stattypes.contains("nominal") && stattypes.contains("numerical")){
-                return "";
-            }
-            else if (stattypes.contains("nominal")){
-                return "true";
-            }
-            else if (stattypes.contains("numerical")){
-                return "false";
-            }
-            else{
-                throw new InternalServerError("Invalid stattypes");
-            }
-        }
-    }
-
-    public ExaremeAlgorithmDTO convertToAlgorithmDTO()
-    {
-        ExaremeAlgorithmDTO exaremeAlgorithmDTO = new ExaremeAlgorithmDTO();
-        exaremeAlgorithmDTO.setName(this.name.toUpperCase());
-        exaremeAlgorithmDTO.setLabel(this.label);
-        exaremeAlgorithmDTO.setDesc(this.desc);
-        exaremeAlgorithmDTO.setType("mipengine");
-        List<ExaremeAlgorithmRequestParamDTO> parameters = new ArrayList<>(this.inputdata.convertToAlgorithmRequestParamDTOs());
-        this.parameters.forEach((name, parameterDTO) -> {
-            ExaremeAlgorithmRequestParamDTO parameter = parameterDTO.convertToexaremeAlgorithmRequestDTO(name);
-            parameters.add(parameter);
-        });
-        exaremeAlgorithmDTO.setParameters(parameters);
-        return exaremeAlgorithmDTO;
     }
 }

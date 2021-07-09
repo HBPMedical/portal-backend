@@ -76,17 +76,17 @@ public class AlgorithmsAPI {
         logger.LogUserAction("Loaded " + galaxyAlgorithms.size() + " galaxy algorithms");
 
         ArrayList<ExaremeAlgorithmDTO> algorithms = new ArrayList<>();
-        if (!exaremeAlgorithms.isEmpty()) {
+        if (exaremeAlgorithms != null) {
             algorithms.addAll(exaremeAlgorithms);
         } else {
             logger.LogUserAction("Getting exareme algorithms failed and returned null");
         }
-        if (!mipengineAlgorithms.isEmpty()) {
+        if (mipengineAlgorithms != null) {
             algorithms.addAll(mipengineAlgorithms);
         } else {
             logger.LogUserAction("Getting mipengine algorithms failed and returned null");
         }
-        if (!galaxyAlgorithms.isEmpty()) {
+        if (galaxyAlgorithms != null) {
             algorithms.addAll(galaxyAlgorithms);
         } else {
             logger.LogUserAction("Getting galaxy workflows failed and returned null");
@@ -159,7 +159,7 @@ public class AlgorithmsAPI {
         }
 
         ArrayList<ExaremeAlgorithmDTO> algorithms = new ArrayList<>();
-        mipEngineAlgorithms.forEach(mipEngineAlgorithm -> algorithms.add(mipEngineAlgorithm.convertToAlgorithmDTO()));
+        mipEngineAlgorithms.forEach(mipEngineAlgorithm -> algorithms.add(new ExaremeAlgorithmDTO(mipEngineAlgorithm)));
 
         logger.LogUserAction("Completed, returned " + algorithms.size() + " algorithms.");
         return algorithms;

@@ -1,15 +1,13 @@
 package eu.hbp.mip.models.DTOs;
 
 import com.google.gson.annotations.SerializedName;
-import eu.hbp.mip.utils.JsonConverters;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.util.*;
 
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
 public class ExaremeAlgorithmDTO {
 
     @SerializedName("name")
@@ -27,9 +25,30 @@ public class ExaremeAlgorithmDTO {
     @SerializedName("parameters")
     private List<ExaremeAlgorithmRequestParamDTO> parameters;
 
+    public ExaremeAlgorithmDTO()
+    {
 
-    @Getter
-    @Setter
+    }
+
+    public ExaremeAlgorithmDTO(MIPEngineAlgorithmDTO mipEngineAlgorithm )
+    {
+        this.name = mipEngineAlgorithm.getName().toUpperCase();
+        this.label = mipEngineAlgorithm.getLabel();
+        this.desc = mipEngineAlgorithm.getDesc();
+        this.type = "mipengine";
+        List<ExaremeAlgorithmRequestParamDTO> parameters = new ArrayList<>();
+        parameters.add(new ExaremeAlgorithmRequestParamDTO("x", mipEngineAlgorithm.getInputdata().getX()));
+        parameters.add(new ExaremeAlgorithmRequestParamDTO("y", mipEngineAlgorithm.getInputdata().getY()));
+        parameters.add(new ExaremeAlgorithmRequestParamDTO("pathology", mipEngineAlgorithm.getInputdata().getPathology()));
+        parameters.add(new ExaremeAlgorithmRequestParamDTO("dataset", mipEngineAlgorithm.getInputdata().getDatasets()));
+        parameters.add(new ExaremeAlgorithmRequestParamDTO("filter", mipEngineAlgorithm.getInputdata().getFilter()));
+        mipEngineAlgorithm.getParameters().forEach((name, parameterDTO) -> {
+            ExaremeAlgorithmRequestParamDTO parameter = new ExaremeAlgorithmRequestParamDTO(name, parameterDTO);
+            parameters.add(parameter);
+        });
+        this.setParameters(parameters);
+    }
+    @Data
     @AllArgsConstructor
     static class Rule
     {
@@ -44,48 +63,5 @@ public class ExaremeAlgorithmDTO {
 
         @SerializedName("value")
         private Object value;
-    }
-    public MIPEngineAlgorithmRequestDTO convertToMIPEngineBody()
-    {
-        MIPEngineAlgorithmRequestDTO mipEngineAlgorithmRequestDTO = new MIPEngineAlgorithmRequestDTO();
-        MIPEngineAlgorithmRequestDTO.InputData inputData = new MIPEngineAlgorithmRequestDTO.InputData();
-        HashMap<String, Object> mipEngineParameters = new HashMap<>();
-
-        List<Object> rules = new ArrayList<>();
-        this.parameters.forEach(parameter -> {
-
-            switch (parameter.getName()) {
-                case "x":
-                    List<String> x = Arrays.asList(parameter.getValue().split(","));
-                    x.forEach(column -> rules.add(new Rule(column, parameter.getColumnValuesSQLType(), "is_not_null", null)));
-                    inputData.setX(x);
-                    break;
-                case "y":
-                    List<String> y = Arrays.asList(parameter.getValue().split(","));
-                    y.forEach(column -> rules.add(new Rule(column, parameter.getColumnValuesSQLType(), "is_not_null", null)));
-                    inputData.setY(y);
-                    break;
-                case "dataset":
-                    List<String> datasets = Arrays.asList(parameter.getValue().split(","));
-                    rules.add(new Rule("dataset", "string", "in", datasets));
-                    inputData.setDatasets(datasets);
-                    break;
-                case "pathology":
-                    inputData.setPathology(parameter.getValue());
-                    break;
-                case "filter":
-                    if (!parameter.getValue().equals(""))
-                        rules.add(JsonConverters.convertJsonStringToObject(parameter.getValue(), MIPEngineAlgorithmRequestDTO.Filter.class));
-                    break;
-                default:
-                    mipEngineParameters.put(parameter.getName(), Arrays.asList(parameter.getValue().split(",")));
-                    break;
-            }
-        });
-        MIPEngineAlgorithmRequestDTO.Filter filter = new MIPEngineAlgorithmRequestDTO.Filter("AND", rules, true);
-        inputData.setFilters(filter);
-        mipEngineAlgorithmRequestDTO.setInputdata(inputData);
-        mipEngineAlgorithmRequestDTO.setParameters(mipEngineParameters);
-        return mipEngineAlgorithmRequestDTO;
     }
 }

@@ -209,9 +209,9 @@ public class ExperimentService {
         // Results are stored in the experiment object
         ExaremeAlgorithmResultDTO exaremeAlgorithmResultDTO = runExperiment(experimentDTO, logger);
 
-        logger.LogUserAction("Experiment with uuid: " + experimentDTO.getUuid() + "gave response code: " + exaremeAlgorithmResultDTO.getCode() + " and result: " + exaremeAlgorithmResultDTO.getResults());
+        logger.LogUserAction("Experiment with uuid: " + experimentDTO.getUuid() + "gave response code: " + exaremeAlgorithmResultDTO.getCode() + " and result: " + exaremeAlgorithmResultDTO.getResult());
 
-        experimentDTO.setResult((exaremeAlgorithmResultDTO.getCode() >= 400) ? null : exaremeAlgorithmResultDTO.getResults());
+        experimentDTO.setResult((exaremeAlgorithmResultDTO.getCode() >= 400) ? null : exaremeAlgorithmResultDTO.getResult());
         experimentDTO.setStatus((exaremeAlgorithmResultDTO.getCode() >= 400) ? ExperimentDAO.Status.error : ExperimentDAO.Status.success);
 
         return experimentDTO;
@@ -504,9 +504,9 @@ public class ExperimentService {
                 // Results are stored in the experiment object
                 ExaremeAlgorithmResultDTO exaremeAlgorithmResultDTO = runExperiment(finalExperimentDTO, logger);
 
-                Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Experiment with uuid: " + experimentDAO.getUuid() + "gave response code: " + exaremeAlgorithmResultDTO.getCode() + " and result: " + exaremeAlgorithmResultDTO.getResults());
+                Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Experiment with uuid: " + experimentDAO.getUuid() + "gave response code: " + exaremeAlgorithmResultDTO.getCode() + " and result: " + exaremeAlgorithmResultDTO.getResult());
 
-                experimentDAO.setResult((exaremeAlgorithmResultDTO.getCode() >= 400) ? null : JsonConverters.convertObjectToJsonString(exaremeAlgorithmResultDTO.getResults()));
+                experimentDAO.setResult((exaremeAlgorithmResultDTO.getCode() >= 400) ? null : JsonConverters.convertObjectToJsonString(exaremeAlgorithmResultDTO.getResult()));
                 experimentDAO.setStatus((exaremeAlgorithmResultDTO.getCode() >= 400) ? ExperimentDAO.Status.error : ExperimentDAO.Status.success);
             } catch (Exception e) {
                 Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "There was an exception: " + e.getMessage());

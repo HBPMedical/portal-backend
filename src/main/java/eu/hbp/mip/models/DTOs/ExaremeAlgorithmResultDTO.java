@@ -9,7 +9,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ExaremeAlgorithmResultDTO {
     private int code;
-    private List<Object> results;
+    private List<Object> result;
 }
 
 

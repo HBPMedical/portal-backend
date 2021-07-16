@@ -27,6 +27,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -69,27 +70,27 @@ public class AlgorithmsAPI {
 
         logger.LogUserAction("Executing...");
         ArrayList<ExaremeAlgorithmDTO> mipengineAlgorithms = getMIPEngineAlgorithms(logger);
-        logger.LogUserAction("Loaded " + mipengineAlgorithms.size() + " mipengine algorithms");
         ArrayList<ExaremeAlgorithmDTO> exaremeAlgorithms = getExaremeAlgorithms(logger);
-        logger.LogUserAction("Loaded " + exaremeAlgorithms.size() + " exareme algorithms");
         ArrayList<ExaremeAlgorithmDTO> galaxyAlgorithms = getGalaxyWorkflows(logger);
-        logger.LogUserAction("Loaded " + galaxyAlgorithms.size() + " galaxy algorithms");
 
         ArrayList<ExaremeAlgorithmDTO> algorithms = new ArrayList<>();
         if (exaremeAlgorithms != null) {
             algorithms.addAll(exaremeAlgorithms);
+            logger.LogUserAction("Loaded " + exaremeAlgorithms.size() + " exareme algorithms");
         } else {
-            logger.LogUserAction("Getting exareme algorithms failed and returned null");
+            logger.LogUserAction("Fetching exareme algorithms failed");
         }
         if (mipengineAlgorithms != null) {
             algorithms.addAll(mipengineAlgorithms);
+            logger.LogUserAction("Loaded " + mipengineAlgorithms.size() + " mipengine algorithms");
         } else {
-            logger.LogUserAction("Getting mipengine algorithms failed and returned null");
+            logger.LogUserAction("Fetching mipengine algorithms failed");
         }
         if (galaxyAlgorithms != null) {
             algorithms.addAll(galaxyAlgorithms);
+            logger.LogUserAction("Loaded " + galaxyAlgorithms.size() + " galaxy algorithms");
         } else {
-            logger.LogUserAction("Getting galaxy workflows failed and returned null");
+            logger.LogUserAction("Fetching galaxy workflows failed");
         }
 
         List<String> disabledAlgorithms = new ArrayList<>();
@@ -126,6 +127,9 @@ public class AlgorithmsAPI {
                     new TypeToken<ArrayList<ExaremeAlgorithmDTO>>() {
                     }.getType()
             );
+        } catch (ConnectException e) {
+            logger.LogUserAction("An exception occurred: " + e.getMessage());
+            return null;
         } catch (IOException e) {
             logger.LogUserAction("An exception occurred: " + e.getMessage());
             return null;
@@ -153,6 +157,9 @@ public class AlgorithmsAPI {
                     new TypeToken<ArrayList<MIPEngineAlgorithmDTO>>() {
                     }.getType()
             );
+        } catch (ConnectException e) {
+            logger.LogUserAction("An exception occurred: " + e.getMessage());
+            return null;
         } catch (IOException e) {
             logger.LogUserAction("An exception occurred: " + e.getMessage());
             return null;

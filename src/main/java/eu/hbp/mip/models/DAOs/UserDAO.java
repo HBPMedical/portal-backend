@@ -7,16 +7,16 @@ package eu.hbp.mip.models.DAOs;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.gson.annotations.Expose;
 import io.swagger.annotations.ApiModel;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
 @Table(name = "`user`")
 @ApiModel
 @JsonInclude(JsonInclude.Include.NON_NULL)

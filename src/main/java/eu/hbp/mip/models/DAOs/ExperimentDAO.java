@@ -3,12 +3,9 @@ package eu.hbp.mip.models.DAOs;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
-import eu.hbp.mip.models.DTOs.AlgorithmDTO;
-import eu.hbp.mip.models.DTOs.ExperimentDTO;
-import eu.hbp.mip.utils.JsonConverters;
 import io.swagger.annotations.ApiModel;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
 import javax.persistence.*;
 import java.util.*;
@@ -17,8 +14,8 @@ import java.util.*;
  * Created by habfast on 21/04/16.
  */
 @Entity
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
 @Table(name = "`experiment`")
 @ApiModel
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -95,22 +92,4 @@ public class ExperimentDAO {
          */
     }
 
-    public ExperimentDTO convertToDTO(boolean includeResult)
-    {
-        ExperimentDTO experimentDTO = new ExperimentDTO();
-        experimentDTO.setAlgorithm(JsonConverters.convertJsonStringToObject(this.algorithm, AlgorithmDTO.class));
-        experimentDTO.setCreated(this.created);
-        experimentDTO.setUpdated(this.updated);
-        experimentDTO.setFinished(this.finished);
-        experimentDTO.setCreatedBy(this.createdBy.getUsername());
-        experimentDTO.setName(this.name);
-        if(includeResult){
-            experimentDTO.setResult(JsonConverters.convertJsonStringToObject(String.valueOf(this.result),  new ArrayList<>().getClass()));
-        }
-        experimentDTO.setStatus(this.status);
-        experimentDTO.setShared(this.shared);
-        experimentDTO.setUuid(this.uuid);
-        experimentDTO.setViewed(this.viewed);
-        return experimentDTO;
-    }
 }

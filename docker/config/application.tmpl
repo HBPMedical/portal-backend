@@ -34,6 +34,9 @@ spring:
 
 ### EXTERNAL SERVICES ###
 services:
+  mipengine:
+    algorithmsUrl: {{ .Env.MIPENGINE_URL}}/algorithms
+
   exareme:
     queryExaremeUrl: {{ default .Env.EXAREME_URL "http://localhost:9090" }}/mining/query
     algorithmsUrl: {{ default .Env.EXAREME_URL "http://localhost:9090" }}/mining/algorithms.json

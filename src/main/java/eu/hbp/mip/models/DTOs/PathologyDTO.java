@@ -1,13 +1,13 @@
 package eu.hbp.mip.models.DTOs;
 
 import com.google.gson.annotations.SerializedName;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
 import java.util.List;
 
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
 public class PathologyDTO {
 
     @SerializedName("code")
@@ -22,8 +22,11 @@ public class PathologyDTO {
     @SerializedName("datasets")
     private List<PathologyDatasetDTO> datasets;
 
-    @Getter
-    @Setter
+    public PathologyDTO(){
+
+    }
+    @Data
+    @AllArgsConstructor
     public static class PathologyDatasetDTO {
         @SerializedName("code")
         private String code;

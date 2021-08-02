@@ -55,6 +55,7 @@ keycloak:
   auth-server-url: {{ .Env.KEYCLOAK_AUTH_URL }}
   realm: {{ .Env.KEYCLOAK_REALM }}
   resource: {{ .Env.KEYCLOAK_CLIENT_ID }}
+  use-resource-role-mappings: true
   enable-basic-auth: true
   credentials:
     secret: {{ .Env.KEYCLOAK_CLIENT_SECRET }}

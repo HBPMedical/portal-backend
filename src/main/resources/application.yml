@@ -53,6 +53,7 @@ keycloak:
   auth-server-url: "https://iam.humanbrainproject.eu/auth"
   realm: "MIP"
   resource: "mipfedqa"
+  use-resource-role-mappings: true
   enable-basic-auth: true
   credentials:
     secret: "dae83a6b-c769-4186-8383-f0984c6edf05"
@@ -72,12 +73,3 @@ server:
     contextPath: "/services"
   port: 8080
   forward-headers-strategy: native
-
-
-### ENDPOINTS ###
-endpoints:
-  enabled: true
-  health:
-    enabled: true
-    endpoint: "/health"
-    sensitive: false

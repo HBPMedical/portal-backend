@@ -14,6 +14,7 @@ RUN cp /usr/share/maven/ref/settings-docker.xml /root/.m2/settings.xml \
 
 FROM hbpmip/java-base:11.0.1-1
 
+RUN apt-get update && apt-get install -y --no-install-recommends curl jq
 RUN rm -rf /var/lib/apt/lists/* /tmp/*
 
 COPY docker/config/application.tmpl /opt/portal/config/application.tmpl
@@ -42,10 +43,9 @@ ENV APP_NAME="Portal backend" \
 WORKDIR /home/portal
 ENTRYPOINT ["/run.sh"]
 
-# 8080: Web service API, health checks on http://host:8080$CONTEXT_PATH/health
 EXPOSE 8080
 
-HEALTHCHECK --start-period=60s CMD curl -v --silent http://localhost:8080$CONTEXT_PATH/health 2>&1 | grep UP
+HEALTHCHECK --start-period=60s CMD curl -v --silent http://localhost:8080/services/actuator/health 2>&1 | grep UP
 
 LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.name="hbpmip/portal-backend" \

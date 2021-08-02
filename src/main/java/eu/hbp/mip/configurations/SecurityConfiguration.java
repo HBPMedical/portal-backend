@@ -53,7 +53,7 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
         if (authenticationEnabled) {
             http.authorizeRequests()
                     .antMatchers(
-                            "/sso/login",
+                            "/sso/login", "/actuator/**", 
                             "/v2/api-docs", "/swagger-ui/**", "/swagger-resources/**"  // Swagger URLs
                     ).permitAll()
                     .antMatchers("/galaxy*", "/galaxy/*").hasRole("WORKFLOW_ADMIN")

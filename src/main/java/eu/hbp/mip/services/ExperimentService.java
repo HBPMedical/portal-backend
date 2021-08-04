@@ -385,14 +385,14 @@ public class ExperimentService {
         return experimentDatasets;
     }
 
-    private ExaremeAlgorithmResultDTO convertMIPEngineResultToExaremeAlgorithmResult(int code, String result) {
+    private List<Object> convertMIPEngineResultToExaremeAlgorithmResult(String result) {
         MIPEngineAlgorithmResultDTO mipVisualization = JsonConverters.convertJsonStringToObject(result, MIPEngineAlgorithmResultDTO.class);
         LinkedTreeMap<String,Object> data = new LinkedTreeMap<>();
         data.put("data", new TabularVisualizationDTO(mipVisualization));
         data.put("type", "application/vnd.dataresource+json");
         List<Object> finalObject = new ArrayList<>();
         finalObject.add(data);
-        return new ExaremeAlgorithmResultDTO(code, finalObject);
+        return finalObject;
     }
 
     /**
@@ -471,9 +471,35 @@ public class ExperimentService {
         } catch (Exception e) {
             throw new InternalServerError("Error occurred : " + e.getMessage());
         }
+
+        System.out.println("\n");
         System.out.println(results);
-        // Results are stored in the experiment object
-        return convertMIPEngineResultToExaremeAlgorithmResult(code, String.valueOf(results));
+        System.out.println("\n");
+        System.out.println("---------------->>>>" + code);
+        List<Object> results_in_exareme_format = new ArrayList<>();
+        Map<String, Object> error = new HashMap<>();
+        switch(code)
+        {
+            case 200:
+                results_in_exareme_format = convertMIPEngineResultToExaremeAlgorithmResult(String.valueOf(results));
+            case 400:
+                error.put("data", String.valueOf(results));
+                error.put("type", "text/plain+error");
+                results_in_exareme_format.clear();
+                results_in_exareme_format.add(error);
+            case 460:
+                error.put("data", String.valueOf(results));
+                error.put("type", "text/plain+user_error");
+                results_in_exareme_format.clear();
+                results_in_exareme_format.add(error);
+            case 500:
+                results_in_exareme_format.clear();
+                results_in_exareme_format.add(
+                        "Something went wrong. \n" +
+                        "Please inform the system administrator or try again later.");
+                return new ExaremeAlgorithmResultDTO(500, results_in_exareme_format);
+        }
+        return new ExaremeAlgorithmResultDTO(200, results_in_exareme_format);
     }
 
     /* --------------------------------------  EXAREME CALLS ---------------------------------------------------------*/

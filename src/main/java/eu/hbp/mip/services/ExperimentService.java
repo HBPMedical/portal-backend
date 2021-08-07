@@ -477,28 +477,23 @@ public class ExperimentService {
         System.out.println("\n");
         System.out.println("---------------->>>>" + code);
         List<Object> results_in_exareme_format = new ArrayList<>();
-        Map<String, Object> error = new HashMap<>();
-        switch(code)
-        {
-            case 200:
-                results_in_exareme_format = convertMIPEngineResultToExaremeAlgorithmResult(String.valueOf(results));
-            case 400:
-                error.put("data", String.valueOf(results));
-                error.put("type", "text/plain+error");
-                results_in_exareme_format.clear();
-                results_in_exareme_format.add(error);
-            case 460:
-                error.put("data", String.valueOf(results));
-                error.put("type", "text/plain+user_error");
-                results_in_exareme_format.clear();
-                results_in_exareme_format.add(error);
-            case 500:
-                results_in_exareme_format.clear();
-                results_in_exareme_format.add(
-                        "Something went wrong. \n" +
-                        "Please inform the system administrator or try again later.");
-                return new ExaremeAlgorithmResultDTO(500, results_in_exareme_format);
+        if (code == 200) {
+            results_in_exareme_format = convertMIPEngineResultToExaremeAlgorithmResult(String.valueOf(results));
+            return new ExaremeAlgorithmResultDTO(200, results_in_exareme_format);
         }
+
+        if (code == 500) {
+            results_in_exareme_format.add(
+                    "Something went wrong. \n" +
+                            "Please inform the system administrator or try again later.");
+            return new ExaremeAlgorithmResultDTO(500, results_in_exareme_format);
+        }
+
+        String error_type = (code == 400) ? "text/plain+error" : "text/plain+user_error";
+        Map<String, Object> error = new HashMap<>();
+        error.put("data", String.valueOf(results));
+        error.put("type", error_type);
+        results_in_exareme_format.add(error);
         return new ExaremeAlgorithmResultDTO(200, results_in_exareme_format);
     }
 

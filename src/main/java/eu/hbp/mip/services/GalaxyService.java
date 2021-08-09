@@ -56,12 +56,12 @@ public class GalaxyService {
     private static final Gson gson = new Gson();
 
     /**
-     * The runWorkflow will POST the algorithm to the galaxy client
+     * Creates an experiment and runs it on Galaxy
      *
      * @param experimentDTO is the request with the experiment information
      * @return the response to be returned
      */
-    public ExperimentDTO runGalaxyWorkflow(ExperimentDTO experimentDTO, Logger logger) {
+    public ExperimentDTO createGalaxyExperiment(ExperimentDTO experimentDTO, Logger logger) {
         logger.LogUserAction("Running a workflow...");
 
         ExperimentDAO experimentDAO = experimentRepository.createExperimentInTheDatabase(experimentDTO, activeUserService.getActiveUser(), logger);
@@ -161,8 +161,8 @@ public class GalaxyService {
         String experimentName = experimentDAO.getName();
         UUID experimentId = experimentDAO.getUuid();
 
-        // ATTENTION: This function is used from a Thread. Only LogExperimentAction should be used, not LogUserAction!
-        Logger.LogExperimentAction(experimentName, experimentId, " History Id : " + historyId);
+        // ATTENTION: This function is used from a Thread. Only LogBackgroundAction should be used, not LogUserAction!
+        Logger.LogBackgroundAction(experimentName, experimentId, " History Id : " + historyId);
 
         // Create the request client
         RetroFitGalaxyClients service = RetrofitClientInstance.getRetrofitInstance().create(RetroFitGalaxyClients.class);
@@ -172,15 +172,15 @@ public class GalaxyService {
         try {
             Response<Object> response = call.execute();
             if (response.code() >= 400) {
-                Logger.LogExperimentAction(experimentName, experimentId, " Response code: "
+                Logger.LogBackgroundAction(experimentName, experimentId, " Response code: "
                         + response.code() + "" + " with body: " + (response.errorBody() != null ? response.errorBody().string() : " "));
                 return "internalError";
             }
             result = new Gson().toJson(response.body());
-            Logger.LogExperimentAction(experimentName, experimentId, " ResultDTO: " + result);
+            Logger.LogBackgroundAction(experimentName, experimentId, " ResultDTO: " + result);
 
         } catch (IOException e) {
-            Logger.LogExperimentAction(experimentName, experimentId, " An exception happened: " + e.getMessage());
+            Logger.LogBackgroundAction(experimentName, experimentId, " An exception happened: " + e.getMessage());
             return "internalError";
         }
 
@@ -189,11 +189,11 @@ public class GalaxyService {
             JSONObject resultJson = new JSONObject(result);
             state = resultJson.getString("state");
         } catch (JSONException e) {
-            Logger.LogExperimentAction(experimentName, experimentId, " An exception happened: " + e.getMessage());
+            Logger.LogBackgroundAction(experimentName, experimentId, " An exception happened: " + e.getMessage());
             return "internalError";
         }
 
-        Logger.LogExperimentAction(experimentName, experimentId, " Completed!");
+        Logger.LogBackgroundAction(experimentName, experimentId, " Completed!");
         switch (state) {
             case "ok":
                 return "success";
@@ -218,7 +218,7 @@ public class GalaxyService {
         String historyId = experimentDAO.getWorkflowHistoryId();
         String experimentName = experimentDAO.getName();
         UUID experimentId = experimentDAO.getUuid();
-        Logger.LogExperimentAction(experimentName, experimentId, " historyId : " + historyId);
+        Logger.LogBackgroundAction(experimentName, experimentId, " historyId : " + historyId);
 
         RetroFitGalaxyClients service = RetrofitClientInstance.getRetrofitInstance().create(RetroFitGalaxyClients.class);
         Call<List<GalaxyWorkflowResult>> call = service.getWorkflowResultsFromGalaxy(historyId, galaxyApiKey);
@@ -227,19 +227,19 @@ public class GalaxyService {
         try {
             Response<List<GalaxyWorkflowResult>> response = call.execute();
             if (response.code() >= 400) {
-                Logger.LogExperimentAction(experimentName, experimentId, " Response code: "
+                Logger.LogBackgroundAction(experimentName, experimentId, " Response code: "
                         + response.code() + "" + " with body: " + (response.errorBody() != null ? response.errorBody().string() : " "));
                 return null;
             }
             getGalaxyWorkflowResultList = response.body();
-            Logger.LogExperimentAction(experimentName, experimentId, " ResultDTO: " + response.body());
+            Logger.LogBackgroundAction(experimentName, experimentId, " ResultDTO: " + response.body());
 
         } catch (IOException e) {
-            Logger.LogExperimentAction(experimentName, experimentId, " An exception happened: " + e.getMessage());
+            Logger.LogBackgroundAction(experimentName, experimentId, " An exception happened: " + e.getMessage());
             return null;
         }
 
-        Logger.LogExperimentAction(experimentName, experimentId, " Completed!");
+        Logger.LogBackgroundAction(experimentName, experimentId, " Completed!");
         return getGalaxyWorkflowResultList;
 
     }
@@ -255,7 +255,7 @@ public class GalaxyService {
         String experimentName = experimentDAO.getName();
         UUID experimentId = experimentDAO.getUuid();
 
-        Logger.LogExperimentAction(experimentName, experimentId, " historyId : " + historyId);
+        Logger.LogBackgroundAction(experimentName, experimentId, " historyId : " + historyId);
 
         RetroFitGalaxyClients service = RetrofitClientInstance.getRetrofitInstance().create(RetroFitGalaxyClients.class);
         Call<Object> call =
@@ -265,20 +265,20 @@ public class GalaxyService {
         try {
             Response<Object> response = call.execute();
             if (response.code() >= 400) {
-                Logger.LogExperimentAction(experimentName, experimentId, " Response code: "
+                Logger.LogBackgroundAction(experimentName, experimentId, " Response code: "
                         + response.code() + "" + " with body: " + (response.errorBody() != null ? response.errorBody().string() : " "));
                 return null;
             }
             resultJson = new Gson().toJson(response.body());
-            Logger.LogExperimentAction(experimentName, experimentId, " ResultDTO: " + resultJson);
+            Logger.LogBackgroundAction(experimentName, experimentId, " ResultDTO: " + resultJson);
 
         } catch (IOException e) {
-            Logger.LogExperimentAction(experimentName, experimentId,
+            Logger.LogBackgroundAction(experimentName, experimentId,
                     " An exception happened: " + e.getMessage());
             return null;
         }
 
-        Logger.LogExperimentAction(experimentName, experimentId, " Completed!");
+        Logger.LogBackgroundAction(experimentName, experimentId, " Completed!");
         return formattingGalaxyResult(resultJson);
     }
 
@@ -300,7 +300,7 @@ public class GalaxyService {
         String experimentName = experimentDAO.getName();
         UUID experimentId = experimentDAO.getUuid();
 
-        Logger.LogExperimentAction(experimentName, experimentId, " jobId : " + jobId);
+        Logger.LogBackgroundAction(experimentName, experimentId, " jobId : " + jobId);
         RetroFitGalaxyClients service = RetrofitClientInstance.getRetrofitInstance().create(RetroFitGalaxyClients.class);
         Call<Object> callError = service.getErrorMessageOfWorkflowFromGalaxy(jobId, galaxyApiKey);
 
@@ -309,7 +309,7 @@ public class GalaxyService {
         try {
             Response<Object> response = callError.execute();
             if (response.code() >= 400) {
-                Logger.LogExperimentAction(experimentName, experimentId, "Response code: "
+                Logger.LogBackgroundAction(experimentName, experimentId, "Response code: "
                         + response.code() + " with body: " + (response.errorBody() != null ? response.errorBody().string() : " "));
                 return null;
             }
@@ -319,19 +319,19 @@ public class GalaxyService {
             JsonElement jsonElement = new JsonParser().parse(jsonString);
             JsonObject rootObject = jsonElement.getAsJsonObject();
             fullError = rootObject.get("stderr").getAsString();
-            Logger.LogExperimentAction(experimentName, experimentId, "Error: " + fullError);
+            Logger.LogBackgroundAction(experimentName, experimentId, "Error: " + fullError);
 
             String[] arrOfStr = fullError.split("ValueError", 0);
             String specError = arrOfStr[arrOfStr.length - 1];
             returnError = specError.substring(1);
-            Logger.LogExperimentAction(experimentName, experimentId, "Parsed Error: " + returnError);
+            Logger.LogBackgroundAction(experimentName, experimentId, "Parsed Error: " + returnError);
 
         } catch (IOException e) {
-            Logger.LogExperimentAction(experimentName, experimentId, "Exception: " + e.getMessage());
+            Logger.LogBackgroundAction(experimentName, experimentId, "Exception: " + e.getMessage());
             return null;
         }
 
-        Logger.LogExperimentAction(experimentName, experimentId, "Completed successfully!");
+        Logger.LogBackgroundAction(experimentName, experimentId, "Completed successfully!");
 
         return returnError;
     }
@@ -358,40 +358,40 @@ public class GalaxyService {
         logger.LogUserAction("Starting Thread...");
         new Thread(() -> {
             while (true) {
-                // ATTENTION: Inside the Thread only LogExperimentAction should be used, not LogExperimentAction!
-                Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Thread is running...");
+                // ATTENTION: Inside the Thread only LogBackgroundAction should be used, not LogUserAction!
+                Logger.LogBackgroundAction(experimentDAO.getName(), experimentDAO.getUuid(), "Thread is running...");
 
                 try {
                     sleep(2000);
                 } catch (InterruptedException e) {
-                    Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Sleep was disrupted: " + e.getMessage());
+                    Logger.LogBackgroundAction(experimentDAO.getName(), experimentDAO.getUuid(), "Sleep was disrupted: " + e.getMessage());
                     throw new InternalServerError(e.getMessage());
                 }
 
-                Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Fetching status for experiment Id: " + experimentDAO.getUuid());
+                Logger.LogBackgroundAction(experimentDAO.getName(), experimentDAO.getUuid(), "Fetching status for experiment Id: " + experimentDAO.getUuid());
 
                 String state = getWorkflowStatus(experimentDAO);
-                Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "State is: " + state);
+                Logger.LogBackgroundAction(experimentDAO.getName(), experimentDAO.getUuid(), "State is: " + state);
 
                 switch (state) {
                     case "pending":
                         // Do nothing, when the experiment is created the status is set to running
-                        Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Workflow is still running.");
+                        Logger.LogBackgroundAction(experimentDAO.getName(), experimentDAO.getUuid(), "Workflow is still running.");
                         break;
 
                     case "success":
                         // Get only the job result that is visible
                         List<GalaxyWorkflowResult> workflowJobsResults = getWorkflowResults(experimentDAO);
-                        Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Results are: " + workflowJobsResults.toString());
+                        Logger.LogBackgroundAction(experimentDAO.getName(), experimentDAO.getUuid(), "Results are: " + workflowJobsResults.toString());
 
                         boolean resultFound = false;
                         for (GalaxyWorkflowResult jobResult : workflowJobsResults) {
                             if (jobResult.getVisible()) {
-                                Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Visible result are: " + jobResult.getId());
+                                Logger.LogBackgroundAction(experimentDAO.getName(), experimentDAO.getUuid(), "Visible result are: " + jobResult.getId());
 
                                 String result = getWorkflowResultBody(experimentDAO, jobResult.getId());
 
-                                Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "ResultDTO: " + result);
+                                Logger.LogBackgroundAction(experimentDAO.getName(), experimentDAO.getUuid(), "ResultDTO: " + result);
                                 if (result == null) {
                                     experimentDAO.setStatus(ExperimentDAO.Status.error);
                                 } else {
@@ -403,7 +403,7 @@ public class GalaxyService {
                         }
 
                         if (!resultFound) {      // If there is no visible result
-                            Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "No visible result");
+                            Logger.LogBackgroundAction(experimentDAO.getName(), experimentDAO.getUuid(), "No visible result");
                             experimentDAO.setStatus(ExperimentDAO.Status.error);
                         }
 
@@ -413,16 +413,16 @@ public class GalaxyService {
                     case "error":
                         // Get the job result that failed
                         workflowJobsResults = getWorkflowResults(experimentDAO);
-                        Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Error results are: " + workflowJobsResults.toString());
+                        Logger.LogBackgroundAction(experimentDAO.getName(), experimentDAO.getUuid(), "Error results are: " + workflowJobsResults.toString());
 
                         boolean failedJobFound = false;
                         for (GalaxyWorkflowResult jobResult : workflowJobsResults) {
                             if (jobResult.getState().equals("error")) {
-                                Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Failed job is: " + jobResult.getId());
+                                Logger.LogBackgroundAction(experimentDAO.getName(), experimentDAO.getUuid(), "Failed job is: " + jobResult.getId());
 
                                 String result = getWorkflowJobError(jobResult.getId(), experimentDAO);
 
-                                Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "Job result: " + result);
+                                Logger.LogBackgroundAction(experimentDAO.getName(), experimentDAO.getUuid(), "Job result: " + result);
                                 if (result == null) {
                                     experimentDAO.setStatus(ExperimentDAO.Status.error);
                                 }
@@ -432,14 +432,14 @@ public class GalaxyService {
                         }
 
                         if (!failedJobFound) {      // If there is no visible failed job
-                            Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "No failed result");
+                            Logger.LogBackgroundAction(experimentDAO.getName(), experimentDAO.getUuid(), "No failed result");
                             experimentDAO.setStatus(ExperimentDAO.Status.error);
                         }
                         experimentRepository.finishExperiment(experimentDAO, logger);
                         break;
 
                     default:        // InternalError or unexpected result
-                        Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "An unexpected error occurred.");
+                        Logger.LogBackgroundAction(experimentDAO.getName(), experimentDAO.getUuid(), "An unexpected error occurred.");
                         experimentDAO.setStatus(ExperimentDAO.Status.error);
                         experimentRepository.finishExperiment(experimentDAO, logger);
                         break;
@@ -447,7 +447,7 @@ public class GalaxyService {
 
                 // If result exists return
                 if (experimentDAO.getResult() != null) {
-                    Logger.LogExperimentAction(experimentDAO.getName(), experimentDAO.getUuid(), "ResultDTO exists: " + experimentDAO.getResult());
+                    Logger.LogBackgroundAction(experimentDAO.getName(), experimentDAO.getUuid(), "ResultDTO exists: " + experimentDAO.getResult());
                     return;
                 }
             }

@@ -104,7 +104,9 @@ public interface ExperimentRepository extends CrudRepository<ExperimentDAO, UUID
         try {
             save(experimentDAO);
         } catch (Exception e) {
-            logger.LogUserAction( "Attempted to save changes to database but an error ocurred  : " + e.getMessage() + ".");
+            logger.LogUserAction(
+                    "Attempted to save changes to database but an error occurred  : " + e.getMessage() + "."
+            );
             throw new InternalServerError(e.getMessage());
         }
     }

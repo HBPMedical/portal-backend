@@ -22,8 +22,8 @@ public class Logger {
                 + "Info ->  " + actionInfo);
     }
 
-    // Used from Threads because threads can't get userName.
-    public static void LogExperimentAction(String experimentName, UUID experimentId, String actionInfo) {
+    // Deprecated, should be removed
+    public static void LogBackgroundAction(String experimentName, UUID experimentId, String actionInfo) {
         LOGGER.info(" Experiment -> " + experimentName
                 + "(" + experimentId + ") ,"
                 + "Info -> " + actionInfo);

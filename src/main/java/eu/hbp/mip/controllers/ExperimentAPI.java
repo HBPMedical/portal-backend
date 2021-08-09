@@ -103,7 +103,8 @@ public class ExperimentAPI {
     @ApiOperation(value = "Create a transient experiment", response = ExperimentDTO.class)
     @RequestMapping(value = "/transient", method = RequestMethod.POST)
     public ResponseEntity<String> createTransientExperiment(Authentication authentication, @RequestBody ExperimentDTO experimentDTO) {
-        experimentDTO = experimentService.createTransientExperiment(authentication, experimentDTO, new Logger(activeUserService.getActiveUser().getUsername(), "(POST) /experiments/transient"));
+        experimentDTO = experimentService.
+                runTransientExperiment(authentication, experimentDTO, new Logger(activeUserService.getActiveUser().getUsername(), "(POST) /experiments/transient"));
         return new ResponseEntity<>(JsonConverters.convertObjectToJsonString(experimentDTO), HttpStatus.OK);
     }
 }

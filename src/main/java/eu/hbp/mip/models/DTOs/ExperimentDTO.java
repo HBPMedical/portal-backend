@@ -18,7 +18,7 @@ public class ExperimentDTO {
 
     private UUID uuid;
     private String name;
-    private String createdBy;
+    private UserDTO createdBy;
     private Date created;
     private Date updated;
     private Date finished;
@@ -41,7 +41,7 @@ public class ExperimentDTO {
         this.created = experimentDAO.getCreated();
         this.updated = experimentDAO.getUpdated();
         this.finished = experimentDAO.getFinished();
-        this.createdBy = experimentDAO.getCreatedBy().getUsername();
+        this.createdBy = new UserDTO(experimentDAO.getCreatedBy());
         this.name = experimentDAO.getName();
         if(includeResult){
             this.result = JsonConverters.convertJsonStringToObject(String.valueOf(experimentDAO.getResult()),  new ArrayList<>().getClass());

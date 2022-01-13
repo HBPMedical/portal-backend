@@ -9,6 +9,13 @@ import java.util.List;
 @AllArgsConstructor
 public class MIPEngineAlgorithmResultDTO {
     private final String title;
-    private final List<TabularVisualizationDTO.Field> columns;
-    private final List<List<Object>> data;
+    private final List<Column> columns;
+
+    @Data
+    @AllArgsConstructor
+    public static class Column {
+        private final String name;
+        private final String type;
+        private final List<Object> data;
+    }
 }

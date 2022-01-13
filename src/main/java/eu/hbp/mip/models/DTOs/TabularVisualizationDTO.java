@@ -17,17 +17,29 @@ public class TabularVisualizationDTO {
 
     public TabularVisualizationDTO(MIPEngineAlgorithmResultDTO mipEngineAlgorithmResultDTO) {
         HashMap<String, List<TabularVisualizationDTO.Field>> schema = new HashMap<>();
-        schema.put("fields", mipEngineAlgorithmResultDTO.getColumns());
+        List<Field> fields = new ArrayList<TabularVisualizationDTO.Field>();
+        List<List<Object>> data = new ArrayList<ArrayList<TabularVisualizationDTO.Field>>()
+        for (Column column : mipEngineAlgorithmResultDTO.getColumns())
+        {
+            fields.add(new Field(column));
+            data.add(column.getData());
+        }
+        schema.put("fields", fields);
         this.name = mipEngineAlgorithmResultDTO.getTitle();
         this.profile = "tabular-data-resource";
         this.schema = schema;
-        this.data = mipEngineAlgorithmResultDTO.getData();
+        this.data = data;
     }
     @Data
     @AllArgsConstructor
     public static class Field {
         private final String name;
         private final String type;
+        public Field(Column column)
+        {
+            this.name = column.getName();
+            this.type = column.getType();
+        }
     }
 }
 

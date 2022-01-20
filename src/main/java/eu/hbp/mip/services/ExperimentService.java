@@ -390,18 +390,6 @@ public class ExperimentService {
         return experimentDatasets;
     }
 
-    private List<Object> convertMIPEngineToExaremeAlgorithmResult(
-            MIPEngineAlgorithmResultDTO mipEngineAlgorithmResultDTO
-    ) {
-        Map<String, Object> exaremeResultElement = new HashMap<>();
-        exaremeResultElement.put("data", new TabularVisualizationDTO(mipEngineAlgorithmResultDTO));
-        exaremeResultElement.put("type", "application/vnd.dataresource+json");
-
-        List<Object> exaremeResult = new ArrayList<>();
-        exaremeResult.add(exaremeResultElement);
-        return exaremeResult;
-    }
-
     /**
      * Creates an experiment and runs it on the background.
      * Uses the exareme or mip-engine engine that run an experiment synchronously.
@@ -527,9 +515,9 @@ public class ExperimentService {
 
         List<Object> exaremeAlgorithmResult = new ArrayList<>();
         if (requestResponseCode == 200) {
-            MIPEngineAlgorithmResultDTO mipEngineAlgorithmResultDTO =
-                    JsonConverters.convertJsonStringToObject(String.valueOf(requestResponseBody), MIPEngineAlgorithmResultDTO.class);
-            exaremeAlgorithmResult = convertMIPEngineToExaremeAlgorithmResult(mipEngineAlgorithmResultDTO);
+            Object mipEngineResult =
+                    JsonConverters.convertJsonStringToObject(String.valueOf(requestResponseBody), Object.class);
+            exaremeAlgorithmResult.add(mipEngineResult);
 
         } else if (requestResponseCode == 400) {
             Map<String, Object> exaremeAlgorithmResultElement = new HashMap<>();
@@ -543,11 +531,23 @@ public class ExperimentService {
             exaremeAlgorithmResultElement.put("type", "text/plain+user_error");
             exaremeAlgorithmResult.add(exaremeAlgorithmResultElement);
 
+        } else if (requestResponseCode == 461) {
+            Map<String, Object> exaremeAlgorithmResultElement = new HashMap<>();
+            exaremeAlgorithmResultElement.put("data", String.valueOf(requestResponseBody));
+            exaremeAlgorithmResultElement.put("type", "text/plain+error");
+            exaremeAlgorithmResult.add(exaremeAlgorithmResultElement);
+
         } else if (requestResponseCode == 500) {
             Map<String, Object> exaremeAlgorithmResultElement = new HashMap<>();
             exaremeAlgorithmResultElement.put("data",
                     "Something went wrong. Please inform the system administrator or try again later."
             );
+            exaremeAlgorithmResultElement.put("type", "text/plain+error");
+            exaremeAlgorithmResult.add(exaremeAlgorithmResultElement);
+
+        } else if (requestResponseCode == 512) {
+            Map<String, Object> exaremeAlgorithmResultElement = new HashMap<>();
+            exaremeAlgorithmResultElement.put("data", String.valueOf(requestResponseBody));
             exaremeAlgorithmResultElement.put("type", "text/plain+error");
             exaremeAlgorithmResult.add(exaremeAlgorithmResultElement);
 

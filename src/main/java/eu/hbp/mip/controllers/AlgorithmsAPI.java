@@ -151,7 +151,6 @@ public class AlgorithmsAPI {
             StringBuilder response = new StringBuilder();
             HTTPUtil.sendGet(mipengineAlgorithmsUrl, response);
             logger.LogUserAction(response.toString());
-
             mipEngineAlgorithms = gson.fromJson(
                     response.toString(),
                     new TypeToken<ArrayList<MIPEngineAlgorithmDTO>>() {

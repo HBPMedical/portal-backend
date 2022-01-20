@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Optional;
 
 @Data
 @AllArgsConstructor
@@ -32,6 +33,9 @@ public class MIPEngineAlgorithmDTO {
     @SerializedName("inputdata")
     private MIPEngineAlgorithmInputdataDTO inputdata;
 
+    public Optional<Hashtable<String, MIPEngineAlgorithmParameterDTO>> getParameters() {
+        return Optional.ofNullable(parameters);
+    }
     @Data
     @AllArgsConstructor
     public static class MIPEngineAlgorithmParameterDTO {
@@ -67,6 +71,7 @@ public class MIPEngineAlgorithmDTO {
     @Data
     @AllArgsConstructor
     public static class MIPEngineAlgorithmInputdataDTO {
+
         @SerializedName("x")
         private MIPEngineAlgorithmInputDataDetailDTO x;
 
@@ -81,6 +86,10 @@ public class MIPEngineAlgorithmDTO {
 
         @SerializedName("filter")
         private MIPEngineAlgorithmInputDataDetailDTO filter;
+
+        public Optional<MIPEngineAlgorithmInputDataDetailDTO> getY() {
+            return Optional.ofNullable(y);
+        }
     }
 
     @Data

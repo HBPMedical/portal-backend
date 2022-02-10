@@ -43,7 +43,7 @@
         <commons-dbcp.version>2.7.0</commons-dbcp.version>
         <flyway-core.version>4.2.0</flyway-core.version>
         <hibernate-jpa-2.1-api.version>1.0.0.Final</hibernate-jpa-2.1-api.version>
-        <hibernate.version>5.4.10.Final</hibernate.version>
+        <hibernate.version>5.4.24.Final</hibernate.version>
         <hibernate-validator.version>6.1.0.Final</hibernate-validator.version>
         <aspectjweaver.version>1.8.9</aspectjweaver.version>
         <javax-inject.version>1</javax-inject.version>

@@ -78,8 +78,8 @@ public class MIPEngineAlgorithmDTO {
         @SerializedName("y")
         private MIPEngineAlgorithmInputDataDetailDTO y;
 
-        @SerializedName("pathology")
-        private MIPEngineAlgorithmInputDataDetailDTO pathology;
+        @SerializedName("data_model")
+        private MIPEngineAlgorithmInputDataDetailDTO data_model;
 
         @SerializedName("datasets")
         private MIPEngineAlgorithmInputDataDetailDTO datasets;
@@ -89,6 +89,10 @@ public class MIPEngineAlgorithmDTO {
 
         public Optional<MIPEngineAlgorithmInputDataDetailDTO> getY() {
             return Optional.ofNullable(y);
+        }
+
+        public Optional<MIPEngineAlgorithmInputDataDetailDTO> getX() {
+            return Optional.ofNullable(x);
         }
     }
 

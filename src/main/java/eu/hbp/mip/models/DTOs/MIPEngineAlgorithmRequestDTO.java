@@ -5,21 +5,21 @@ import eu.hbp.mip.utils.JsonConverters;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 @Data
 @AllArgsConstructor
 public class MIPEngineAlgorithmRequestDTO {
+    @SerializedName("request_id")
+    private String request_id;
     @SerializedName("inputdata")
     private InputData inputdata;
     @SerializedName("parameters")
     private HashMap<String, Object> parameters;
 
-    public MIPEngineAlgorithmRequestDTO(List<ExaremeAlgorithmRequestParamDTO> exaremeAlgorithmRequestParamDTOs)
+    public MIPEngineAlgorithmRequestDTO(UUID experimentUUID, List<ExaremeAlgorithmRequestParamDTO> exaremeAlgorithmRequestParamDTOs)
     {
+        this.request_id = experimentUUID.toString();
         MIPEngineAlgorithmRequestDTO.InputData inputData = new MIPEngineAlgorithmRequestDTO.InputData();
         HashMap<String, Object> mipEngineParameters = new HashMap<>();
 
@@ -43,7 +43,7 @@ public class MIPEngineAlgorithmRequestDTO {
                     inputData.setDatasets(datasets);
                     break;
                 case "pathology":
-                    inputData.setPathology(parameter.getValue());
+                    inputData.setData_model(parameter.getValue());
                     break;
                 case "filter":
                     if (!parameter.getValue().equals(""))
@@ -64,8 +64,8 @@ public class MIPEngineAlgorithmRequestDTO {
     @Data
     @AllArgsConstructor
     public static class InputData {
-        @SerializedName("pathology")
-        private String pathology;
+        @SerializedName("data_model")
+        private String data_model;
         @SerializedName("datasets")
         private List<String> datasets;
         @SerializedName("filters")

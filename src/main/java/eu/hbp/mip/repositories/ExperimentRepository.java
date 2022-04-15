@@ -73,10 +73,6 @@ public interface ExperimentRepository extends CrudRepository<ExperimentDAO, UUID
             logger.LogUserAction("Attempted to save changes to database but an error ocurred  : " + e.getMessage() + ".");
             throw new InternalServerError(e.getMessage());
         }
-
-        logger.LogUserAction(" id : " + experimentDAO.getUuid());
-        logger.LogUserAction(" algorithm : " + experimentDAO.getAlgorithm());
-        logger.LogUserAction(" name : " + experimentDAO.getName());
         return experimentDAO;
     }
 

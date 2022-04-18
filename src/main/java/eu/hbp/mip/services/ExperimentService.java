@@ -403,6 +403,7 @@ public class ExperimentService {
         logger.LogUserAction("Running the algorithm...");
 
         ExperimentDAO experimentDAO = experimentRepository.createExperimentInTheDatabase(experimentDTO, activeUserService.getActiveUser(), logger);
+        experimentDTO.setUuid(experimentDAO.getUuid());
         logger.LogUserAction("Created experiment with uuid :" + experimentDAO.getUuid());
 
         logger.LogUserAction("Starting execution in thread");
@@ -422,9 +423,8 @@ public class ExperimentService {
                 experimentDAO.setStatus((exaremeAlgorithmResultDTO.getCode() >= 400)
                         ? ExperimentDAO.Status.error : ExperimentDAO.Status.success);
             } catch (Exception e) {
-                logger.LogUserAction("There was an exception: " + e.getMessage());
-
                 experimentDAO.setStatus(ExperimentDAO.Status.error);
+                throw e;
             }
 
             experimentRepository.finishExperiment(experimentDAO, logger);
@@ -499,7 +499,7 @@ public class ExperimentService {
 
         String algorithmEndpoint = mipengineAlgorithmsUrl + "/" + algorithmName.toLowerCase();
         MIPEngineAlgorithmRequestDTO mipEngineAlgorithmRequestDTO =
-                new MIPEngineAlgorithmRequestDTO(experimentDTO.getAlgorithm().getParameters());
+                new MIPEngineAlgorithmRequestDTO(experimentDTO.getUuid(), experimentDTO.getAlgorithm().getParameters());
         String algorithmBody = JsonConverters.convertObjectToJsonString(mipEngineAlgorithmRequestDTO);
         logger.LogUserAction("MIP-Engine algorithm execution. Endpoint: " + algorithmEndpoint);
         logger.LogUserAction("MIP-Engine algorithm execution. Body: " + algorithmBody);

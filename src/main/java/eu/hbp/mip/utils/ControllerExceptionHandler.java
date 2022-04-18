@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import java.util.Arrays;
 import java.util.Date;
 
 @ControllerAdvice
@@ -15,7 +16,6 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ExperimentNotFoundException.class)
     public ResponseEntity<Object> handleExperimentNotFoundException(ExperimentNotFoundException ex, WebRequest request) {
-
         ErrorMessage message = new ErrorMessage(
                 HttpStatus.NOT_FOUND.value(),
                 new Date(),
@@ -27,7 +27,6 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
     
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<Object> handleBadRequestException(BadRequestException ex, WebRequest request) {
-
         ErrorMessage message = new ErrorMessage(
                 HttpStatus.BAD_REQUEST.value(),
                 new Date(),
@@ -39,7 +38,6 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<Object> handleUnauthorizedException(UnauthorizedException ex, WebRequest request) {
-
         ErrorMessage message = new ErrorMessage(
                 HttpStatus.UNAUTHORIZED.value(),
                 new Date(),
@@ -49,13 +47,12 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(message, HttpStatus.UNAUTHORIZED);
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public Object handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
-        return null;
-    }
-
     @ExceptionHandler(InternalServerError.class)
     public ResponseEntity<ErrorMessage> handleInternalServerError(InternalServerError er, WebRequest request) {
+        logger.error("An unexpected exception occurred: " + er.getClass() +
+                "\nMessage: " + er.getMessage() +
+                "\nStacktrace: " + Arrays.toString(er.getStackTrace()).replaceAll(", ", "\n")
+        );
         ErrorMessage message = new ErrorMessage(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 new Date(),
@@ -78,6 +75,10 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorMessage> globalExceptionHandler(Exception ex, WebRequest request) {
+        logger.error("An unexpected exception occurred: " + ex.getClass() +
+                "\nMessage: " + ex.getMessage() +
+                "\nStacktrace: " + Arrays.toString(ex.getStackTrace()).replaceAll(", ", "\n")
+        );
         ErrorMessage message = new ErrorMessage(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 new Date(),

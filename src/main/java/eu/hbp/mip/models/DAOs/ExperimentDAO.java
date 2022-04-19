@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -84,6 +85,27 @@ public class ExperimentDAO {
         error,
         pending,
         success
+    }
+
+    @Override
+    public String toString() {
+        String finishedDT = "";
+        if (this.finished != null)
+            finishedDT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(this.finished);
+
+        return "ExperimentDAO(uuid=" + this.uuid +
+                ", name=" + this.name +
+                ", createdBy=" + this.createdBy +
+                ", workflowHistoryId=" + this.workflowHistoryId +
+                ", status=" + this.status +
+                ", result=" + this.result +
+                ", finished=" + finishedDT +
+                ", algorithm=" + this.algorithm +
+                ", algorithmId=" + this.algorithmId +
+                ", created=" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(this.created) +
+                ", updated=" + this.updated +
+                ", shared=" + this.shared +
+                ", viewed=" + this.viewed + ")";
     }
 
     public ExperimentDAO() {

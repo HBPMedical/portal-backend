@@ -1,62 +1,65 @@
-# Build stage for Java classes
-FROM hbpmip/java-base-build:3.6.0-jdk-11-0 as java-build-env
+#######################################################
+# Build the spring boot maven project
+#######################################################
+FROM maven:3.8.5-openjdk-11 as mvn-build-env
 
-COPY pom.xml /project/
+ENV CODE_PATH="/opt/code"
+WORKDIR $CODE_PATH
 
-RUN cp /usr/share/maven/ref/settings-docker.xml /root/.m2/settings.xml \
-    && mvn clean compile test
+COPY pom.xml $CODE_PATH
 
-COPY src/ /project/src/
+RUN mvn clean compile test
 
-# Repeating the file copy works better. I dunno why.
-RUN cp /usr/share/maven/ref/settings-docker.xml /root/.m2/settings.xml \
-    && mvn clean package
+COPY src/ $CODE_PATH/src
 
-FROM hbpmip/java-base:11.0.1-1
+RUN mvn clean package
 
-RUN apt-get update && apt-get install -y --no-install-recommends curl jq
-RUN rm -rf /var/lib/apt/lists/* /tmp/*
+#######################################################
+# Setup the running container
+#######################################################
+FROM openjdk:11.0.15-jdk
+MAINTAINER Thanasis Karampatsis <tkarabatsis@athenarc.gr>
 
-COPY docker/config/application.tmpl /opt/portal/config/application.tmpl
-COPY docker/README.md docker/run.sh /opt/portal/
+#######################################################
+# Setting up timezone
+#######################################################
+ENV TZ=Etc/GMT
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-RUN addgroup portal \
-    && adduser --system --disabled-password --uid 1000 --ingroup portal portal \
-    && chmod +x /opt/portal/run.sh \
-    && ln -s /opt/portal/run.sh /run.sh \
-    && chown -R portal:portal /opt/portal
+#######################################################
+# Setting up env variables and workdir
+#######################################################
+ENV APP_CONFIG_TEMPLATE="/opt/config/application.tmpl" \
+    APP_CONFIG_LOCATION="/opt/config/application.yml" \
+    SPRING_CONFIG_LOCATION="file:/opt/config/application.yml"
 
-COPY --from=java-build-env /project/target/portal-backend.jar /usr/share/jars/
+WORKDIR /opt
 
-ARG BUILD_DATE
-ARG VCS_REF
-ARG VERSION
 
-USER portal
-ENV APP_NAME="Portal backend" \
-    APP_TYPE="Spring" \
-    VERSION=$VERSION \
-    BUILD_DATE=$BUILD_DATE \
-    CONTEXT_PATH="/services" \
-    BUGSNAG_KEY="dff301aa15eb795a6d8b22b600586f77"
+#######################################################
+# Install dockerize
+#######################################################
+ENV DOCKERIZE_VERSION v0.6.1
+RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && tar -C /usr/local/bin -xzvf dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && rm dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
-WORKDIR /home/portal
-ENTRYPOINT ["/run.sh"]
 
+#######################################################
+# Prepare the spring boot application files
+#######################################################
+COPY /config/application.tmpl $APP_CONFIG_TEMPLATE
+COPY --from=mvn-build-env /opt/code/target/portal-backend.jar /usr/share/jars/
+
+
+#######################################################
+# Volume for the backend config files
+#######################################################
+VOLUME /opt/portal/api
+
+
+ENTRYPOINT ["sh", "-c", "dockerize -template $APP_CONFIG_TEMPLATE:$APP_CONFIG_LOCATION java -Daeron.term.buffer.length -jar /usr/share/jars/portal-backend.jar"]
 EXPOSE 8080
-
 HEALTHCHECK --start-period=60s CMD curl -v --silent http://localhost:8080/services/actuator/health 2>&1 | grep UP
 
-LABEL org.label-schema.build-date=$BUILD_DATE \
-      org.label-schema.name="hbpmip/portal-backend" \
-      org.label-schema.description="Spring backend for the MIP portal" \
-      org.label-schema.url="https://mip.humanbrainproject.eu" \
-      org.label-schema.vcs-type="git" \
-      org.label-schema.vcs-url="https://github.com/HBPMedical/portal-backend" \
-      org.label-schema.vcs-ref=$VCS_REF \
-      org.label-schema.version="$VERSION" \
-      org.label-schema.vendor="LREN CHUV" \
-      org.label-schema.license="AGPLv3" \
-      org.label-schema.docker.dockerfile="Dockerfile" \
-      org.label-schema.memory-hint="2048" \
-      org.label-schema.schema-version="1.0"
+

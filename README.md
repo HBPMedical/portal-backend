@@ -1,45 +1,44 @@
 [![CHUV](https://img.shields.io/badge/CHUV-LREN-AF4C64.svg)](https://www.unil.ch/lren/en/home.html) [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](https://www.gnu.org/licenses/agpl-3.0.html)
 [![DockerHub](https://img.shields.io/badge/docker-hbpmip%2Fportal--backend-008bb8.svg)](https://hub.docker.com/r/hbpmip/portal-backend/)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/05ba08087da24b3980475f88e1a591b7)](https://www.codacy.com/app/hbp-mip/portal-backend?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=LREN-CHUV/portal-backend&amp;utm_campaign=Badge_Grade)
-[![CircleCI](https://circleci.com/gh/LREN-CHUV/portal-backend/tree/master.svg?style=svg)](https://circleci.com/gh/LREN-CHUV/portal-backend/tree/master)
 
 # Backend for the MIP portal
 
-## Usage
-
-* Build a versioned image: `./build.sh`
-* Build and test an image: `./test.sh`
+## DEV Deployment
+To run the backend using an IDE for development, such as IntelliJ, you need a running instance of PostgreSQL.
 
 ## Deployment (using a Docker image)
+Build the image: ` docker build -t hbpmip/portal-backend:latest .`
 
-* See the [documentation for hbpmip/portal-backend Docker image](./docker/README.md)
+To use this image, you need a running instance of PostgreSQL and to configure the software using the following environment variables.
 
-## Build
+#### LOG LEVELS ###
+* LOG_LEVEL: log level for the developer added logs. Default is "ERROR".
+* LOG_LEVEL_FRAMEWORK: log level for all the framework logs. Default is "ERROR".
 
-Run: `./build.sh`
+#### AUTHENTICATION ###
+* AUTHENTICATION: true for production, false for development.
 
-## Publish on Docker Hub
+#### DATABASE CONFIGURATION ###
+* PORTAL_DB_URL: JDBC URL to connect to the portal database, default value is "jdbc:postgresql://127.0.0.1:5432/portal".
+* PORTAL_DB_SCHEMA: Database schema, default value is "public".
+* PORTAL_DB_USER: User to use when connecting to the portal database, default value is "postgres".
+* PORTAL_DB_PASSWORD: Password to use when connecting to the portal database.
 
-Run: `./publish.sh`
+#### EXTERNAL SERVICES ###
+* MIPENGINE_URL: URL to MIPENGINE server. Default is "http://localhost:5000" .
+* EXAREME_URL: URL to Exareme server. Default is "http://localhost:9090" .
+* GALAXY_URL: URL to Workflow server. Default is "http://localhost:8090/" .
+* GALAXY_API_KEY: The api key to authorize galaxy requests.
+* GALAXY_USERNAME: The username of galaxy user to be able to embed the frame.
+* GALAXY_PASSWORD: The password of galaxy user.
 
-## License
-
-Copyright © 2016-2017 LREN CHUV
-
-Licensed under the GNU Affero General Public License, Version 3.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-   [https://www.gnu.org/licenses/agpl-3.0.html](https://www.gnu.org/licenses/agpl-3.0.html)
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+#### KEYCLOAK ###
+* KEYCLOAK_AUTH_URL: Keycloak authentication URL.
+* KEYCLOAK_REALM: Keycloak realm user for authentication.
+* KEYCLOAK_CLIENT_ID: The keycloak client id.
+* KEYCLOAK_CLIENT_SECRET: The keycloak secret to be able to authenticate.
 
 # Acknowledgements
 
 This work has been funded by the European Union Seventh Framework Program (FP7/2007­2013) under grant agreement no. 604102 (HBP)
 
-This work is part of SP8 of the Human Brain Project (SGA1).

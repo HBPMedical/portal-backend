@@ -22,23 +22,19 @@ public class MIPEngineAlgorithmRequestDTO {
         MIPEngineAlgorithmRequestDTO.InputData inputData = new MIPEngineAlgorithmRequestDTO.InputData();
         HashMap<String, Object> mipEngineParameters = new HashMap<>();
 
-        List<Object> rules = new ArrayList<>();
         exaremeAlgorithmRequestParamDTOs.forEach(parameter -> {
 
             switch (parameter.getName()) {
                 case "x":
                     List<String> x = Arrays.asList(parameter.getValue().split(","));
-                    x.forEach(column -> rules.add(new ExaremeAlgorithmDTO.Rule(column, parameter.getColumnValuesSQLType(), "is_not_null", null)));
                     inputData.setX(x);
                     break;
                 case "y":
                     List<String> y = Arrays.asList(parameter.getValue().split(","));
-                    y.forEach(column -> rules.add(new ExaremeAlgorithmDTO.Rule(column, parameter.getColumnValuesSQLType(), "is_not_null", null)));
                     inputData.setY(y);
                     break;
                 case "dataset":
                     List<String> datasets = Arrays.asList(parameter.getValue().split(","));
-                    rules.add(new ExaremeAlgorithmDTO.Rule("dataset", "string", "in", datasets));
                     inputData.setDatasets(datasets);
                     break;
                 case "pathology":
@@ -46,14 +42,12 @@ public class MIPEngineAlgorithmRequestDTO {
                     break;
                 case "filter":
                     if (!parameter.getValue().equals(""))
-                        rules.add(JsonConverters.convertJsonStringToObject(parameter.getValue(), MIPEngineAlgorithmRequestDTO.Filter.class));
+                        inputData.setFilters(JsonConverters.convertJsonStringToObject(parameter.getValue(), MIPEngineAlgorithmRequestDTO.Filter.class));
                     break;
                 default:
                     mipEngineParameters.put(parameter.getName(), convertStringToMultipleValues(parameter.getValue()));
             }
         });
-        MIPEngineAlgorithmRequestDTO.Filter filter = new MIPEngineAlgorithmRequestDTO.Filter("AND", rules);
-        inputData.setFilters(filter);
         this.inputdata = inputData;
         this.parameters = mipEngineParameters;
     }

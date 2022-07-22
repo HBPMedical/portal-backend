@@ -41,7 +41,7 @@ public class MIPEngineAlgorithmRequestDTO {
                     inputData.setData_model(parameter.getValue());
                     break;
                 case "filter":
-                    if (!parameter.getValue().equals(""))
+                    if (parameter.getValue() != null && !parameter.getValue().equals(""))
                         inputData.setFilters(JsonConverters.convertJsonStringToObject(parameter.getValue(), MIPEngineAlgorithmRequestDTO.Filter.class));
                     break;
                 default:

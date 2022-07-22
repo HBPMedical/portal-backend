@@ -465,7 +465,20 @@ public class ExperimentService {
         String algorithmEndpoint = queryExaremeUrl + "/" + algorithmName;
         List<ExaremeAlgorithmRequestParamDTO> algorithmParameters
                 = experimentDTO.getAlgorithm().getParameters();
-        String algorithmBody = gson.toJson(algorithmParameters);
+        List<ExaremeAlgorithmRequestParamDTO> algorithmParametersWithoutPathologyVersion = new ArrayList<>();
+
+        for (ExaremeAlgorithmRequestParamDTO algorithmParameter : algorithmParameters)
+        {
+            if (algorithmParameter.getName().equals("pathology")) {
+                List<String> pathology_info = Arrays.asList(algorithmParameter.getValue().split(":", 2));
+                String pathology_code = pathology_info.get(0);
+                algorithmParameter.setValue(pathology_code);
+            }
+            algorithmParametersWithoutPathologyVersion.add(algorithmParameter);
+
+        }
+
+        String algorithmBody = gson.toJson(algorithmParametersWithoutPathologyVersion);
         logger.LogUserAction("Exareme algorithm execution. Endpoint: " + algorithmEndpoint);
         logger.LogUserAction("Exareme algorithm execution. Body: " + algorithmBody);
 

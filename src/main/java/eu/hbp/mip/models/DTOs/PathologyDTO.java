@@ -13,6 +13,10 @@ public class PathologyDTO {
     @SerializedName("code")
     private String code;
 
+    @SerializedName("version")
+    private String version;
+
+
     @SerializedName("label")
     private String label;
 

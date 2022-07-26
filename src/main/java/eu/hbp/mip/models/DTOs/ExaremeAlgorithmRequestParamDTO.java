@@ -65,8 +65,8 @@ public class ExaremeAlgorithmRequestParamDTO {
         this.label = parameter.getLabel();
         this.valueEnumerations = parameter.getEnums();
         this.valueMultiple = parameter.getMultiple();
-        this.valueMax = parameter.getMin();
-        this.valueMin = parameter.getMax();
+        this.valueMax = parameter.getMax();
+        this.valueMin = parameter.getMin();
     }
 
     public ExaremeAlgorithmRequestParamDTO (String name, MIPEngineAlgorithmDTO.MIPEngineAlgorithmInputDataDetailDTO inputDataDetail){

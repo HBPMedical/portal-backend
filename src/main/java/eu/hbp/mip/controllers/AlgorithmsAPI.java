@@ -75,6 +75,14 @@ public class AlgorithmsAPI {
         ArrayList<ExaremeAlgorithmDTO> galaxyAlgorithms = getGalaxyWorkflows(logger);
 
         ArrayList<ExaremeAlgorithmDTO> algorithms = new ArrayList<>();
+
+        // Remove Exareme algorithms that exist in the Exareme2
+        if (mipengineAlgorithms != null && exaremeAlgorithms != null){
+            for (ExaremeAlgorithmDTO algorithm : mipengineAlgorithms) {
+                exaremeAlgorithms.removeIf(obj -> Objects.equals(obj.getName(), algorithm.getName()));
+            }
+        }
+
         if (exaremeAlgorithms != null) {
             algorithms.addAll(exaremeAlgorithms);
             logger.LogUserAction("Loaded " + exaremeAlgorithms.size() + " exareme algorithms");
@@ -101,12 +109,7 @@ public class AlgorithmsAPI {
             logger.LogUserAction("The disabled algorithms could not be loaded.");
         }
 
-        // Remove Exareme algorithms that exist in the Exareme2
-        if (mipengineAlgorithms != null && exaremeAlgorithms != null){
-            for (ExaremeAlgorithmDTO algorithm : mipengineAlgorithms) {
-                exaremeAlgorithms.removeIf(obj -> Objects.equals(obj.getName(), algorithm.getName()));
-            }
-        }
+
 
         // Remove any disabled algorithm
         ArrayList<ExaremeAlgorithmDTO> allowedAlgorithms = new ArrayList<>();

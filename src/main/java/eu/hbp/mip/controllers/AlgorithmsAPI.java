@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static eu.hbp.mip.utils.InputStreamConverter.convertInputStreamToString;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -98,6 +99,13 @@ public class AlgorithmsAPI {
             disabledAlgorithms = getDisabledAlgorithms();
         } catch (IOException e) {
             logger.LogUserAction("The disabled algorithms could not be loaded.");
+        }
+
+        // Remove Exareme algorithms that exist in the Exareme2
+        if (mipengineAlgorithms != null && exaremeAlgorithms != null){
+            for (ExaremeAlgorithmDTO algorithm : mipengineAlgorithms) {
+                exaremeAlgorithms.removeIf(obj -> Objects.equals(obj.getName(), algorithm.getName()));
+            }
         }
 
         // Remove any disabled algorithm

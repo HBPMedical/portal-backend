@@ -49,7 +49,7 @@ public class MIPEngineAlgorithmDTO {
         @SerializedName("multiple")
         private String multiple;
 
-        @SerializedName("types")
+        @SerializedName("type")
         private String type;
 
         @SerializedName("desc")

@@ -49,7 +49,7 @@ public class MIPEngineAlgorithmDTO {
         @SerializedName("multiple")
         private String multiple;
 
-        @SerializedName("types")
+        @SerializedName("type")
         private String type;
 
         @SerializedName("desc")
@@ -61,7 +61,7 @@ public class MIPEngineAlgorithmDTO {
         @SerializedName("max")
         private String max;
 
-        @SerializedName("default_value")
+        @SerializedName("default")
         private String default_value;
 
         @SerializedName("enums")

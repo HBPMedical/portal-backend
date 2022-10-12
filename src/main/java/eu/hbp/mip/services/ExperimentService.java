@@ -124,11 +124,11 @@ public class ExperimentService {
         logger.LogUserAction("Loading Experiment with uuid : " + uuid);
 
         experimentDAO = experimentRepository.loadExperiment(uuid, logger);
-        if (
-                !experimentDAO.isShared()
-                        && !experimentDAO.getCreatedBy().getUsername().equals(user.getUsername())
-                        && authenticationIsEnabled
-                        && ClaimUtils.validateAccessRightsOnExperiments(authentication, logger)
+        if (               
+            authenticationIsEnabled
+            && !experimentDAO.isShared()
+            && !experimentDAO.getCreatedBy().getUsername().equals(user.getUsername())
+            && !ClaimUtils.validateAccessRightsOnExperiments(authentication, logger)
         ) {
             logger.LogUserAction("Accessing Experiment is unauthorized.");
             throw new UnauthorizedException("You don't have access to the experiment.");

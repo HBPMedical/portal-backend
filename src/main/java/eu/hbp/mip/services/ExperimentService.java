@@ -124,7 +124,7 @@ public class ExperimentService {
         logger.LogUserAction("Loading Experiment with uuid : " + uuid);
 
         experimentDAO = experimentRepository.loadExperiment(uuid, logger);
-        if (               
+        if (
             authenticationIsEnabled
             && !experimentDAO.isShared()
             && !experimentDAO.getCreatedBy().getUsername().equals(user.getUsername())

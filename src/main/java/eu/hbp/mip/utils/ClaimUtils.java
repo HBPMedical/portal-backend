@@ -54,8 +54,8 @@ public class ClaimUtils {
         return  hasRoleAccess(authorities, ClaimUtils.allExperimentsAllowedClaim(), logger);
     }
 
-    public static String getAuthorizedPathologies(Logger logger, Authentication authentication,
-                                                  List<PathologyDTO> allPathologies) {
+    public static List<PathologyDTO> getAuthorizedPathologies(Logger logger, Authentication authentication,
+                                                              List<PathologyDTO> allPathologies) {
         // --- Providing only the allowed pathologies/datasets to the user  ---
         logger.LogUserAction("Filter out the unauthorised datasets.");
 
@@ -63,7 +63,7 @@ public class ClaimUtils {
 
         // If the "dataset_all" claim exists then return everything
         if (hasRoleAccess(authorities, ClaimUtils.allDatasetsAllowedClaim(), logger)) {
-            return gson.toJson(allPathologies);
+            return allPathologies;
         }
 
         List<PathologyDTO> userPathologies = new ArrayList<>();
@@ -83,13 +83,13 @@ public class ClaimUtils {
                 PathologyDTO userPathology = new PathologyDTO();
                 userPathology.setCode(curPathology.getCode());
                 userPathology.setLabel(curPathology.getLabel());
-                userPathology.setMetadataHierarchy(curPathology.getMetadataHierarchy());
+                userPathology.setMetadataHierarchyDTO(curPathology.getMetadataHierarchyDTO());
                 userPathology.setDatasets(userPathologyDatasets);
                 userPathologies.add(userPathology);
             }
         }
 
-        return gson.toJson(userPathologies);
+        return userPathologies;
     }
 
     private static boolean  hasRoleAccess(ArrayList<String> authorities, String role, Logger logger)

@@ -78,9 +78,12 @@ public class AlgorithmsAPI {
 
         // Remove Exareme algorithms that exist in the Exareme2
         if (mipengineAlgorithms != null && exaremeAlgorithms != null){
+            int old_exareme_algorithm_size = exaremeAlgorithms.size();
+
             for (ExaremeAlgorithmDTO algorithm : mipengineAlgorithms) {
                 exaremeAlgorithms.removeIf(obj -> Objects.equals(obj.getName(), algorithm.getName()));
             }
+            logger.LogUserAction("Removed "+ (old_exareme_algorithm_size - exaremeAlgorithms.size()) +" deprecated exareme algorithms");
         }
 
         if (exaremeAlgorithms != null) {
@@ -109,8 +112,6 @@ public class AlgorithmsAPI {
             logger.LogUserAction("The disabled algorithms could not be loaded.");
         }
 
-
-
         // Remove any disabled algorithm
         ArrayList<ExaremeAlgorithmDTO> allowedAlgorithms = new ArrayList<>();
         for (ExaremeAlgorithmDTO algorithm : algorithms) {
@@ -118,6 +119,9 @@ public class AlgorithmsAPI {
                 allowedAlgorithms.add(algorithm);
             }
         }
+
+        logger.LogUserAction("Removed "+ (algorithms.size() - allowedAlgorithms.size()) +" disabled algorithms");
+
         logger.LogUserAction("Successfully listed " + allowedAlgorithms.size() + " algorithms");
         return ResponseEntity.ok(allowedAlgorithms);
     }
@@ -138,15 +142,12 @@ public class AlgorithmsAPI {
                     new TypeToken<ArrayList<ExaremeAlgorithmDTO>>() {
                     }.getType()
             );
-        } catch (ConnectException e) {
-            logger.LogUserAction("An exception occurred: " + e.getMessage());
-            return null;
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.LogUserAction("An exception occurred: " + e.getMessage());
             return null;
         }
 
-        logger.LogUserAction("Completed, returned " + algorithms.size() + " algorithms.");
+        logger.LogUserAction("Completed, returned " + algorithms.size() + " Exareme algorithms.");
         return algorithms;
     }
 
@@ -166,10 +167,7 @@ public class AlgorithmsAPI {
                     new TypeToken<ArrayList<MIPEngineAlgorithmDTO>>() {
                     }.getType()
             );
-        } catch (ConnectException e) {
-            logger.LogUserAction("An exception occurred: " + e.getMessage());
-            return null;
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.LogUserAction("An exception occurred: " + e.getMessage());
             return null;
         }
@@ -177,7 +175,7 @@ public class AlgorithmsAPI {
         ArrayList<ExaremeAlgorithmDTO> algorithms = new ArrayList<>();
         mipEngineAlgorithms.forEach(mipEngineAlgorithm -> algorithms.add(new ExaremeAlgorithmDTO(mipEngineAlgorithm)));
 
-        logger.LogUserAction("Completed, returned " + algorithms.size() + " algorithms.");
+        logger.LogUserAction("Completed, returned  " + algorithms.size() + " Exareme2 algorithms.");
         return algorithms;
     }
 

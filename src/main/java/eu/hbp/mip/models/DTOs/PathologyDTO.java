@@ -6,7 +6,6 @@ import lombok.Data;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 @Data
 @AllArgsConstructor
@@ -26,14 +25,14 @@ public class PathologyDTO {
     private MetadataHierarchyDTO metadataHierarchyDTO;
 
     @SerializedName("datasets")
-    private List<PathologyDatasetDTO> datasets;
+    private List<EnumerationDTO> datasets;
 
     public PathologyDTO(){
 
     }
 
 
-    public PathologyDTO(String pathology, MIPEngineAttributesDTO mipEngineAttributesDTO, List<PathologyDatasetDTO> pathologyDatasetDTOS) {
+    public PathologyDTO(String pathology, MIPEngineAttributesDTO mipEngineAttributesDTO, List<EnumerationDTO> pathologyDatasetDTOS) {
         MetadataHierarchyDTO metadataHierarchyDTO = mipEngineAttributesDTO.getProperties().get("cdes").get(0);
         List<MetadataHierarchyDTO.CommonDataElement> variables = metadataHierarchyDTO.getVariables();
         variables.stream().filter(cde -> cde.getCode().equals("dataset")).
@@ -50,7 +49,7 @@ public class PathologyDTO {
 
     @Data
     @AllArgsConstructor
-    public static class PathologyDatasetDTO {
+    public static class EnumerationDTO {
         @SerializedName("code")
         private String code;
 

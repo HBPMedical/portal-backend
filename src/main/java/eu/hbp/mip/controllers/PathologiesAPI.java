@@ -15,8 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
-import java.net.ConnectException;
 import java.util.*;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -49,17 +47,14 @@ public class PathologiesAPI {
         Logger logger = new Logger(activeUserService.getActiveUser().getUsername(), "(GET) /pathologies");
         logger.LogUserAction("Loading pathologies ...");
 
-        Map<String, List<PathologyDTO.PathologyDatasetDTO>> datasetsPerPathology = getMIPEngineDatasetsPerPathology(logger);
-        System.out.println(datasetsPerPathology);
+        Map<String, List<PathologyDTO.EnumerationDTO>> datasetsPerPathology = getMIPEngineDatasetsPerPathology(logger);
 
         Map<String, MIPEngineAttributesDTO> mipEnginePathologyAttributes = getMIPEnginePathologyAttributes(logger);
-        System.out.println(mipEnginePathologyAttributes);
 
         List<PathologyDTO> pathologyDTOS = new ArrayList<>();
         for (String pathology : mipEnginePathologyAttributes.keySet()) {
             pathologyDTOS.add(new PathologyDTO(pathology, mipEnginePathologyAttributes.get(pathology), datasetsPerPathology.get(pathology)));
         }
-        System.out.println(pathologyDTOS);
 
         // If authentication is disabled return everything
         if (!authenticationIsEnabled) {
@@ -71,7 +66,7 @@ public class PathologiesAPI {
         return ResponseEntity.ok().body(gson.toJson(ClaimUtils.getAuthorizedPathologies(logger, authentication, pathologyDTOS)));
     }
 
-    public Map<String, List<PathologyDTO.PathologyDatasetDTO>> getMIPEngineDatasetsPerPathology(Logger logger) {
+    public Map<String, List<PathologyDTO.EnumerationDTO>> getMIPEngineDatasetsPerPathology(Logger logger) {
         Map<String, Map<String, MetadataHierarchyDTO.CommonDataElement>> mipEngineCDEsMetadata;
         // Get MIPEngine algorithms
         try {
@@ -87,13 +82,15 @@ public class PathologiesAPI {
             return null;
         }
 
-        Map<String, List<PathologyDTO.PathologyDatasetDTO>> datasetsPerPathology = new HashMap<>();
+        Map<String, List<PathologyDTO.EnumerationDTO>> datasetsPerPathology = new HashMap<>();
 
         mipEngineCDEsMetadata.forEach( (pathology, cdePerDataset) ->  {
-            List<PathologyDTO.PathologyDatasetDTO> pathologyDatasetDTOS = new ArrayList<>();
-            cdePerDataset.forEach((dataset, cde) ->  pathologyDatasetDTOS.add(new PathologyDTO.PathologyDatasetDTO(dataset, cde.getLabel())));
+            List<PathologyDTO.EnumerationDTO> pathologyDatasetDTOS = new ArrayList<>();
+            Map datasetEnumerations = (Map) cdePerDataset.get("dataset").getEnumerations();
+            datasetEnumerations.forEach((code, label) ->  pathologyDatasetDTOS.add(new PathologyDTO.EnumerationDTO((String) code, (String) label)));
             datasetsPerPathology.put(pathology, pathologyDatasetDTOS);
         });
+
 
 
         return datasetsPerPathology;
@@ -115,6 +112,14 @@ public class PathologiesAPI {
             return null;
         }
 
-        return mipEnginePathologyAttributes;
+        Map<String, MIPEngineAttributesDTO> mipEnginePathologyAttributesWithProperEnums = new HashMap<>();
+        for (Map.Entry<String, MIPEngineAttributesDTO> entry : mipEnginePathologyAttributes.entrySet()) {
+            String pathology = entry.getKey();
+            MIPEngineAttributesDTO attributes = entry.getValue();
+            attributes.updateAttributesWithProperEnums();
+            mipEnginePathologyAttributesWithProperEnums.put(pathology, attributes);
+        }
+
+        return mipEnginePathologyAttributesWithProperEnums;
     }
 }

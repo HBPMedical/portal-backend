@@ -4,9 +4,9 @@ import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.util.Hashtable;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 @Data
 @AllArgsConstructor
@@ -19,15 +19,15 @@ public class MetadataHierarchyDTO {
     private String code;
 
     @SerializedName("groups")
-    private Object groups;
+    private List<MetadataHierarchyDTO> groups;
 
     @SerializedName("label")
     private String label;
     @Data
     @AllArgsConstructor
     public static class CommonDataElement {
-        @SerializedName("isCategorical")
-        private Boolean isCategorical;
+        @SerializedName("is_categorical")
+        private Boolean is_categorical;
 
         @SerializedName("code")
         private String code;
@@ -53,5 +53,46 @@ public class MetadataHierarchyDTO {
         @SerializedName("methodology")
         private String methodology;
 
+        @SerializedName("min")
+        private String min;
+
+        @SerializedName("max")
+        private String max;
+
+        private void updateEnumerations(){
+            if (this.enumerations != null){
+                Map old_enumeration = (Map) this.enumerations;
+                List<PathologyDTO.EnumerationDTO> enumerationDTOS = new ArrayList<>();
+                old_enumeration.forEach((cdeCode, cdeLabel) -> {
+                    enumerationDTOS.add(new PathologyDTO.EnumerationDTO((String) cdeCode, (String) cdeLabel));
+                });
+                setEnumerations(enumerationDTOS);
+            }
+        }
+    }
+
+    public void updateVariableWithProperEnums(){
+        List<CommonDataElement> updated_variables = new ArrayList<>();
+        this.variables.forEach(commonDataElement -> {
+            commonDataElement.updateEnumerations();
+            updated_variables.add(commonDataElement);
+        });
+        setVariables(updated_variables);
+    }
+
+    public void updateGroupWithProperEnums(){
+        List<MetadataHierarchyDTO> updated_groups = new ArrayList<>();
+        for (MetadataHierarchyDTO hierarchyDTO : this.groups) {
+
+            if (hierarchyDTO.getVariables() != null) {
+                hierarchyDTO.updateVariableWithProperEnums();
+            }
+
+            if (hierarchyDTO.getGroups() != null) {
+                hierarchyDTO.updateGroupWithProperEnums();
+            }
+            updated_groups.add(hierarchyDTO);
+        }
+        this.groups = updated_groups;
     }
 }

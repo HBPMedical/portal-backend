@@ -68,8 +68,8 @@ public class ClaimUtils {
 
         List<PathologyDTO> userPathologies = new ArrayList<>();
         for (PathologyDTO curPathology : allPathologies) {
-            List<PathologyDTO.PathologyDatasetDTO> userPathologyDatasets = new ArrayList<>();
-            for (PathologyDTO.PathologyDatasetDTO dataset : curPathology.getDatasets()) {
+            List<PathologyDTO.EnumerationDTO> userPathologyDatasets = new ArrayList<>();
+            for (PathologyDTO.EnumerationDTO dataset : curPathology.getDatasets()) {
                 if (hasRoleAccess(authorities, ClaimUtils.getDatasetClaim(dataset.getCode()), logger)) {
                     logger.LogUserAction("Added dataset: " + dataset.getCode());
                     userPathologyDatasets.add(dataset);

@@ -95,4 +95,37 @@ public class MetadataHierarchyDTO {
         }
         this.groups = updated_groups;
     }
+
+    public boolean isDatasetCDEPresent(){
+        if (this.variables != null) {
+            for (CommonDataElement variable : this.variables) {
+                if (variable.code.equals("dataset")){
+                    return true;
+                }
+            }
+
+        }
+        if (this.groups != null) {
+            for (MetadataHierarchyDTO group: this.groups){
+                if (group.isDatasetCDEPresent()){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public void updateDatasetCde(List<PathologyDTO.EnumerationDTO> pathologyDatasetDTOS){
+        if (this.variables != null) {
+            List<MetadataHierarchyDTO.CommonDataElement> variables = this.variables;
+            variables.stream().filter(cde -> cde.getCode().equals("dataset")).
+                    findAny().ifPresent(cde -> cde.setEnumerations(pathologyDatasetDTOS));
+        }
+
+        if (this.groups != null) {
+            for (MetadataHierarchyDTO group: this.groups){
+                group.updateDatasetCde(pathologyDatasetDTOS);
+            }
+        }
+    }
 }

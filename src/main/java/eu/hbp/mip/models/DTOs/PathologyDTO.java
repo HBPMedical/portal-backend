@@ -1,6 +1,7 @@
 package eu.hbp.mip.models.DTOs;
 
 import com.google.gson.annotations.SerializedName;
+import eu.hbp.mip.utils.Exceptions.InternalServerError;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -34,10 +35,8 @@ public class PathologyDTO {
 
     public PathologyDTO(String pathology, MIPEngineAttributesDTO mipEngineAttributesDTO, List<EnumerationDTO> pathologyDatasetDTOS) {
         MetadataHierarchyDTO metadataHierarchyDTO = mipEngineAttributesDTO.getProperties().get("cdes").get(0);
-        List<MetadataHierarchyDTO.CommonDataElement> variables = metadataHierarchyDTO.getVariables();
-        variables.stream().filter(cde -> cde.getCode().equals("dataset")).
-                findAny().ifPresent(cde -> cde.setEnumerations(pathologyDatasetDTOS));
-        metadataHierarchyDTO.setVariables(variables);
+        if (!metadataHierarchyDTO.isDatasetCDEPresent()) throw new InternalServerError("CommonDataElement Dataset was not present in the pathology:" + pathology);
+        metadataHierarchyDTO.updateDatasetCde(pathologyDatasetDTOS);
 
         List<String> pathology_info = Arrays.asList(pathology.split(":", 2));
         this.code = pathology_info.get(0);

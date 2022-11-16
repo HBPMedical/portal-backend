@@ -7,6 +7,7 @@ import eu.hbp.mip.models.DTOs.MetadataHierarchyDTO;
 import eu.hbp.mip.models.DTOs.PathologyDTO;
 import eu.hbp.mip.services.ActiveUserService;
 import eu.hbp.mip.utils.*;
+import eu.hbp.mip.utils.Exceptions.InternalServerError;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -53,7 +54,16 @@ public class PathologiesAPI {
 
         List<PathologyDTO> pathologyDTOS = new ArrayList<>();
         for (String pathology : mipEnginePathologyAttributes.keySet()) {
-            pathologyDTOS.add(new PathologyDTO(pathology, mipEnginePathologyAttributes.get(pathology), datasetsPerPathology.get(pathology)));
+            PathologyDTO newPathology;
+            try {
+                newPathology = new PathologyDTO(pathology, mipEnginePathologyAttributes.get(pathology), datasetsPerPathology.get(pathology));
+            }
+            catch(InternalServerError e) {
+                logger.LogUserAction(e.getMessage());
+                continue;
+            }
+
+            pathologyDTOS.add(newPathology);
         }
 
         // If authentication is disabled return everything

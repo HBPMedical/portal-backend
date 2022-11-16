@@ -152,7 +152,7 @@ public class ExperimentService {
         //Checking if check (POST) /experiments has proper input.
         checkPostExperimentProperInput(experimentDTO, logger);
 
-        // Get the type and name of algorithm
+        // Get the type of algorithm
         String algorithmType = experimentDTO.getAlgorithm().getType();
 
         if (algorithmType == null) {
@@ -190,8 +190,10 @@ public class ExperimentService {
         //Checking if check (POST) /experiments has proper input.
         checkPostExperimentProperInput(experimentDTO, logger);
 
-        // Get the type and name of algorithm
+        // Get the type of algorithm
         String algorithmType = experimentDTO.getAlgorithm().getType();
+
+        experimentDTO.setUuid(UUID.randomUUID());
 
         if (algorithmType.equals("workflow")) {
             logger.LogUserAction("You can not run workflow algorithms transiently.");

@@ -34,6 +34,7 @@ spring:
 
 ### EXTERNAL SERVICES ###
 services:
+  algorithmsUpdateInterval: {{  .Env.ALGORITHM_UPDATE_INTERVAL}}
   mipengine:
     algorithmsUrl: {{ .Env.MIPENGINE_URL}}/algorithms
     attributesUrl: {{ .Env.MIPENGINE_URL}}/data_models_attributes

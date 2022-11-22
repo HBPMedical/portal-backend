@@ -34,6 +34,7 @@ spring:
 
 ### EXTERNAL SERVICES ###
 services:
+  algorithmsUpdateInterval: 10
   mipengine:
     algorithmsUrl: "http://127.0.0.1:5000/algorithms"
     attributesUrl: "http://127.0.0.1:5000/data_models_attributes"

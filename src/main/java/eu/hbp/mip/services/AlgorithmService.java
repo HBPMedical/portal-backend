@@ -17,6 +17,10 @@ import eu.hbp.mip.utils.HTTPUtil;
 import eu.hbp.mip.utils.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -26,16 +30,13 @@ import java.util.*;
 
 import static eu.hbp.mip.utils.InputStreamConverter.convertInputStreamToString;
 
+@EnableScheduling
 @Service
 public class AlgorithmService {
 
     private static final Gson gson = new Gson();
 
-    private long algorithmsUpdated = 0;
-    private List<ExaremeAlgorithmDTO> algorithmDTOS = new ArrayList<>();
-
-    @Value("#{'${services.algorithmsUpdateInterval}'}")
-    private int algorithmsUpdateInterval;
+    private ArrayList<ExaremeAlgorithmDTO> algorithmDTOS = new ArrayList<>();
 
     @Value("#{'${services.mipengine.algorithmsUrl}'}")
     private String mipengineAlgorithmsUrl;
@@ -55,8 +56,12 @@ public class AlgorithmService {
     public AlgorithmService(CustomResourceLoader resourceLoader) {
         this.resourceLoader = resourceLoader;
     }
+    public ArrayList<ExaremeAlgorithmDTO> getAlgorithms() {
 
-    public ArrayList<ExaremeAlgorithmDTO> getAlgorithms(Logger logger) {
+        return this.algorithmDTOS;
+    }
+
+    public void update(Logger logger) {
         ArrayList<ExaremeAlgorithmDTO> mipengineAlgorithms = getMIPEngineAlgorithms(logger);
         ArrayList<ExaremeAlgorithmDTO> exaremeAlgorithms = getExaremeAlgorithms(logger);
         ArrayList<ExaremeAlgorithmDTO> galaxyAlgorithms = getGalaxyWorkflows(logger);
@@ -107,27 +112,37 @@ public class AlgorithmService {
             }
         }
 
-        logger.LogUserAction("Removed "+ (algorithms.size() - allowedAlgorithms.size()) +" disabled algorithms");
+        int algorithmsRemoved = algorithms.size() - allowedAlgorithms.size();
+        if (algorithmsRemoved > 0){
+            logger.LogUserAction("Removed "+ (algorithmsRemoved) +" disabled algorithms");
+        }
 
-        this.algorithmsUpdated = System.currentTimeMillis();
         this.algorithmDTOS = allowedAlgorithms;
-
-        return allowedAlgorithms;
     }
 
-    private boolean areAlgorithmsOutDated (){
-        if (this.algorithmsUpdated == 0) return true;
-        return (int)((System.currentTimeMillis() - this.algorithmsUpdated) / 1000) > algorithmsUpdateInterval;
+
+    @EnableAsync
+    public static class AlgorithmAggregator {
+
+        private final AlgorithmService algorithmService;
+
+        public AlgorithmAggregator(AlgorithmService algorithmService){
+            this.algorithmService = algorithmService;
+        }
+        @Async
+        @Scheduled(fixedDelayString = "${services.algorithmsUpdateInterval}000")
+        public void scheduleFixedRateTaskAsync() throws InterruptedException {
+            algorithmService.update(new Logger("AlgorithmAggregator","(GET) /algorithms"));
+        }
     }
 
-    public  String getEngineName(Logger logger, String algorithmName){
-        if(areAlgorithmsOutDated()) getAlgorithms(logger);
+    public  String getAlgorithmEngineType(String algorithmName){
         Optional<ExaremeAlgorithmDTO> exaremeAlgorithmDTO  = this.algorithmDTOS.stream().filter(algorithmDTO -> algorithmDTO.getName().equals(algorithmName)).findAny();
-        if (exaremeAlgorithmDTO.isPresent()) return getEngineNameForSpecificAlgorithm(exaremeAlgorithmDTO.get());
+        if (exaremeAlgorithmDTO.isPresent()) return getAlgorithmEngineType(exaremeAlgorithmDTO.get());
         else throw new BadRequestException("Algorithm: " + algorithmName + " does not exist.");
     }
 
-    private String getEngineNameForSpecificAlgorithm(ExaremeAlgorithmDTO algorithmDTO){
+    private String getAlgorithmEngineType(ExaremeAlgorithmDTO algorithmDTO){
         switch (algorithmDTO.getType()) {
             case "mipengine":
                 return "MIP-Engine";

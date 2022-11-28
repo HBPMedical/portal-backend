@@ -32,9 +32,9 @@ public class AlgorithmsAPI {
     public ResponseEntity<List<ExaremeAlgorithmDTO>> getAlgorithms() {
         Logger logger = new Logger(activeUserService.getActiveUser().getUsername(), "(GET) /algorithms");
         logger.LogUserAction("Executing...");
-        List<ExaremeAlgorithmDTO> allowedAlgorithms = algorithmService.getAlgorithms(logger);
+        List<ExaremeAlgorithmDTO> algorithms = algorithmService.getAlgorithms();
 
-        logger.LogUserAction("Successfully listed " + allowedAlgorithms.size() + " algorithms");
-        return ResponseEntity.ok(allowedAlgorithms);
+        logger.LogUserAction("Successfully listed " + algorithms.size() + " algorithms");
+        return ResponseEntity.ok(algorithms);
     }
 }

@@ -156,8 +156,8 @@ public class ExperimentService {
 
 
         // Get the engine name from algorithmService
-        String engineName = algorithmService.getEngineName(logger, experimentDTO.getAlgorithm().getName().toUpperCase());
-        logger.LogUserAction("Algorithm runs on " + engineName + ".");
+        String algorithmEngineName = algorithmService.getAlgorithmEngineType(experimentDTO.getAlgorithm().getName().toUpperCase());
+        logger.LogUserAction("Algorithm runs on " + algorithmEngineName + ".");
 
         algorithmParametersLogging(experimentDTO, logger);
 
@@ -167,10 +167,10 @@ public class ExperimentService {
         }
 
         // Run with the appropriate engine
-        if (engineName.equals("Galaxy")) {
+        if (algorithmEngineName.equals("Galaxy")) {
             return galaxyService.createGalaxyExperiment(experimentDTO, logger);
         } else {
-            return createSynchronousExperiment(experimentDTO, engineName, logger);
+            return createSynchronousExperiment(experimentDTO, algorithmEngineName, logger);
         }
     }
 
@@ -188,12 +188,12 @@ public class ExperimentService {
         checkPostExperimentProperInput(experimentDTO, logger);
 
         // Get the engine name from algorithmService
-        String engineName = algorithmService.getEngineName(logger, experimentDTO.getAlgorithm().getName().toUpperCase());
+        String algorithmEngineName = algorithmService.getAlgorithmEngineType(experimentDTO.getAlgorithm().getName().toUpperCase());
 
 
         experimentDTO.setUuid(UUID.randomUUID());
 
-        if (engineName.equals("Galaxy")) {
+        if (algorithmEngineName.equals("Galaxy")) {
             logger.LogUserAction("You can not run workflow algorithms transiently.");
             throw new BadRequestException("You can not run workflow algorithms transiently.");
         }
@@ -207,7 +207,7 @@ public class ExperimentService {
 
         logger.LogUserAction("Completed, returning: " + experimentDTO);
 
-        ExaremeAlgorithmResultDTO exaremeAlgorithmResultDTO = runSynchronousExperiment(experimentDTO, engineName, logger);
+        ExaremeAlgorithmResultDTO exaremeAlgorithmResultDTO = runSynchronousExperiment(experimentDTO, algorithmEngineName, logger);
 
         logger.LogUserAction(
                 "Experiment with uuid: " + experimentDTO.getUuid()
@@ -398,7 +398,7 @@ public class ExperimentService {
      * @param logger        contains username and the endpoint.
      * @return the experiment information that was retrieved from exareme
      */
-    private ExperimentDTO createSynchronousExperiment(ExperimentDTO experimentDTO, String engineName, Logger logger) {
+    private ExperimentDTO createSynchronousExperiment(ExperimentDTO experimentDTO, String algorithmEngineName, Logger logger) {
 
         logger.LogUserAction("Running the algorithm...");
 
@@ -411,7 +411,7 @@ public class ExperimentService {
         new Thread(() -> {
 
             try {
-                ExaremeAlgorithmResultDTO exaremeAlgorithmResultDTO = runSynchronousExperiment(finalExperimentDTO, engineName, logger);
+                ExaremeAlgorithmResultDTO exaremeAlgorithmResultDTO = runSynchronousExperiment(finalExperimentDTO, algorithmEngineName, logger);
 
                 logger.LogUserAction(
                         "Experiment with uuid: " + experimentDAO.getUuid()
@@ -442,8 +442,8 @@ public class ExperimentService {
      * @param experimentDTO is the request with the experiment information
      * @return the result of experiment as well as the http status that was retrieved
      */
-    private ExaremeAlgorithmResultDTO runSynchronousExperiment(ExperimentDTO experimentDTO, String engineName,  Logger logger) {
-        if (engineName.equals("MIP-Engine")) {
+    private ExaremeAlgorithmResultDTO runSynchronousExperiment(ExperimentDTO experimentDTO, String algorithmEngineName,  Logger logger) {
+        if (algorithmEngineName.equals("MIP-Engine")) {
             return runMIPEngineExperiment(experimentDTO, logger);
         } else {
             return runExaremeExperiment(experimentDTO, logger);

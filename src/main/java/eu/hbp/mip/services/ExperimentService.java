@@ -41,10 +41,12 @@ public class ExperimentService {
     private static final Gson gson = new Gson();
 
     private final ActiveUserService activeUserService;
+    private final AlgorithmService algorithmService;
     private final GalaxyService galaxyService;
     private final ExperimentRepository experimentRepository;
 
-    public ExperimentService(ActiveUserService activeUserService, GalaxyService galaxyService, ExperimentRepository experimentRepository) {
+    public ExperimentService(ActiveUserService activeUserService, AlgorithmService algorithmService, GalaxyService galaxyService, ExperimentRepository experimentRepository) {
+        this.algorithmService = algorithmService;
         this.activeUserService = activeUserService;
         this.galaxyService = galaxyService;
         this.experimentRepository = experimentRepository;
@@ -58,7 +60,7 @@ public class ExperimentService {
      * @param shared        is optional, in case it is required to filter the experiments by shared
      * @param viewed        is optional, in case it is required to filter the experiments by viewed
      * @param includeShared is optional, in case it is required to retrieve the experiment that is shared
-     * @param page          is the page that is required to be retrieve
+     * @param page          is the page that is required to be retrieved
      * @param size          is the size of each page
      * @param orderBy       is the column that is required to ordered by
      * @param descending    is a boolean to determine if the experiments will be order by descending or ascending
@@ -152,13 +154,10 @@ public class ExperimentService {
         //Checking if check (POST) /experiments has proper input.
         checkPostExperimentProperInput(experimentDTO, logger);
 
-        // Get the type of algorithm
-        String algorithmType = experimentDTO.getAlgorithm().getType();
 
-        if (algorithmType == null) {
-            logger.LogUserAction("Please provide algorithm type.");
-            throw new BadRequestException("Please provide algorithm type.");
-        }
+        // Get the engine name from algorithmService
+        String algorithmEngineName = algorithmService.getAlgorithmEngineType(experimentDTO.getAlgorithm().getName().toUpperCase());
+        logger.LogUserAction("Algorithm runs on " + algorithmEngineName + ".");
 
         algorithmParametersLogging(experimentDTO, logger);
 
@@ -168,12 +167,10 @@ public class ExperimentService {
         }
 
         // Run with the appropriate engine
-        if (algorithmType.equals("workflow")) {
-            logger.LogUserAction("Algorithm runs on Galaxy.");
+        if (algorithmEngineName.equals("Galaxy")) {
             return galaxyService.createGalaxyExperiment(experimentDTO, logger);
         } else {
-            logger.LogUserAction("Algorithm runs on Exareme.");
-            return createSynchronousExperiment(experimentDTO, logger);
+            return createSynchronousExperiment(experimentDTO, algorithmEngineName, logger);
         }
     }
 
@@ -190,12 +187,13 @@ public class ExperimentService {
         //Checking if check (POST) /experiments has proper input.
         checkPostExperimentProperInput(experimentDTO, logger);
 
-        // Get the type of algorithm
-        String algorithmType = experimentDTO.getAlgorithm().getType();
+        // Get the engine name from algorithmService
+        String algorithmEngineName = algorithmService.getAlgorithmEngineType(experimentDTO.getAlgorithm().getName().toUpperCase());
+
 
         experimentDTO.setUuid(UUID.randomUUID());
 
-        if (algorithmType.equals("workflow")) {
+        if (algorithmEngineName.equals("Galaxy")) {
             logger.LogUserAction("You can not run workflow algorithms transiently.");
             throw new BadRequestException("You can not run workflow algorithms transiently.");
         }
@@ -209,7 +207,7 @@ public class ExperimentService {
 
         logger.LogUserAction("Completed, returning: " + experimentDTO);
 
-        ExaremeAlgorithmResultDTO exaremeAlgorithmResultDTO = runSynchronousExperiment(experimentDTO, logger);
+        ExaremeAlgorithmResultDTO exaremeAlgorithmResultDTO = runSynchronousExperiment(experimentDTO, algorithmEngineName, logger);
 
         logger.LogUserAction(
                 "Experiment with uuid: " + experimentDTO.getUuid()
@@ -258,7 +256,7 @@ public class ExperimentService {
         try {
             experimentRepository.save(experimentDAO);
         } catch (Exception e) {
-            logger.LogUserAction("Attempted to save changes to database but an error ocurred  : " + e.getMessage() + ".");
+            logger.LogUserAction("Attempted to save changes to database but an error occurred  : " + e.getMessage() + ".");
             throw new InternalServerError(e.getMessage());
         }
 
@@ -287,7 +285,7 @@ public class ExperimentService {
         try {
             experimentRepository.delete(experimentDAO);
         } catch (Exception e) {
-            logger.LogUserAction("Attempted to delete an experiment to database but an error ocurred  : " + e.getMessage() + ".");
+            logger.LogUserAction("Attempted to delete an experiment to database but an error occurred  : " + e.getMessage() + ".");
             throw new InternalServerError(e.getMessage());
         }
 
@@ -400,7 +398,7 @@ public class ExperimentService {
      * @param logger        contains username and the endpoint.
      * @return the experiment information that was retrieved from exareme
      */
-    private ExperimentDTO createSynchronousExperiment(ExperimentDTO experimentDTO, Logger logger) {
+    private ExperimentDTO createSynchronousExperiment(ExperimentDTO experimentDTO, String algorithmEngineName, Logger logger) {
 
         logger.LogUserAction("Running the algorithm...");
 
@@ -413,7 +411,7 @@ public class ExperimentService {
         new Thread(() -> {
 
             try {
-                ExaremeAlgorithmResultDTO exaremeAlgorithmResultDTO = runSynchronousExperiment(finalExperimentDTO, logger);
+                ExaremeAlgorithmResultDTO exaremeAlgorithmResultDTO = runSynchronousExperiment(finalExperimentDTO, algorithmEngineName, logger);
 
                 logger.LogUserAction(
                         "Experiment with uuid: " + experimentDAO.getUuid()
@@ -444,9 +442,8 @@ public class ExperimentService {
      * @param experimentDTO is the request with the experiment information
      * @return the result of experiment as well as the http status that was retrieved
      */
-    private ExaremeAlgorithmResultDTO runSynchronousExperiment(ExperimentDTO experimentDTO, Logger logger) {
-        String algorithmType = experimentDTO.getAlgorithm().getType();
-        if (algorithmType.equals("mipengine")) {
+    private ExaremeAlgorithmResultDTO runSynchronousExperiment(ExperimentDTO experimentDTO, String algorithmEngineName,  Logger logger) {
+        if (algorithmEngineName.equals("MIP-Engine")) {
             return runMIPEngineExperiment(experimentDTO, logger);
         } else {
             return runExaremeExperiment(experimentDTO, logger);
@@ -485,9 +482,9 @@ public class ExperimentService {
         logger.LogUserAction("Exareme algorithm execution. Body: " + algorithmBody);
 
         StringBuilder requestResponseBody = new StringBuilder();
-        int requestReponseCode;
+        int requestResponseCode;
         try {
-            requestReponseCode = HTTPUtil.sendPost(algorithmEndpoint, algorithmBody, requestResponseBody);
+            requestResponseCode = HTTPUtil.sendPost(algorithmEndpoint, algorithmBody, requestResponseBody);
         } catch (Exception e) {
             throw new InternalServerError("Error occurred : " + e.getMessage());
         }
@@ -496,7 +493,7 @@ public class ExperimentService {
         ExaremeAlgorithmResultDTO exaremeResult = JsonConverters.convertJsonStringToObject(
                 String.valueOf(requestResponseBody), ExaremeAlgorithmResultDTO.class
         );
-        exaremeResult.setCode(requestReponseCode);
+        exaremeResult.setCode(requestResponseCode);
 
         return exaremeResult;
     }

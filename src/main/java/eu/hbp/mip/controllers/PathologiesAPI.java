@@ -3,7 +3,7 @@ package eu.hbp.mip.controllers;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import eu.hbp.mip.models.DTOs.MIPEngineAttributesDTO;
-import eu.hbp.mip.models.DTOs.MetadataHierarchyDTO;
+import eu.hbp.mip.models.DTOs.MIPEngineCommonDataElement;
 import eu.hbp.mip.models.DTOs.PathologyDTO;
 import eu.hbp.mip.services.ActiveUserService;
 import eu.hbp.mip.utils.*;
@@ -77,14 +77,14 @@ public class PathologiesAPI {
     }
 
     public Map<String, List<PathologyDTO.EnumerationDTO>> getMIPEngineDatasetsPerPathology(Logger logger) {
-        Map<String, Map<String, MetadataHierarchyDTO.CommonDataElement>> mipEngineCDEsMetadata;
+        Map<String, Map<String, MIPEngineCommonDataElement>> mipEngineCDEsMetadata;
         // Get MIPEngine algorithms
         try {
             StringBuilder response = new StringBuilder();
             HTTPUtil.sendGet(mipengineCDEsMetadataUrl, response);
             mipEngineCDEsMetadata = gson.fromJson(
                     response.toString(),
-                    new TypeToken<HashMap<String, Map<String, MetadataHierarchyDTO.CommonDataElement>>>() {
+                    new TypeToken<HashMap<String, Map<String, MIPEngineCommonDataElement>>>() {
                     }.getType()
             );
         } catch (Exception e) {
@@ -122,14 +122,7 @@ public class PathologiesAPI {
             return null;
         }
 
-        Map<String, MIPEngineAttributesDTO> mipEnginePathologyAttributesWithProperEnums = new HashMap<>();
-        for (Map.Entry<String, MIPEngineAttributesDTO> entry : mipEnginePathologyAttributes.entrySet()) {
-            String pathology = entry.getKey();
-            MIPEngineAttributesDTO attributes = entry.getValue();
-            attributes.updateAttributesWithProperEnums();
-            mipEnginePathologyAttributesWithProperEnums.put(pathology, attributes);
-        }
 
-        return mipEnginePathologyAttributesWithProperEnums;
+        return mipEnginePathologyAttributes;
     }
 }

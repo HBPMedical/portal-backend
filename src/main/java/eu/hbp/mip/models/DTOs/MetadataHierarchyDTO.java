@@ -4,9 +4,7 @@ import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Data
 @AllArgsConstructor
@@ -39,7 +37,7 @@ public class MetadataHierarchyDTO {
         private String description;
 
         @SerializedName("enumerations")
-        private Object enumerations;
+        private List<PathologyDTO.EnumerationDTO> enumerations;
 
         @SerializedName("label")
         private String label;
@@ -58,43 +56,8 @@ public class MetadataHierarchyDTO {
 
         @SerializedName("max")
         private String max;
-
-        private void updateEnumerations(){
-            if (this.enumerations != null){
-                Map old_enumeration = (Map) this.enumerations;
-                List<PathologyDTO.EnumerationDTO> enumerationDTOS = new ArrayList<>();
-                old_enumeration.forEach((cdeCode, cdeLabel) -> {
-                    enumerationDTOS.add(new PathologyDTO.EnumerationDTO((String) cdeCode, (String) cdeLabel));
-                });
-                setEnumerations(enumerationDTOS);
-            }
-        }
     }
 
-    public void updateVariableWithProperEnums(){
-        List<CommonDataElement> updated_variables = new ArrayList<>();
-        this.variables.forEach(commonDataElement -> {
-            commonDataElement.updateEnumerations();
-            updated_variables.add(commonDataElement);
-        });
-        setVariables(updated_variables);
-    }
-
-    public void updateGroupWithProperEnums(){
-        List<MetadataHierarchyDTO> updated_groups = new ArrayList<>();
-        for (MetadataHierarchyDTO hierarchyDTO : this.groups) {
-
-            if (hierarchyDTO.getVariables() != null) {
-                hierarchyDTO.updateVariableWithProperEnums();
-            }
-
-            if (hierarchyDTO.getGroups() != null) {
-                hierarchyDTO.updateGroupWithProperEnums();
-            }
-            updated_groups.add(hierarchyDTO);
-        }
-        this.groups = updated_groups;
-    }
 
     public boolean isDatasetCDEPresent(){
         if (this.variables != null) {

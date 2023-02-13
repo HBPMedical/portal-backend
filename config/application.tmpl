@@ -69,7 +69,7 @@ keycloak:
 # Files are imported when building the docker image
 files:
   pathologies_json: "file:/opt/portal/api/pathologies.json"
-  disabledAlgorithms_json: "file:/opt/portal/api/disabledAlgorithms.json"
+  disabledAlgorithms_json: "file:{{ .Env.DISABLED_ALGORITHMS_CONFIG_PATH}}"
 
 
 ### EMBEDDED SERVER CONFIGURATION ###

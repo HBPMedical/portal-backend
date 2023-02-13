@@ -29,9 +29,9 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 #######################################################
 # Setting up env variables and workdir
 #######################################################
-ENV APP_CONFIG_TEMPLATE="/opt/config/application.tmpl" \
-    APP_CONFIG_LOCATION="/opt/config/application.yml" \
-    SPRING_CONFIG_LOCATION="file:/opt/config/application.yml"
+ENV APP_CONFIG_TEMPLATE="/opt/config/application.tmpl"
+ENV APP_CONFIG_LOCATION="/opt/config/application.yml"
+ENV SPRING_CONFIG_LOCATION="file:/opt/config/application.yml"
 
 WORKDIR /opt
 
@@ -53,13 +53,13 @@ COPY --from=mvn-build-env /opt/code/target/portal-backend.jar /usr/share/jars/
 
 
 #######################################################
-# Volume for the backend config files
+# Configuration for the backend config files
 #######################################################
+ENV DISABLED_ALGORITHMS_CONFIG_PATH="/opt/portal/algorithms/disabledAlgorithms.json"
+COPY /config/disabledAlgorithms.json $DISABLED_ALGORITHMS_CONFIG_PATH
 VOLUME /opt/portal/api
 
 
 ENTRYPOINT ["sh", "-c", "dockerize -template $APP_CONFIG_TEMPLATE:$APP_CONFIG_LOCATION java -Daeron.term.buffer.length -jar /usr/share/jars/portal-backend.jar"]
 EXPOSE 8080
 HEALTHCHECK --start-period=60s CMD curl -v --silent http://localhost:8080/services/actuator/health 2>&1 | grep UP
-
-

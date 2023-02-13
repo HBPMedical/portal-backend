@@ -101,7 +101,7 @@ public class AlgorithmService {
         try {
             disabledAlgorithms = getDisabledAlgorithms();
         } catch (IOException e) {
-            logger.LogUserAction("The disabled algorithms could not be loaded.");
+            logger.LogUserAction("The disabled algorithms could not be loaded. Exception: " + e.getMessage());
         }
 
         // Remove any disabled algorithm

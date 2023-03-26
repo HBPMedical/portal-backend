@@ -65,7 +65,6 @@ public class AlgorithmService {
         ArrayList<ExaremeAlgorithmDTO> mipengineAlgorithms = getMIPEngineAlgorithms(logger);
         ArrayList<ExaremeAlgorithmDTO> exaremeAlgorithms = getExaremeAlgorithms(logger);
         ArrayList<ExaremeAlgorithmDTO> galaxyAlgorithms = getGalaxyWorkflows(logger);
-
         ArrayList<ExaremeAlgorithmDTO> algorithms = new ArrayList<>();
 
         // Remove Exareme algorithms that exist in the Exareme2

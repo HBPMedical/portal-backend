@@ -63,7 +63,7 @@ public class ExaremeAlgorithmRequestParamDTO {
         this.defaultValue = parameter.getDefault_value();
         this.valueNotBlank = parameter.getNotblank();
         this.label = parameter.getLabel();
-        this.valueEnumerations = parameter.getEnums();
+        this.valueEnumerations = parameter.getEnums().isPresent()? parameter.getEnums().get().getSource():null;
         this.valueMultiple = parameter.getMultiple();
         this.valueMax = parameter.getMax();
         this.valueMin = parameter.getMin();

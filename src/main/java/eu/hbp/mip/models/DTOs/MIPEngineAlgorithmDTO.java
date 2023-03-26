@@ -36,6 +36,8 @@ public class MIPEngineAlgorithmDTO {
     public Optional<Hashtable<String, MIPEngineAlgorithmParameterDTO>> getParameters() {
         return Optional.ofNullable(parameters);
     }
+
+
     @Data
     @AllArgsConstructor
     public static class MIPEngineAlgorithmParameterDTO {
@@ -65,7 +67,29 @@ public class MIPEngineAlgorithmDTO {
         private String default_value;
 
         @SerializedName("enums")
-        private List<String> enums;
+        private MIPEngineAlgorithmEnumDTO enums;
+
+        @SerializedName("dict_keys_enums")
+        private MIPEngineAlgorithmEnumDTO dict_keys_enums;
+
+        @SerializedName("dict_values_enums")
+        private MIPEngineAlgorithmEnumDTO dict_values_enums;
+
+        public Optional<MIPEngineAlgorithmEnumDTO> getEnums() {
+            return Optional.ofNullable(enums);
+        }
+
+        @Data
+        @AllArgsConstructor
+        public static class MIPEngineAlgorithmEnumDTO {
+
+            @SerializedName("type")
+            private String type;
+
+            @SerializedName("source")
+            private List<String> source;
+
+        }
     }
 
     @Data

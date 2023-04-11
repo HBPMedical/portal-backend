@@ -3,7 +3,6 @@ name: Mirror to Ebrains
 on:
   push:
     branches: [ master ]
-  push:
     tags:
     - '*'
 

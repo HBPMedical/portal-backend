@@ -34,7 +34,7 @@ jobs:
         with:
           images: |
             hbpmip/portal-backend
-            docker-registry.ebrains.eu/medical-informatics-platform
+            docker-registry.ebrains.eu/medical-informatics-platform/portal-backend
             
       - name: Load cached image
         uses: actions/cache@v3

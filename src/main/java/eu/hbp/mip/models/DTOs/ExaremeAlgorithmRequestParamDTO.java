@@ -58,7 +58,7 @@ public class ExaremeAlgorithmRequestParamDTO {
     public ExaremeAlgorithmRequestParamDTO (String name, MIPEngineAlgorithmDTO.MIPEngineAlgorithmParameterDTO parameter){
         this.name = name;
         this.desc = parameter.getDesc();
-        this.valueType = parameter.getType();
+        this.valueType = parameter.getTypes().get(0);
         this.type = "other";
         this.defaultValue = parameter.getDefault_value();
         this.valueNotBlank = parameter.getNotblank();

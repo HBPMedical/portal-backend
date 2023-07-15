@@ -26,6 +26,9 @@ public class ExaremeAlgorithmDTO {
     @SerializedName("parameters")
     private List<ExaremeAlgorithmRequestParamDTO> parameters;
 
+    @SerializedName("preprocessing")
+    private List<Transformer> preprocessing;
+
     public ExaremeAlgorithmDTO() {
 
     }
@@ -51,7 +54,45 @@ public class ExaremeAlgorithmDTO {
                 parameters.add(parameter);
             });
         }
-        this.setParameters(parameters);
+        this.parameters = parameters;
+        List<Transformer> preprocessing = new ArrayList<>();
+        if (mipEngineAlgorithm.getPreprocessing().isPresent()) {
+            mipEngineAlgorithm.getPreprocessing().get().forEach(mipEngineTransformerDTO -> {
+                Transformer transformer = new Transformer(mipEngineTransformerDTO);
+                preprocessing.add(transformer);
+            });
+            this.preprocessing = preprocessing;
+        }
+    }
+
+
+    @Data
+    @AllArgsConstructor
+    public static class Transformer {
+        @SerializedName("name")
+        private String name;
+
+        @SerializedName("desc")
+        private String desc;
+
+        @SerializedName("label")
+        private String label;
+
+        @SerializedName("parameters")
+        private List<ExaremeAlgorithmRequestParamDTO> parameters;
+
+
+        public Transformer(MIPEngineAlgorithmDTO.MIPEngineTransformerDTO transformerDTO) {
+            this.name = transformerDTO.getName().toUpperCase();
+            this.label = transformerDTO.getLabel();
+            this.desc = transformerDTO.getDesc();
+            List<ExaremeAlgorithmRequestParamDTO> parameters = new ArrayList<>();
+            transformerDTO.getParameters().forEach((name, parameterDTO) -> {
+                ExaremeAlgorithmRequestParamDTO parameter = new ExaremeAlgorithmRequestParamDTO(name, parameterDTO);
+                parameters.add(parameter);
+            });
+            this.parameters = parameters;
+        }
     }
 
     @Data

@@ -16,11 +16,14 @@ public class MIPEngineAlgorithmRequestDTO {
     private InputData inputdata;
     @SerializedName("parameters")
     private HashMap<String, Object> parameters;
+    @SerializedName("preprocessing")
+    private HashMap<String, Object> preprocessing;
 
-    public MIPEngineAlgorithmRequestDTO(UUID experimentUUID, List<ExaremeAlgorithmRequestParamDTO> exaremeAlgorithmRequestParamDTOs) {
+    public MIPEngineAlgorithmRequestDTO(UUID experimentUUID, List<ExaremeAlgorithmRequestParamDTO> exaremeAlgorithmRequestParamDTOs, List<ExaremeAlgorithmDTO.Transformer> exaremeTransformers) {
         this.request_id = experimentUUID.toString();
         MIPEngineAlgorithmRequestDTO.InputData inputData = new MIPEngineAlgorithmRequestDTO.InputData();
         HashMap<String, Object> mipEngineParameters = new HashMap<>();
+        HashMap<String, Object> mipEnginePreprocessing = new HashMap<>();
 
         exaremeAlgorithmRequestParamDTOs.forEach(parameter -> {
 
@@ -48,8 +51,25 @@ public class MIPEngineAlgorithmRequestDTO {
                     mipEngineParameters.put(parameter.getName(), convertStringToMultipleValues(parameter.getValue()));
             }
         });
+        if (exaremeTransformers.size() > 0) {
+            exaremeTransformers.forEach(transformer -> {
+                HashMap<String, Object> transformerParameterDTOs = new HashMap<>();
+                for (ExaremeAlgorithmRequestParamDTO parameter : transformer.getParameters()) {
+                    if (parameter.getName().equals("strategies")){
+                        transformerParameterDTOs.put(parameter.getName(),
+                                JsonConverters.convertJsonStringToObject(parameter.getValue(), HashMap.class)
+                        );
+                    }
+                    else {
+                        transformerParameterDTOs.put(parameter.getName(), convertStringToMultipleValues(parameter.getValue()));
+                    }
+                }
+                mipEnginePreprocessing.put(transformer.getName(), transformerParameterDTOs);
+            });
+        }
         this.inputdata = inputData;
         this.parameters = mipEngineParameters;
+        this.preprocessing = mipEnginePreprocessing;
     }
 
     private static Object convertStringToMultipleValues(String str) {

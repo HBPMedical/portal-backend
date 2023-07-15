@@ -363,6 +363,24 @@ public class ExperimentService {
                         .append(" -> ")
                         .append(params.getValue())
                         .append("\n"));
+        experimentDTO.getAlgorithm().getPreprocessing().forEach( transformer ->
+                {
+                    parametersLogMessage
+                            .append("  ")
+                            .append(transformer.getLabel())
+                            .append(" -> ")
+                            .append("\n");
+                    transformer.getParameters().forEach(
+                            transformerParams -> parametersLogMessage
+                                    .append("        ")
+                                    .append(transformerParams.getLabel())
+                                    .append(" -> ")
+                                    .append(transformerParams.getValue())
+                                    .append("\n"));
+                    parametersLogMessage.append("\n");
+                });
+
+
         logger.LogUserAction("Executing " + algorithmName + parametersLogMessage);
     }
 
@@ -511,7 +529,7 @@ public class ExperimentService {
 
         String algorithmEndpoint = mipengineAlgorithmsUrl + "/" + algorithmName.toLowerCase();
         MIPEngineAlgorithmRequestDTO mipEngineAlgorithmRequestDTO =
-                new MIPEngineAlgorithmRequestDTO(experimentDTO.getUuid(), experimentDTO.getAlgorithm().getParameters());
+                new MIPEngineAlgorithmRequestDTO(experimentDTO.getUuid(), experimentDTO.getAlgorithm().getParameters(), experimentDTO.getAlgorithm().getPreprocessing());
         String algorithmBody = JsonConverters.convertObjectToJsonString(mipEngineAlgorithmRequestDTO);
         logger.LogUserAction("MIP-Engine algorithm execution. Endpoint: " + algorithmEndpoint);
         logger.LogUserAction("MIP-Engine algorithm execution. Body: " + algorithmBody);

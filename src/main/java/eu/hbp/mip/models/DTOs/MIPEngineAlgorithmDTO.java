@@ -36,6 +36,12 @@ public class MIPEngineAlgorithmDTO {
     public Optional<Hashtable<String, MIPEngineAlgorithmParameterDTO>> getParameters() {
         return Optional.ofNullable(parameters);
     }
+    @SerializedName("preprocessing")
+    private List<MIPEngineTransformerDTO> preprocessing;
+
+    public Optional<List<MIPEngineTransformerDTO>> getPreprocessing() {
+        return Optional.ofNullable(preprocessing);
+    }
 
 
     @Data
@@ -120,6 +126,8 @@ public class MIPEngineAlgorithmDTO {
         }
     }
 
+
+
     @Data
     @AllArgsConstructor
     public static class MIPEngineAlgorithmInputDataDetailDTO {
@@ -144,5 +152,22 @@ public class MIPEngineAlgorithmDTO {
 
         @SerializedName("desc")
         private String desc;
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class MIPEngineTransformerDTO {
+        @SerializedName("name")
+        private String name;
+
+        @SerializedName("desc")
+        private String desc;
+
+        @SerializedName("label")
+        private String label;
+
+        @SerializedName("parameters")
+        private Hashtable<String, MIPEngineAlgorithmParameterDTO> parameters;
+
     }
 }

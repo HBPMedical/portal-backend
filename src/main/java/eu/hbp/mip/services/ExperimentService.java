@@ -32,8 +32,8 @@ public class ExperimentService {
     @Value("#{'${services.exareme.queryExaremeUrl}'}")
     private String queryExaremeUrl;
 
-    @Value("#{'${services.mipengine.algorithmsUrl}'}")
-    private String mipengineAlgorithmsUrl;
+    @Value("#{'${services.exareme2.algorithmsUrl}'}")
+    private String exareme2AlgorithmsUrl;
 
     @Value("#{'${authentication.enabled}'}")
     private boolean authenticationIsEnabled;
@@ -410,7 +410,7 @@ public class ExperimentService {
 
     /**
      * Creates an experiment and runs it on the background.
-     * Uses the exareme or mip-engine engine that run an experiment synchronously.
+     * Uses the exareme or exareme2 engine that run an experiment synchronously.
      *
      * @param experimentDTO is the request with the experiment information
      * @param logger        contains username and the endpoint.
@@ -454,15 +454,15 @@ public class ExperimentService {
     }
 
     /**
-     * Runs the experiment to exareme or MIPEngine, waiting for the response from them.
-     * Exareme and MIP-Engine do not support async fetching of an algorithm result.
+     * Runs the experiment to exareme or Exareme2, waiting for the response from them.
+     * Exareme and Exareme2 do not support async fetching of an algorithm result.
      *
      * @param experimentDTO is the request with the experiment information
      * @return the result of experiment as well as the http status that was retrieved
      */
     private ExaremeAlgorithmResultDTO runSynchronousExperiment(ExperimentDTO experimentDTO, String algorithmEngineName,  Logger logger) {
-        if (algorithmEngineName.equals("MIP-Engine")) {
-            return runMIPEngineExperiment(experimentDTO, logger);
+        if (algorithmEngineName.equals("Exareme2")) {
+            return runExareme2Experiment(experimentDTO, logger);
         } else {
             return runExaremeExperiment(experimentDTO, logger);
         }
@@ -517,22 +517,22 @@ public class ExperimentService {
     }
 
     /**
-     * The runMIPEngineExperiment will run an experiment using the MIP-Engine
+     * The runExareme2Experiment will run an experiment using the Exareme2
      *
      * @param experimentDTO contains the information needed to run the experiment
      * @param logger        is used to log
      * @return the result of the algorithm
      */
-    private ExaremeAlgorithmResultDTO runMIPEngineExperiment(ExperimentDTO experimentDTO, Logger logger) {
+    private ExaremeAlgorithmResultDTO runExareme2Experiment(ExperimentDTO experimentDTO, Logger logger) {
         String algorithmName = experimentDTO.getAlgorithm().getName();
-        logger.LogUserAction("Starting MIP-Engine algorithm execution, algorithm: " + algorithmName);
+        logger.LogUserAction("Starting Exareme2 algorithm execution, algorithm: " + algorithmName);
 
-        String algorithmEndpoint = mipengineAlgorithmsUrl + "/" + algorithmName.toLowerCase();
-        MIPEngineAlgorithmRequestDTO mipEngineAlgorithmRequestDTO =
-                new MIPEngineAlgorithmRequestDTO(experimentDTO.getUuid(), experimentDTO.getAlgorithm().getParameters(), experimentDTO.getAlgorithm().getPreprocessing());
-        String algorithmBody = JsonConverters.convertObjectToJsonString(mipEngineAlgorithmRequestDTO);
-        logger.LogUserAction("MIP-Engine algorithm execution. Endpoint: " + algorithmEndpoint);
-        logger.LogUserAction("MIP-Engine algorithm execution. Body: " + algorithmBody);
+        String algorithmEndpoint = exareme2AlgorithmsUrl + "/" + algorithmName.toLowerCase();
+        Exareme2AlgorithmRequestDTO exareme2AlgorithmRequestDTO =
+                new Exareme2AlgorithmRequestDTO(experimentDTO.getUuid(), experimentDTO.getAlgorithm().getParameters(), experimentDTO.getAlgorithm().getPreprocessing());
+        String algorithmBody = JsonConverters.convertObjectToJsonString(exareme2AlgorithmRequestDTO);
+        logger.LogUserAction("Exareme2 algorithm execution. Endpoint: " + algorithmEndpoint);
+        logger.LogUserAction("Exareme2 algorithm execution. Body: " + algorithmBody);
 
         StringBuilder requestResponseBody = new StringBuilder();
         int requestResponseCode;
@@ -545,9 +545,9 @@ public class ExperimentService {
 
         List<Object> exaremeAlgorithmResult = new ArrayList<>();
         if (requestResponseCode == 200) {
-            Object mipEngineResult =
+            Object exareme2Result =
                     JsonConverters.convertJsonStringToObject(String.valueOf(requestResponseBody), Object.class);
-            exaremeAlgorithmResult.add(mipEngineResult);
+            exaremeAlgorithmResult.add(exareme2Result);
 
         } else if (requestResponseCode == 400) {
             Map<String, Object> exaremeAlgorithmResultElement = new HashMap<>();
@@ -583,7 +583,7 @@ public class ExperimentService {
 
         } else {
             logger.LogUserAction(
-                    "MIP-Engine execution responded with an unexpected status code: " + requestResponseCode
+                    "Exareme2 execution responded with an unexpected status code: " + requestResponseCode
             );
             throw new InternalServerError("");
         }

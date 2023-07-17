@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class MIPEngineCommonDataElement {
+public class Exareme2CommonDataElement {
     @SerializedName("is_categorical")
     private Boolean is_categorical;
 

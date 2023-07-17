@@ -2,8 +2,8 @@ package eu.hbp.mip.controllers;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import eu.hbp.mip.models.DTOs.MIPEngineAttributesDTO;
-import eu.hbp.mip.models.DTOs.MIPEngineCommonDataElement;
+import eu.hbp.mip.models.DTOs.Exareme2AttributesDTO;
+import eu.hbp.mip.models.DTOs.Exareme2CommonDataElement;
 import eu.hbp.mip.models.DTOs.PathologyDTO;
 import eu.hbp.mip.services.ActiveUserService;
 import eu.hbp.mip.utils.*;
@@ -32,11 +32,11 @@ public class PathologiesAPI {
     @Value("#{'${authentication.enabled}'}")
     private boolean authenticationIsEnabled;
 
-    @Value("#{'${services.mipengine.attributesUrl}'}")
-    private String mipengineAttributesUrl;
+    @Value("#{'${services.exareme2.attributesUrl}'}")
+    private String exareme2AttributesUrl;
 
-    @Value("#{'${services.mipengine.cdesMetadataUrl}'}")
-    private String mipengineCDEsMetadataUrl;
+    @Value("#{'${services.exareme2.cdesMetadataUrl}'}")
+    private String exareme2CDEsMetadataUrl;
     private final ActiveUserService activeUserService;
 
     public PathologiesAPI(ActiveUserService activeUserService) {
@@ -48,15 +48,15 @@ public class PathologiesAPI {
         Logger logger = new Logger(activeUserService.getActiveUser().getUsername(), "(GET) /pathologies");
         logger.LogUserAction("Loading pathologies ...");
 
-        Map<String, List<PathologyDTO.EnumerationDTO>> datasetsPerPathology = getMIPEngineDatasetsPerPathology(logger);
+        Map<String, List<PathologyDTO.EnumerationDTO>> datasetsPerPathology = getExareme2DatasetsPerPathology(logger);
 
-        Map<String, MIPEngineAttributesDTO> mipEnginePathologyAttributes = getMIPEnginePathologyAttributes(logger);
+        Map<String, Exareme2AttributesDTO> exareme2PathologyAttributes = getExareme2PathologyAttributes(logger);
 
         List<PathologyDTO> pathologyDTOS = new ArrayList<>();
-        for (String pathology : mipEnginePathologyAttributes.keySet()) {
+        for (String pathology : exareme2PathologyAttributes.keySet()) {
             PathologyDTO newPathology;
             try {
-                newPathology = new PathologyDTO(pathology, mipEnginePathologyAttributes.get(pathology), datasetsPerPathology.get(pathology));
+                newPathology = new PathologyDTO(pathology, exareme2PathologyAttributes.get(pathology), datasetsPerPathology.get(pathology));
             }
             catch(InternalServerError e) {
                 logger.LogUserAction(e.getMessage());
@@ -76,15 +76,15 @@ public class PathologiesAPI {
         return ResponseEntity.ok().body(gson.toJson(ClaimUtils.getAuthorizedPathologies(logger, authentication, pathologyDTOS)));
     }
 
-    public Map<String, List<PathologyDTO.EnumerationDTO>> getMIPEngineDatasetsPerPathology(Logger logger) {
-        Map<String, Map<String, MIPEngineCommonDataElement>> mipEngineCDEsMetadata;
-        // Get MIPEngine algorithms
+    public Map<String, List<PathologyDTO.EnumerationDTO>> getExareme2DatasetsPerPathology(Logger logger) {
+        Map<String, Map<String, Exareme2CommonDataElement>> exareme2CDEsMetadata;
+        // Get Exareme2 algorithms
         try {
             StringBuilder response = new StringBuilder();
-            HTTPUtil.sendGet(mipengineCDEsMetadataUrl, response);
-            mipEngineCDEsMetadata = gson.fromJson(
+            HTTPUtil.sendGet(exareme2CDEsMetadataUrl, response);
+            exareme2CDEsMetadata = gson.fromJson(
                     response.toString(),
-                    new TypeToken<HashMap<String, Map<String, MIPEngineCommonDataElement>>>() {
+                    new TypeToken<HashMap<String, Map<String, Exareme2CommonDataElement>>>() {
                     }.getType()
             );
         } catch (Exception e) {
@@ -94,7 +94,7 @@ public class PathologiesAPI {
 
         Map<String, List<PathologyDTO.EnumerationDTO>> datasetsPerPathology = new HashMap<>();
 
-        mipEngineCDEsMetadata.forEach( (pathology, cdePerDataset) ->  {
+        exareme2CDEsMetadata.forEach( (pathology, cdePerDataset) ->  {
             List<PathologyDTO.EnumerationDTO> pathologyDatasetDTOS = new ArrayList<>();
             Map datasetEnumerations = (Map) cdePerDataset.get("dataset").getEnumerations();
             datasetEnumerations.forEach((code, label) ->  pathologyDatasetDTOS.add(new PathologyDTO.EnumerationDTO((String) code, (String) label)));
@@ -106,15 +106,15 @@ public class PathologiesAPI {
         return datasetsPerPathology;
     }
 
-    public Map<String, MIPEngineAttributesDTO> getMIPEnginePathologyAttributes(Logger logger) {
-        Map<String, MIPEngineAttributesDTO> mipEnginePathologyAttributes;
-        // Get MIPEngine algorithms
+    public Map<String, Exareme2AttributesDTO> getExareme2PathologyAttributes(Logger logger) {
+        Map<String, Exareme2AttributesDTO> exareme2PathologyAttributes;
+        // Get Exareme2 algorithms
         try {
             StringBuilder response = new StringBuilder();
-            HTTPUtil.sendGet(mipengineAttributesUrl, response);
-            mipEnginePathologyAttributes = gson.fromJson(
+            HTTPUtil.sendGet(exareme2AttributesUrl, response);
+            exareme2PathologyAttributes = gson.fromJson(
                     response.toString(),
-                    new TypeToken<HashMap<String, MIPEngineAttributesDTO>>() {
+                    new TypeToken<HashMap<String, Exareme2AttributesDTO>>() {
                     }.getType()
             );
         } catch (Exception e) {
@@ -123,6 +123,6 @@ public class PathologiesAPI {
         }
 
 
-        return mipEnginePathologyAttributes;
+        return exareme2PathologyAttributes;
     }
 }

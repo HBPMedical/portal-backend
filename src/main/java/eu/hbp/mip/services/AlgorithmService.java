@@ -9,7 +9,7 @@ import com.google.gson.reflect.TypeToken;
 import eu.hbp.mip.controllers.galaxy.retrofit.RetroFitGalaxyClients;
 import eu.hbp.mip.controllers.galaxy.retrofit.RetrofitClientInstance;
 import eu.hbp.mip.models.DTOs.ExaremeAlgorithmDTO;
-import eu.hbp.mip.models.DTOs.MIPEngineAlgorithmDTO;
+import eu.hbp.mip.models.DTOs.Exareme2AlgorithmDTO;
 import eu.hbp.mip.models.galaxy.WorkflowDTO;
 import eu.hbp.mip.utils.CustomResourceLoader;
 import eu.hbp.mip.utils.Exceptions.BadRequestException;
@@ -38,8 +38,8 @@ public class AlgorithmService {
 
     private ArrayList<ExaremeAlgorithmDTO> algorithmDTOS = new ArrayList<>();
 
-    @Value("#{'${services.mipengine.algorithmsUrl}'}")
-    private String mipengineAlgorithmsUrl;
+    @Value("#{'${services.exareme2.algorithmsUrl}'}")
+    private String exareme2AlgorithmsUrl;
 
     @Value("#{'${services.exareme.algorithmsUrl}'}")
     private String exaremeAlgorithmsUrl;
@@ -62,16 +62,16 @@ public class AlgorithmService {
     }
 
     public void update(Logger logger) {
-        ArrayList<ExaremeAlgorithmDTO> mipengineAlgorithms = getMIPEngineAlgorithms(logger);
+        ArrayList<ExaremeAlgorithmDTO> exareme2Algorithms = getExareme2Algorithms(logger);
         ArrayList<ExaremeAlgorithmDTO> exaremeAlgorithms = getExaremeAlgorithms(logger);
         ArrayList<ExaremeAlgorithmDTO> galaxyAlgorithms = getGalaxyWorkflows(logger);
         ArrayList<ExaremeAlgorithmDTO> algorithms = new ArrayList<>();
 
         // Remove Exareme algorithms that exist in the Exareme2
-        if (mipengineAlgorithms != null && exaremeAlgorithms != null){
+        if (exareme2Algorithms != null && exaremeAlgorithms != null){
             int old_exareme_algorithm_size = exaremeAlgorithms.size();
 
-            for (ExaremeAlgorithmDTO algorithm : mipengineAlgorithms) {
+            for (ExaremeAlgorithmDTO algorithm : exareme2Algorithms) {
                 exaremeAlgorithms.removeIf(obj -> Objects.equals(obj.getName(), algorithm.getName()));
             }
             logger.LogUserAction("Removed "+ (old_exareme_algorithm_size - exaremeAlgorithms.size()) +" deprecated exareme algorithms");
@@ -83,11 +83,11 @@ public class AlgorithmService {
         } else {
             logger.LogUserAction("Fetching exareme algorithms failed");
         }
-        if (mipengineAlgorithms != null) {
-            algorithms.addAll(mipengineAlgorithms);
-            logger.LogUserAction("Loaded " + mipengineAlgorithms.size() + " mipengine algorithms");
+        if (exareme2Algorithms != null) {
+            algorithms.addAll(exareme2Algorithms);
+            logger.LogUserAction("Loaded " + exareme2Algorithms.size() + " exareme2 algorithms");
         } else {
-            logger.LogUserAction("Fetching mipengine algorithms failed");
+            logger.LogUserAction("Fetching exareme2 algorithms failed");
         }
         if (galaxyAlgorithms != null) {
             algorithms.addAll(galaxyAlgorithms);
@@ -143,8 +143,8 @@ public class AlgorithmService {
 
     private String getAlgorithmEngineType(ExaremeAlgorithmDTO algorithmDTO){
         switch (algorithmDTO.getType()) {
-            case "mipengine":
-                return "MIP-Engine";
+            case "exareme2":
+                return "Exareme2";
             case "workflow":
                 return "Galaxy";
             default:
@@ -178,19 +178,19 @@ public class AlgorithmService {
     }
 
     /**
-     * This method gets all the available mipengine algorithms and
+     * This method gets all the available exareme2 algorithms and
      *
      * @return a list of AlgorithmDTOs or null if something fails
      */
-    public ArrayList<ExaremeAlgorithmDTO> getMIPEngineAlgorithms(Logger logger) {
-        ArrayList<MIPEngineAlgorithmDTO> mipEngineAlgorithms;
-        // Get MIPEngine algorithms
+    public ArrayList<ExaremeAlgorithmDTO> getExareme2Algorithms(Logger logger) {
+        ArrayList<Exareme2AlgorithmDTO> exareme2Algorithms;
+        // Get Exareme2 algorithms
         try {
             StringBuilder response = new StringBuilder();
-            HTTPUtil.sendGet(mipengineAlgorithmsUrl, response);
-            mipEngineAlgorithms = gson.fromJson(
+            HTTPUtil.sendGet(exareme2AlgorithmsUrl, response);
+            exareme2Algorithms = gson.fromJson(
                     response.toString(),
-                    new TypeToken<ArrayList<MIPEngineAlgorithmDTO>>() {
+                    new TypeToken<ArrayList<Exareme2AlgorithmDTO>>() {
                     }.getType()
             );
         } catch (Exception e) {
@@ -199,7 +199,7 @@ public class AlgorithmService {
         }
 
         ArrayList<ExaremeAlgorithmDTO> algorithms = new ArrayList<>();
-        mipEngineAlgorithms.forEach(mipEngineAlgorithm -> algorithms.add(new ExaremeAlgorithmDTO(mipEngineAlgorithm)));
+        exareme2Algorithms.forEach(exareme2Algorithm -> algorithms.add(new ExaremeAlgorithmDTO(exareme2Algorithm)));
 
         logger.LogUserAction("Completed, returned  " + algorithms.size() + " Exareme2 algorithms.");
         return algorithms;

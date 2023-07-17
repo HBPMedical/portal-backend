@@ -9,7 +9,7 @@ import java.util.*;
 
 @Data
 @AllArgsConstructor
-public class MIPEngineAlgorithmRequestDTO {
+public class Exareme2AlgorithmRequestDTO {
     @SerializedName("request_id")
     private String request_id;
     @SerializedName("inputdata")
@@ -19,11 +19,11 @@ public class MIPEngineAlgorithmRequestDTO {
     @SerializedName("preprocessing")
     private HashMap<String, Object> preprocessing;
 
-    public MIPEngineAlgorithmRequestDTO(UUID experimentUUID, List<ExaremeAlgorithmRequestParamDTO> exaremeAlgorithmRequestParamDTOs, List<ExaremeAlgorithmDTO.Transformer> exaremeTransformers) {
+    public Exareme2AlgorithmRequestDTO(UUID experimentUUID, List<ExaremeAlgorithmRequestParamDTO> exaremeAlgorithmRequestParamDTOs, List<ExaremeAlgorithmDTO.Transformer> exaremeTransformers) {
         this.request_id = experimentUUID.toString();
-        MIPEngineAlgorithmRequestDTO.InputData inputData = new MIPEngineAlgorithmRequestDTO.InputData();
-        HashMap<String, Object> mipEngineParameters = new HashMap<>();
-        HashMap<String, Object> mipEnginePreprocessing = new HashMap<>();
+        Exareme2AlgorithmRequestDTO.InputData inputData = new Exareme2AlgorithmRequestDTO.InputData();
+        HashMap<String, Object> exareme2Parameters = new HashMap<>();
+        HashMap<String, Object> exareme2Preprocessing = new HashMap<>();
 
         exaremeAlgorithmRequestParamDTOs.forEach(parameter -> {
 
@@ -45,10 +45,10 @@ public class MIPEngineAlgorithmRequestDTO {
                     break;
                 case "filter":
                     if (parameter.getValue() != null && !parameter.getValue().equals(""))
-                        inputData.setFilters(JsonConverters.convertJsonStringToObject(parameter.getValue(), MIPEngineAlgorithmRequestDTO.Filter.class));
+                        inputData.setFilters(JsonConverters.convertJsonStringToObject(parameter.getValue(), Exareme2AlgorithmRequestDTO.Filter.class));
                     break;
                 default:
-                    mipEngineParameters.put(parameter.getName(), convertStringToMultipleValues(parameter.getValue()));
+                    exareme2Parameters.put(parameter.getName(), convertStringToMultipleValues(parameter.getValue()));
             }
         });
         if (exaremeTransformers.size() > 0) {
@@ -64,12 +64,12 @@ public class MIPEngineAlgorithmRequestDTO {
                         transformerParameterDTOs.put(parameter.getName(), convertStringToMultipleValues(parameter.getValue()));
                     }
                 }
-                mipEnginePreprocessing.put(transformer.getName(), transformerParameterDTOs);
+                exareme2Preprocessing.put(transformer.getName(), transformerParameterDTOs);
             });
         }
         this.inputdata = inputData;
-        this.parameters = mipEngineParameters;
-        this.preprocessing = mipEnginePreprocessing;
+        this.parameters = exareme2Parameters;
+        this.preprocessing = exareme2Preprocessing;
     }
 
     private static Object convertStringToMultipleValues(String str) {

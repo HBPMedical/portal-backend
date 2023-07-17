@@ -33,32 +33,32 @@ public class ExaremeAlgorithmDTO {
 
     }
 
-    public ExaremeAlgorithmDTO(MIPEngineAlgorithmDTO mipEngineAlgorithm) {
-        this.name = mipEngineAlgorithm.getName().toUpperCase();
-        this.label = mipEngineAlgorithm.getLabel();
-        this.desc = mipEngineAlgorithm.getDesc();
-        this.type = "mipengine";
+    public ExaremeAlgorithmDTO(Exareme2AlgorithmDTO exareme2Algorithm) {
+        this.name = exareme2Algorithm.getName().toUpperCase();
+        this.label = exareme2Algorithm.getLabel();
+        this.desc = exareme2Algorithm.getDesc();
+        this.type = "exareme2";
         List<ExaremeAlgorithmRequestParamDTO> parameters = new ArrayList<>();
-        if (mipEngineAlgorithm.getInputdata().getY().isPresent()) {
-            parameters.add(new ExaremeAlgorithmRequestParamDTO("y", mipEngineAlgorithm.getInputdata().getY().get()));
+        if (exareme2Algorithm.getInputdata().getY().isPresent()) {
+            parameters.add(new ExaremeAlgorithmRequestParamDTO("y", exareme2Algorithm.getInputdata().getY().get()));
         }
-        if (mipEngineAlgorithm.getInputdata().getX().isPresent()) {
-            parameters.add(new ExaremeAlgorithmRequestParamDTO("x", mipEngineAlgorithm.getInputdata().getX().get()));
+        if (exareme2Algorithm.getInputdata().getX().isPresent()) {
+            parameters.add(new ExaremeAlgorithmRequestParamDTO("x", exareme2Algorithm.getInputdata().getX().get()));
         }
-        parameters.add(new ExaremeAlgorithmRequestParamDTO("pathology", mipEngineAlgorithm.getInputdata().getData_model()));
-        parameters.add(new ExaremeAlgorithmRequestParamDTO("dataset", mipEngineAlgorithm.getInputdata().getDatasets()));
-        parameters.add(new ExaremeAlgorithmRequestParamDTO("filter", mipEngineAlgorithm.getInputdata().getFilter()));
-        if (mipEngineAlgorithm.getParameters().isPresent()) {
-            mipEngineAlgorithm.getParameters().get().forEach((name, parameterDTO) -> {
+        parameters.add(new ExaremeAlgorithmRequestParamDTO("pathology", exareme2Algorithm.getInputdata().getData_model()));
+        parameters.add(new ExaremeAlgorithmRequestParamDTO("dataset", exareme2Algorithm.getInputdata().getDatasets()));
+        parameters.add(new ExaremeAlgorithmRequestParamDTO("filter", exareme2Algorithm.getInputdata().getFilter()));
+        if (exareme2Algorithm.getParameters().isPresent()) {
+            exareme2Algorithm.getParameters().get().forEach((name, parameterDTO) -> {
                 ExaremeAlgorithmRequestParamDTO parameter = new ExaremeAlgorithmRequestParamDTO(name, parameterDTO);
                 parameters.add(parameter);
             });
         }
         this.parameters = parameters;
         List<Transformer> preprocessing = new ArrayList<>();
-        if (mipEngineAlgorithm.getPreprocessing().isPresent()) {
-            mipEngineAlgorithm.getPreprocessing().get().forEach(mipEngineTransformerDTO -> {
-                Transformer transformer = new Transformer(mipEngineTransformerDTO);
+        if (exareme2Algorithm.getPreprocessing().isPresent()) {
+            exareme2Algorithm.getPreprocessing().get().forEach(exareme2TransformerDTO -> {
+                Transformer transformer = new Transformer(exareme2TransformerDTO);
                 preprocessing.add(transformer);
             });
             this.preprocessing = preprocessing;
@@ -82,7 +82,7 @@ public class ExaremeAlgorithmDTO {
         private List<ExaremeAlgorithmRequestParamDTO> parameters;
 
 
-        public Transformer(MIPEngineAlgorithmDTO.MIPEngineTransformerDTO transformerDTO) {
+        public Transformer(Exareme2AlgorithmDTO.Exareme2TransformerDTO transformerDTO) {
             this.name = transformerDTO.getName().toUpperCase();
             this.label = transformerDTO.getLabel();
             this.desc = transformerDTO.getDesc();

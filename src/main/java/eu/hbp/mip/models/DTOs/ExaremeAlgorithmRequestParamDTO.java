@@ -55,7 +55,7 @@ public class ExaremeAlgorithmRequestParamDTO {
     private List<String> valueEnumerations;
     public ExaremeAlgorithmRequestParamDTO (){}
 
-    public ExaremeAlgorithmRequestParamDTO (String name, MIPEngineAlgorithmDTO.MIPEngineAlgorithmParameterDTO parameter){
+    public ExaremeAlgorithmRequestParamDTO (String name, Exareme2AlgorithmDTO.Exareme2AlgorithmParameterDTO parameter){
         this.name = name;
         this.desc = parameter.getDesc();
         this.valueType = parameter.getTypes().get(0);
@@ -69,7 +69,7 @@ public class ExaremeAlgorithmRequestParamDTO {
         this.valueMin = parameter.getMin();
     }
 
-    public ExaremeAlgorithmRequestParamDTO (String name, MIPEngineAlgorithmDTO.MIPEngineAlgorithmInputDataDetailDTO inputDataDetail){
+    public ExaremeAlgorithmRequestParamDTO (String name, Exareme2AlgorithmDTO.Exareme2AlgorithmInputDataDetailDTO inputDataDetail){
         this.name = name;
         this.desc = inputDataDetail.getDesc();
         this.value = "";

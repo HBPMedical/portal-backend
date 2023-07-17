@@ -33,8 +33,8 @@ public class PathologyDTO {
     }
 
 
-    public PathologyDTO(String pathology, MIPEngineAttributesDTO mipEngineAttributesDTO, List<EnumerationDTO> pathologyDatasetDTOS) {
-        MetadataHierarchyDTO metadataHierarchyDTO = mipEngineAttributesDTO.getProperties().get("cdes").get(0);
+    public PathologyDTO(String pathology, Exareme2AttributesDTO exareme2AttributesDTO, List<EnumerationDTO> pathologyDatasetDTOS) {
+        MetadataHierarchyDTO metadataHierarchyDTO = exareme2AttributesDTO.getProperties().get("cdes").get(0);
         if (!metadataHierarchyDTO.isDatasetCDEPresent()) throw new InternalServerError("CommonDataElement Dataset was not present in the pathology:" + pathology);
         metadataHierarchyDTO.updateDatasetCde(pathologyDatasetDTOS);
 

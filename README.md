@@ -25,8 +25,8 @@ To use this image, you need a running instance of PostgreSQL and to configure th
 * PORTAL_DB_PASSWORD: Password to use when connecting to the portal database.
 
 #### EXTERNAL SERVICES ###
-* MIPENGINE_URL: URL to MIPENGINE server. Default is "http://localhost:5000" .
 * EXAREME_URL: URL to Exareme server. Default is "http://localhost:9090" .
+* EXAREME2_URL: URL to Exareme2 server. Default is "http://localhost:5000" .
 * GALAXY_URL: URL to Workflow server. Default is "http://localhost:8090/" .
 * GALAXY_API_KEY: The api key to authorize galaxy requests.
 * GALAXY_USERNAME: The username of galaxy user to be able to embed the frame.

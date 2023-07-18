@@ -19,7 +19,7 @@ public class Exareme2AlgorithmRequestDTO {
     @SerializedName("preprocessing")
     private HashMap<String, Object> preprocessing;
 
-    public Exareme2AlgorithmRequestDTO(UUID experimentUUID, List<ExaremeAlgorithmRequestParamDTO> exaremeAlgorithmRequestParamDTOs, List<ExaremeAlgorithmDTO.Transformer> exaremeTransformers) {
+    public Exareme2AlgorithmRequestDTO(UUID experimentUUID, List<ExaremeAlgorithmRequestParamDTO> exaremeAlgorithmRequestParamDTOs, List<ExaremeAlgorithmDTO.ExaremeTransformerDTO> exaremeTransformers) {
         this.request_id = experimentUUID.toString();
         Exareme2AlgorithmRequestDTO.InputData inputData = new Exareme2AlgorithmRequestDTO.InputData();
         HashMap<String, Object> exareme2Parameters = new HashMap<>();
@@ -51,7 +51,7 @@ public class Exareme2AlgorithmRequestDTO {
                     exareme2Parameters.put(parameter.getName(), convertStringToMultipleValues(parameter.getValue()));
             }
         });
-        if (exaremeTransformers.size() > 0) {
+        if (exaremeTransformers != null) {
             exaremeTransformers.forEach(transformer -> {
                 HashMap<String, Object> transformerParameterDTOs = new HashMap<>();
                 for (ExaremeAlgorithmRequestParamDTO parameter : transformer.getParameters()) {

@@ -3,6 +3,7 @@ package eu.hbp.mip.models.DTOs;
 import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +28,7 @@ public class ExaremeAlgorithmDTO {
     private List<ExaremeAlgorithmRequestParamDTO> parameters;
 
     @SerializedName("preprocessing")
-    private List<Transformer> preprocessing;
+    private List<ExaremeTransformerDTO> preprocessing;
 
     public ExaremeAlgorithmDTO() {
 
@@ -55,10 +56,10 @@ public class ExaremeAlgorithmDTO {
             });
         }
         this.parameters = parameters;
-        List<Transformer> preprocessing = new ArrayList<>();
+        List<ExaremeTransformerDTO> preprocessing = new ArrayList<>();
         if (exareme2Algorithm.getPreprocessing().isPresent()) {
             exareme2Algorithm.getPreprocessing().get().forEach(exareme2TransformerDTO -> {
-                Transformer transformer = new Transformer(exareme2TransformerDTO);
+                ExaremeTransformerDTO transformer = new ExaremeTransformerDTO(exareme2TransformerDTO);
                 preprocessing.add(transformer);
             });
             this.preprocessing = preprocessing;
@@ -67,8 +68,9 @@ public class ExaremeAlgorithmDTO {
 
 
     @Data
+    @NoArgsConstructor
     @AllArgsConstructor
-    public static class Transformer {
+    public static class ExaremeTransformerDTO {
         @SerializedName("name")
         private String name;
 
@@ -81,8 +83,7 @@ public class ExaremeAlgorithmDTO {
         @SerializedName("parameters")
         private List<ExaremeAlgorithmRequestParamDTO> parameters;
 
-
-        public Transformer(Exareme2AlgorithmDTO.Exareme2TransformerDTO transformerDTO) {
+        public ExaremeTransformerDTO(Exareme2AlgorithmDTO.Exareme2TransformerDTO transformerDTO) {
             this.name = transformerDTO.getName().toUpperCase();
             this.label = transformerDTO.getLabel();
             this.desc = transformerDTO.getDesc();

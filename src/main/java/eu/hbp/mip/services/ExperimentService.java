@@ -356,20 +356,25 @@ public class ExperimentService {
     private void algorithmParametersLogging(ExperimentDTO experimentDTO, Logger logger) {
         String algorithmName = experimentDTO.getAlgorithm().getName();
         StringBuilder parametersLogMessage = new StringBuilder(", Parameters:\n");
-        experimentDTO.getAlgorithm().getParameters().forEach(
-                params -> parametersLogMessage
-                        .append("  ")
-                        .append(params.getLabel())
-                        .append(" -> ")
-                        .append(params.getValue())
-                        .append("\n"));
-        experimentDTO.getAlgorithm().getPreprocessing().forEach( transformer ->
-                {
-                    parametersLogMessage
+        if (experimentDTO.getAlgorithm().getParameters() != null){
+            experimentDTO.getAlgorithm().getParameters().forEach(
+                    params -> parametersLogMessage
                             .append("  ")
-                            .append(transformer.getLabel())
+                            .append(params.getLabel())
                             .append(" -> ")
-                            .append("\n");
+                            .append(params.getValue())
+                            .append("\n"));
+        }
+        if (experimentDTO.getAlgorithm().getPreprocessing() != null) {
+            experimentDTO.getAlgorithm().getPreprocessing().forEach(transformer ->
+            {
+                parametersLogMessage
+                        .append("  ")
+                        .append(transformer.getLabel())
+                        .append(" -> ")
+                        .append("\n");
+
+                if (transformer.getParameters() != null) {
                     transformer.getParameters().forEach(
                             transformerParams -> parametersLogMessage
                                     .append("        ")
@@ -378,8 +383,9 @@ public class ExperimentService {
                                     .append(transformerParams.getValue())
                                     .append("\n"));
                     parametersLogMessage.append("\n");
-                });
-
+                }
+            });
+        }
 
         logger.LogUserAction("Executing " + algorithmName + parametersLogMessage);
     }

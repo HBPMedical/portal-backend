@@ -3,13 +3,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>eu.hbp.mip</groupId>
-    <artifactId>portal-backend</artifactId>
-    <version>4.0.0</version><!-- BUMP_VERSION -->
-    <packaging>jar</packaging>
-
     <name>portal-backend</name>
     <description>Medical Informatics Platform - portal-backend</description>
+    <groupId>eu.hbp.mip</groupId>
+    <artifactId>portal-backend</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -18,50 +17,33 @@
     </parent>
 
     <properties>
-        <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <keycloak-spring.version>11.0.2</keycloak-spring.version>
-        <springfox-swagger.version>2.5.0</springfox-swagger.version>
+        <java.version>1.8</java.version>
         <spring-context.version>5.2.10.RELEASE</spring-context.version>
         <springfox-boot-starter.version>3.0.0</springfox-boot-starter.version>
-        <asciidoctor.maven.plugin.version>1.5.5</asciidoctor.maven.plugin.version>
-        <asciidoctorj.pdf.version>1.5.0-alpha.15</asciidoctorj.pdf.version>
-        <asciidoctorj.version>1.5.5</asciidoctorj.version>
-        <angularjs.version>1.5.7</angularjs.version>
-        <jquery.version>3.0.0</jquery.version>
-        <bootstrap.version>3.3.7</bootstrap.version>
-        <webjars-locator.version>0.36</webjars-locator.version>
-        <h2.version>2.2.220</h2.version>
         <postgresql.version>42.3.8</postgresql.version>
-        <gson.version>2.8.9</gson.version>
-        <slugify.version>2.1.5</slugify.version>
-        <maven-resources-plugin.version>3.0.1</maven-resources-plugin.version>
-        <sonar-maven-plugin.version>3.0.2</sonar-maven-plugin.version>
-        <swagger2markup-maven-plugin.version>1.0.0</swagger2markup-maven-plugin.version>
-        <maven-compiler-plugin.version>3.5.1</maven-compiler-plugin.version>
-        <hibernate4-maven-plugin.version>1.1.1</hibernate4-maven-plugin.version>
-        <commons-dbcp.version>2.7.0</commons-dbcp.version>
-        <flyway-core.version>4.2.0</flyway-core.version>
-        <hibernate-jpa-2.1-api.version>1.0.0.Final</hibernate-jpa-2.1-api.version>
         <hibernate.version>5.4.24.Final</hibernate.version>
-        <hibernate-validator.version>6.1.0.Final</hibernate-validator.version>
-        <aspectjweaver.version>1.8.9</aspectjweaver.version>
-        <javax-inject.version>1</javax-inject.version>
-        <protobuf-java.version>3.16.3</protobuf-java.version>
+        <flyway-core.version>4.2.0</flyway-core.version>
+        <keycloak-spring.version>11.0.2</keycloak-spring.version>
+        <gson.version>2.8.9</gson.version>
+        <commons-dbcp.version>2.7.0</commons-dbcp.version>
+        <blend4j.version>0.2.0</blend4j.version>
+        <retrofit2.version>2.9.0</retrofit2.version>
+        <logging-interceptor.version>4.11.0</logging-interceptor.version>
+        <lombok.version>1.18.16</lombok.version>
     </properties>
 
-    <repositories>
-        <repository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>bintray-hbpmedical-maven</id>
-            <name>bintray</name>
-            <url>https://dl.bintray.com/hbpmedical/maven</url>
-        </repository>
-    </repositories>
-
     <dependencies>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-orm</artifactId>
+            <version>${spring-context.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${spring-context.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
@@ -75,16 +57,12 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-commons</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.data</groupId>
-            <artifactId>spring-data-commons</artifactId>
+            <artifactId>spring-data-jpa</artifactId>
         </dependency>
         <dependency>
             <groupId>org.keycloak</groupId>
@@ -97,58 +75,9 @@
             <version>${keycloak-spring.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-orm</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.webjars</groupId>
-            <artifactId>angularjs</artifactId>
-            <version>${angularjs.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.webjars</groupId>
-            <artifactId>jquery</artifactId>
-            <version>${jquery.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.webjars</groupId>
-            <artifactId>bootstrap</artifactId>
-            <version>${bootstrap.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.webjars</groupId>
-            <artifactId>webjars-locator</artifactId>
-            <version>${webjars-locator.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate.javax.persistence</groupId>
-            <artifactId>hibernate-jpa-2.1-api</artifactId>
-            <version>${hibernate-jpa-2.1-api.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-core</artifactId>
             <version>${hibernate.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-validator</artifactId>
-            <version>${hibernate-validator.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-entitymanager</artifactId>
-            <version>${hibernate.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <version>${h2.version}</version>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -166,15 +95,6 @@
             <version>${gson.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.github.slugify</groupId>
-            <artifactId>slugify</artifactId>
-            <version>${slugify.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.data</groupId>
-            <artifactId>spring-data-jpa</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-dbcp2</artifactId>
             <version>${commons-dbcp.version}</version>
@@ -185,74 +105,30 @@
             <version>${flyway-core.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.aspectj</groupId>
-            <artifactId>aspectjweaver</artifactId>
-            <version>${aspectjweaver.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>javax.inject</groupId>
-            <artifactId>javax.inject</artifactId>
-            <version>${javax-inject.version}</version>
-        </dependency>
-        <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-context</artifactId>
-        <version>${spring-context.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
-            <version>${protobuf-java.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>javax.validation</groupId>
-            <artifactId>validation-api</artifactId>
-            <version>2.0.1.Final</version>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jaxb</groupId>
-            <artifactId>jaxb-runtime</artifactId>
-            <version>3.0.0-M4</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/com.github.jmchilton.blend4j/blend4j -->
-        <dependency>
             <groupId>com.github.jmchilton.blend4j</groupId>
             <artifactId>blend4j</artifactId>
-            <version>0.2.0</version>
+            <version>${blend4j.version}</version>
         </dependency>
         <dependency>
             <groupId>com.squareup.retrofit2</groupId>
             <artifactId>retrofit</artifactId>
-            <version>2.9.0</version>
+            <version>${retrofit2.version}</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/com.squareup.retrofit2/converter-gson -->
         <dependency>
             <groupId>com.squareup.retrofit2</groupId>
             <artifactId>converter-gson</artifactId>
-            <version>2.9.0</version>
+            <version>${retrofit2.version}</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/com.squareup.okhttp3/logging-interceptor -->
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>logging-interceptor</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.auth0</groupId>
-            <artifactId>java-jwt</artifactId>
-            <version>3.11.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.code.svenson</groupId>
-            <artifactId>svenson</artifactId>
-            <version>1.5.8</version>
+            <version>${logging-interceptor.version}</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.16</version>
-            <scope>provided</scope>
+            <version>${lombok.version}</version>
         </dependency>
-
     </dependencies>
 
    <build>
@@ -270,90 +146,7 @@
                 </includes>
                 <filtering>true</filtering>
             </resource>
-
-            <!-- Used for development. Docker/config folder files added as resources -->
-            <resource>
-                <directory>config</directory>
-                <includes>
-                    <include>*.json</include>
-                </includes>
-                <filtering>true</filtering>
-            </resource>
         </resources>
-
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>${maven-resources-plugin.version}</version>
-                <configuration>
-                    <!-- specify UTF-8, ISO-8859-1 or any other file encoding -->
-                    <encoding>UTF-8</encoding>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>de.juplo</groupId>
-                <artifactId>hibernate4-maven-plugin</artifactId>
-                <version>${hibernate4-maven-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <phase>compile</phase>
-                    </execution>
-                </executions>
-            </plugin>
-            <!-- Disable default compiler. -->
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven-compiler-plugin.version}</version>
-                <configuration>
-                    
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>io.github.swagger2markup</groupId>
-                <artifactId>swagger2markup-maven-plugin</artifactId>
-                <version>${swagger2markup-maven-plugin.version}</version>
-                <configuration>
-                    <swaggerInput>http://localhost:8080/services/v2/api-docs</swaggerInput>
-                    <outputFile>${project.build.directory}/asciidoc/api</outputFile>
-                    <config>
-                        <swagger2markup.markupLanguage>ASCIIDOC</swagger2markup.markupLanguage>
-                    </config>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.asciidoctor</groupId>
-                <artifactId>asciidoctor-maven-plugin</artifactId>
-                <version>${asciidoctor.maven.plugin.version}</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.asciidoctor</groupId>
-                        <artifactId>asciidoctorj-pdf</artifactId>
-                        <version>${asciidoctorj.pdf.version}</version>
-                    </dependency>
-                </dependencies>
-                <configuration>
-                    <sourceDirectory>${project.build.directory}/asciidoc</sourceDirectory>
-                    <backend>pdf</backend>
-                    <attributes>
-                        <toc/>
-                        <idseparator>-</idseparator>
-                    </attributes>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.sonarsource.scanner.maven</groupId>
-                <artifactId>sonar-maven-plugin</artifactId>
-                <version>${sonar-maven-plugin.version}</version>
-            </plugin>
-           
-      </plugins>
     </build>
 
 </project>

@@ -10,11 +10,9 @@ import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-import javax.inject.Named;
 import java.util.Objects;
 
 @Component
-@Named("ActiveUserService")
 @Scope(value = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class ActiveUserService {
 

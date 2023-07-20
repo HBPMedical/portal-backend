@@ -46,12 +46,6 @@ services:
   exareme:
     queryExaremeUrl: "http://127.0.0.1:9090/mining/query"
     algorithmsUrl: "http://127.0.0.1:9090/mining/algorithms.json"
-  galaxy:
-    galaxyUrl: "http://127.0.0.1:8090"
-    galaxyContext:  "nativeGalaxy/workflows/list"
-    galaxyApiKey:   "d14a4cc5eebf805eb2ff261374ed08a2"
-    galaxyUsername:  "admin"
-    galaxyPassword:  "password"
 
 
 ### KEYCLOAK ###

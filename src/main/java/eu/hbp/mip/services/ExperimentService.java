@@ -3,7 +3,10 @@ package eu.hbp.mip.services;
 import com.google.gson.Gson;
 import eu.hbp.mip.models.DAOs.ExperimentDAO;
 import eu.hbp.mip.models.DAOs.UserDAO;
-import eu.hbp.mip.models.DTOs.*;
+import eu.hbp.mip.models.DTOs.Exareme2AlgorithmRequestDTO;
+import eu.hbp.mip.models.DTOs.ExaremeAlgorithmRequestParamDTO;
+import eu.hbp.mip.models.DTOs.ExaremeAlgorithmResultDTO;
+import eu.hbp.mip.models.DTOs.ExperimentDTO;
 import eu.hbp.mip.repositories.ExperimentRepository;
 import eu.hbp.mip.repositories.ExperimentSpecifications;
 import eu.hbp.mip.utils.ClaimUtils;
@@ -29,26 +32,20 @@ import java.util.*;
 public class ExperimentService {
 
 
+    private static final Gson gson = new Gson();
+    private final ActiveUserService activeUserService;
+    private final AlgorithmService algorithmService;
+    private final ExperimentRepository experimentRepository;
     @Value("#{'${services.exareme.queryExaremeUrl}'}")
     private String queryExaremeUrl;
-
     @Value("#{'${services.exareme2.algorithmsUrl}'}")
     private String exareme2AlgorithmsUrl;
-
     @Value("#{'${authentication.enabled}'}")
     private boolean authenticationIsEnabled;
 
-    private static final Gson gson = new Gson();
-
-    private final ActiveUserService activeUserService;
-    private final AlgorithmService algorithmService;
-    private final GalaxyService galaxyService;
-    private final ExperimentRepository experimentRepository;
-
-    public ExperimentService(ActiveUserService activeUserService, AlgorithmService algorithmService, GalaxyService galaxyService, ExperimentRepository experimentRepository) {
+    public ExperimentService(ActiveUserService activeUserService, AlgorithmService algorithmService, ExperimentRepository experimentRepository) {
         this.algorithmService = algorithmService;
         this.activeUserService = activeUserService;
-        this.galaxyService = galaxyService;
         this.experimentRepository = experimentRepository;
     }
 
@@ -65,7 +62,7 @@ public class ExperimentService {
      * @param orderBy       is the column that is required to ordered by
      * @param descending    is a boolean to determine if the experiments will be order by descending or ascending
      * @param logger        contains username and the endpoint.
-     * @return a list of mapped experiments
+     * @return a map experiments
      */
 
     public Map getExperiments(Authentication authentication, String name, String algorithm, Boolean shared, Boolean viewed, boolean includeShared, int page, int size, String orderBy, Boolean descending, Logger logger) {
@@ -127,10 +124,10 @@ public class ExperimentService {
 
         experimentDAO = experimentRepository.loadExperiment(uuid, logger);
         if (
-            authenticationIsEnabled
-            && !experimentDAO.isShared()
-            && !experimentDAO.getCreatedBy().getUsername().equals(user.getUsername())
-            && !ClaimUtils.validateAccessRightsOnExperiments(authentication, logger)
+                authenticationIsEnabled
+                        && !experimentDAO.isShared()
+                        && !experimentDAO.getCreatedBy().getUsername().equals(user.getUsername())
+                        && !ClaimUtils.validateAccessRightsOnExperiments(authentication, logger)
         ) {
             logger.LogUserAction("Accessing Experiment is unauthorized.");
             throw new UnauthorizedException("You don't have access to the experiment.");
@@ -151,9 +148,8 @@ public class ExperimentService {
      */
     public ExperimentDTO createExperiment(Authentication authentication, ExperimentDTO experimentDTO, Logger logger) {
 
-        //Checking if check (POST) /experiments has proper input.
+        // TODO ExperimentRequestDTO should be different than ExperimentResponseDTO
         checkPostExperimentProperInput(experimentDTO, logger);
-
 
         // Get the engine name from algorithmService
         String algorithmEngineName = algorithmService.getAlgorithmEngineType(experimentDTO.getAlgorithm().getName().toUpperCase());
@@ -166,12 +162,8 @@ public class ExperimentService {
             ClaimUtils.validateAccessRightsOnDatasets(authentication, experimentDatasets, logger);
         }
 
-        // Run with the appropriate engine
-        if (algorithmEngineName.equals("Galaxy")) {
-            return galaxyService.createGalaxyExperiment(experimentDTO, logger);
-        } else {
-            return createSynchronousExperiment(experimentDTO, algorithmEngineName, logger);
-        }
+        return createSynchronousExperiment(experimentDTO, algorithmEngineName, logger);
+
     }
 
     /**
@@ -192,11 +184,6 @@ public class ExperimentService {
 
 
         experimentDTO.setUuid(UUID.randomUUID());
-
-        if (algorithmEngineName.equals("Galaxy")) {
-            logger.LogUserAction("You can not run workflow algorithms transiently.");
-            throw new BadRequestException("You can not run workflow algorithms transiently.");
-        }
 
         algorithmParametersLogging(experimentDTO, logger);
 
@@ -295,7 +282,6 @@ public class ExperimentService {
     //    /* -------------------------------  PRIVATE METHODS  ----------------------------------------------------*/
 
     private void checkPostExperimentProperInput(ExperimentDTO experimentDTO, Logger logger) {
-
         boolean properInput =
                 experimentDTO.getShared() == null
                         && experimentDTO.getViewed() == null
@@ -356,7 +342,7 @@ public class ExperimentService {
     private void algorithmParametersLogging(ExperimentDTO experimentDTO, Logger logger) {
         String algorithmName = experimentDTO.getAlgorithm().getName();
         StringBuilder parametersLogMessage = new StringBuilder(", Parameters:\n");
-        if (experimentDTO.getAlgorithm().getParameters() != null){
+        if (experimentDTO.getAlgorithm().getParameters() != null) {
             experimentDTO.getAlgorithm().getParameters().forEach(
                     params -> parametersLogMessage
                             .append("  ")
@@ -466,7 +452,7 @@ public class ExperimentService {
      * @param experimentDTO is the request with the experiment information
      * @return the result of experiment as well as the http status that was retrieved
      */
-    private ExaremeAlgorithmResultDTO runSynchronousExperiment(ExperimentDTO experimentDTO, String algorithmEngineName,  Logger logger) {
+    private ExaremeAlgorithmResultDTO runSynchronousExperiment(ExperimentDTO experimentDTO, String algorithmEngineName, Logger logger) {
         if (algorithmEngineName.equals("Exareme2")) {
             return runExareme2Experiment(experimentDTO, logger);
         } else {
@@ -490,8 +476,7 @@ public class ExperimentService {
                 = experimentDTO.getAlgorithm().getParameters();
         List<ExaremeAlgorithmRequestParamDTO> algorithmParametersWithoutPathologyVersion = new ArrayList<>();
 
-        for (ExaremeAlgorithmRequestParamDTO algorithmParameter : algorithmParameters)
-        {
+        for (ExaremeAlgorithmRequestParamDTO algorithmParameter : algorithmParameters) {
             if (algorithmParameter.getName().equals("pathology")) {
                 List<String> pathology_info = Arrays.asList(algorithmParameter.getValue().split(":", 2));
                 String pathology_code = pathology_info.get(0);

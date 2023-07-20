@@ -8,7 +8,6 @@ import eu.hbp.mip.models.DTOs.PathologyDTO;
 import eu.hbp.mip.services.ActiveUserService;
 import eu.hbp.mip.utils.*;
 import eu.hbp.mip.utils.Exceptions.InternalServerError;
-import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -22,11 +21,9 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 @RequestMapping(value = "/pathologies", produces = {APPLICATION_JSON_VALUE})
-@Api(value = "/pathologies")
 public class PathologiesAPI {
 
     private static final Gson gson = new Gson();
-
 
     // Enable HBP collab authentication (1) or disable it (0). Default is 1
     @Value("#{'${authentication.enabled}'}")

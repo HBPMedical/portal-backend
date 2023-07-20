@@ -4,8 +4,6 @@ import eu.hbp.mip.models.DTOs.ExaremeAlgorithmDTO;
 import eu.hbp.mip.services.ActiveUserService;
 import eu.hbp.mip.services.AlgorithmService;
 import eu.hbp.mip.utils.Logger;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -17,7 +15,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 @RequestMapping(value = "/algorithms", produces = {APPLICATION_JSON_VALUE})
-@Api(value = "/algorithms")
 public class AlgorithmsAPI {
 
     private final AlgorithmService algorithmService;
@@ -27,7 +24,6 @@ public class AlgorithmsAPI {
         this.algorithmService = algorithmService;
     }
 
-    @ApiOperation(value = "List all algorithms", response = String.class)
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<ExaremeAlgorithmDTO>> getAlgorithms() {
         Logger logger = new Logger(activeUserService.getActiveUser().getUsername(), "(GET) /algorithms");

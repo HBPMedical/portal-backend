@@ -3,7 +3,6 @@ package eu.hbp.mip.models.DAOs;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
-import io.swagger.annotations.ApiModel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -18,7 +17,6 @@ import java.util.*;
 @Data
 @AllArgsConstructor
 @Table(name = "`experiment`")
-@ApiModel
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ExperimentDAO {
 

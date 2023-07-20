@@ -6,9 +6,6 @@ import eu.hbp.mip.services.ActiveUserService;
 import eu.hbp.mip.services.ExperimentService;
 import eu.hbp.mip.utils.JsonConverters;
 import eu.hbp.mip.utils.Logger;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -18,14 +15,9 @@ import java.util.Map;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-/*
-    This api is creating experiments and running it's algorithm on the
-    exareme or galaxy clients.
- */
 
 @RestController
 @RequestMapping(value = "/experiments", produces = {APPLICATION_JSON_VALUE})
-@Api(value = "/experiments")
 public class ExperimentAPI {
 
     private final ExperimentService experimentService;
@@ -38,7 +30,6 @@ public class ExperimentAPI {
         this.activeUserService = activeUserService;
     }
 
-    @ApiOperation(value = "Get experiments", response = Map.class, responseContainer = "List")
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<String> getExperiments(Authentication authentication,
             @RequestParam(name = "name", required = false) String name,
@@ -66,16 +57,13 @@ public class ExperimentAPI {
     }
 
 
-    @ApiOperation(value = "Get an experiment", response = ExperimentDTO.class)
     @RequestMapping(value = "/{uuid}", method = RequestMethod.GET)
-    public ResponseEntity<String> getExperiment(Authentication authentication,
-            @ApiParam(value = "uuid", required = true) @PathVariable("uuid") String uuid) {
+    public ResponseEntity<String> getExperiment(Authentication authentication, @PathVariable("uuid") String uuid) {
         ExperimentDTO experimentDTO = experimentService.getExperiment(authentication, uuid, new Logger(activeUserService.getActiveUser().getUsername(),"(GET) /experiments/{uuid}"));
         return new ResponseEntity<>(JsonConverters.convertObjectToJsonString(experimentDTO), HttpStatus.OK);
     }
 
 
-    @ApiOperation(value = "Create an experiment", response = ExperimentDTO.class)
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<String> createExperiment(Authentication authentication, @RequestBody ExperimentDTO experimentDTO) {
         experimentDTO = experimentService.createExperiment(authentication, experimentDTO, new Logger(activeUserService.getActiveUser().getUsername(),"(POST) /experiments"));
@@ -83,24 +71,20 @@ public class ExperimentAPI {
     }
 
 
-    @ApiOperation(value = "Update an experiment", response = ExperimentDTO.class)
     @RequestMapping(value = "/{uuid}", method = RequestMethod.PATCH)
-    public ResponseEntity<String> updateExperiment(@RequestBody ExperimentDTO experimentDTO, @ApiParam(value = "uuid", required = true) @PathVariable("uuid") String uuid) {
+    public ResponseEntity<String> updateExperiment(@RequestBody ExperimentDTO experimentDTO, @PathVariable("uuid") String uuid) {
         experimentDTO = experimentService.updateExperiment(uuid, experimentDTO, new Logger(activeUserService.getActiveUser().getUsername(),"(PATCH) /experiments/{uuid}"));
         return new ResponseEntity<>(JsonConverters.convertObjectToJsonString(experimentDTO), HttpStatus.OK);
     }
 
 
-    @ApiOperation(value = "Delete an experiment", response = boolean.class)
     @RequestMapping(value = "/{uuid}", method = RequestMethod.DELETE)
-    public ResponseEntity<String> deleteExperiment(
-            @ApiParam(value = "uuid", required = true) @PathVariable("uuid") String uuid) {
+    public ResponseEntity<String> deleteExperiment(@PathVariable("uuid") String uuid) {
         experimentService.deleteExperiment(uuid, new Logger(activeUserService.getActiveUser().getUsername(), "(DELETE) /experiments/{uuid}"));
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
 
-    @ApiOperation(value = "Create a transient experiment", response = ExperimentDTO.class)
     @RequestMapping(value = "/transient", method = RequestMethod.POST)
     public ResponseEntity<String> createTransientExperiment(Authentication authentication, @RequestBody ExperimentDTO experimentDTO) {
         experimentDTO = experimentService.

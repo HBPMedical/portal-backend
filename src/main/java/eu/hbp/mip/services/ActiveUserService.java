@@ -72,7 +72,6 @@ public class ActiveUserService {
     }
 
     public UserDAO agreeToNDA() {
-        // Fetch the active user
         getActiveUser();
 
         user.setAgreeNDA(true);

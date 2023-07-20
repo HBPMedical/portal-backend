@@ -5,7 +5,7 @@ import eu.hbp.mip.models.DAOs.ExperimentDAO;
 import eu.hbp.mip.models.DAOs.UserDAO;
 import eu.hbp.mip.models.DTOs.*;
 import eu.hbp.mip.repositories.ExperimentRepository;
-import eu.hbp.mip.services.Specifications.ExperimentSpecifications;
+import eu.hbp.mip.repositories.ExperimentSpecifications;
 import eu.hbp.mip.utils.ClaimUtils;
 import eu.hbp.mip.utils.Exceptions.BadRequestException;
 import eu.hbp.mip.utils.Exceptions.InternalServerError;

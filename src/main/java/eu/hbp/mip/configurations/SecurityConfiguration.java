@@ -1,7 +1,6 @@
 package eu.hbp.mip.configurations;
 
 import eu.hbp.mip.utils.CORSFilter;
-import org.jetbrains.annotations.NotNull;
 import org.keycloak.adapters.springsecurity.KeycloakConfiguration;
 import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticationProvider;
 import org.keycloak.adapters.springsecurity.config.KeycloakWebSecurityConfigurerAdapter;
@@ -23,7 +22,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.WebUtils;
 
-import javax.servlet.*;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -36,7 +37,7 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
 
     // Upon logout, redirect to login page url
     private static final String logoutRedirectURL = "/sso/login";
-
+    private final HttpServletRequest request;
     @Value("#{'${authentication.enabled}'}")
     private boolean authenticationEnabled;
 
@@ -51,10 +52,8 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
         if (authenticationEnabled) {
             http.authorizeRequests()
                     .antMatchers(
-                            "/sso/login", "/actuator/**", 
-                            "/v2/api-docs", "/swagger-ui/**", "/swagger-resources/**"  // Swagger URLs
+                            "/sso/login", "/actuator/**"
                     ).permitAll()
-                    .antMatchers("/galaxy*", "/galaxy/*").hasRole("WORKFLOW_ADMIN")
                     .antMatchers("/**").authenticated()
                     .and().csrf().ignoringAntMatchers("/logout").csrfTokenRepository(csrfTokenRepository())
                     .and().addFilterAfter(csrfHeaderFilter(), CsrfFilter.class);
@@ -70,8 +69,8 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
     private Filter csrfHeaderFilter() {
         return new OncePerRequestFilter() {
             @Override
-            protected void doFilterInternal(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response,
-                                            @NotNull FilterChain filterChain) throws ServletException, IOException {
+            protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                            FilterChain filterChain) throws ServletException, IOException {
                 CsrfToken csrf = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
                 if (csrf != null) {
                     Cookie cookie = WebUtils.getCookie(request, "XSRF-TOKEN");
@@ -92,8 +91,6 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
         repository.setHeaderName("X-XSRF-TOKEN");
         return repository;
     }
-
-    private final HttpServletRequest request;
 
     @GetMapping(value = "/logout")
     public String logout() throws ServletException {

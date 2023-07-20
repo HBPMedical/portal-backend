@@ -48,13 +48,6 @@ services:
     queryExaremeUrl: {{ default .Env.EXAREME_URL "http://localhost:9090" }}/mining/query
     algorithmsUrl: {{ default .Env.EXAREME_URL "http://localhost:9090" }}/mining/algorithms.json
 
-  galaxy:
-    galaxyUrl:      {{ default .Env.GALAXY_URL "http://localhost:8090/" }}
-    galaxyContext:  "nativeGalaxy/workflows/list"
-    galaxyApiKey:   {{ .Env.GALAXY_API_KEY }}
-    galaxyUsername:  {{ default .Env.GALAXY_USERNAME "admin" }}
-    galaxyPassword:  {{ default .Env.GALAXY_PASSWORD "password" }}
-
 
 ### KEYCLOAK ###
 keycloak:

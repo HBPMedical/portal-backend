@@ -8,8 +8,8 @@ import java.util.UUID;
 public class Logger {
 
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(Logger.class);
-    private  String username;
-    private  String endpoint;
+    private final String username;
+    private final String endpoint;
 
     public Logger(String username, String endpoint){
         this.username = username;

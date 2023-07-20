@@ -70,7 +70,7 @@ public class HTTPUtil {
             response.append(inputLine);
         }
         in.close();
-        resp.append(response.toString());
+        resp.append(response);
 
         return respCode;
     }

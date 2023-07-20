@@ -14,9 +14,6 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 
 import javax.sql.DataSource;
 
-/**
- * Created by mirco on 11.07.16.
- */
 
 @Configuration
 @EnableJpaRepositories("eu.hbp.mip.repositories")
@@ -46,5 +43,10 @@ public class PersistenceConfiguration {
         flyway.setBaselineOnMigrate(true);
         flyway.setDataSource(portalDataSource());
         return flyway;
+
+//        return Flyway.configure()
+//                .dataSource(portalDataSource())
+//                .baselineOnMigrate(true)
+//                .load();
     }
 }

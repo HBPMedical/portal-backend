@@ -112,5 +112,4 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
         keycloakAuthenticationProvider.setGrantedAuthoritiesMapper(grantedAuthorityMapper);
         auth.authenticationProvider(keycloakAuthenticationProvider);
     }
-
 }

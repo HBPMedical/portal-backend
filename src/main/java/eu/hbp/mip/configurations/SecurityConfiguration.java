@@ -1,6 +1,7 @@
 package eu.hbp.mip.configurations;
 
 import eu.hbp.mip.utils.CORSFilter;
+import org.jetbrains.annotations.NotNull;
 import org.keycloak.adapters.springsecurity.KeycloakConfiguration;
 import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticationProvider;
 import org.keycloak.adapters.springsecurity.config.KeycloakWebSecurityConfigurerAdapter;
@@ -69,8 +70,8 @@ public class SecurityConfiguration extends KeycloakWebSecurityConfigurerAdapter 
     private Filter csrfHeaderFilter() {
         return new OncePerRequestFilter() {
             @Override
-            protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-                                            FilterChain filterChain) throws ServletException, IOException {
+            protected void doFilterInternal(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response,
+                                            @NotNull FilterChain filterChain) throws ServletException, IOException {
                 CsrfToken csrf = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
                 if (csrf != null) {
                     Cookie cookie = WebUtils.getCookie(request, "XSRF-TOKEN");

@@ -173,7 +173,7 @@ public class GalaxyService {
             Response<Object> response = call.execute();
             if (response.code() >= 400) {
                 Logger.LogBackgroundAction(experimentName, experimentId, " Response code: "
-                        + response.code() + "" + " with body: " + (response.errorBody() != null ? response.errorBody().string() : " "));
+                        + response.code() + " with body: " + (response.errorBody() != null ? response.errorBody().string() : " "));
                 return "internalError";
             }
             result = new Gson().toJson(response.body());
@@ -228,7 +228,7 @@ public class GalaxyService {
             Response<List<GalaxyWorkflowResult>> response = call.execute();
             if (response.code() >= 400) {
                 Logger.LogBackgroundAction(experimentName, experimentId, " Response code: "
-                        + response.code() + "" + " with body: " + (response.errorBody() != null ? response.errorBody().string() : " "));
+                        + response.code() + " with body: " + (response.errorBody() != null ? response.errorBody().string() : " "));
                 return null;
             }
             getGalaxyWorkflowResultList = response.body();
@@ -266,7 +266,7 @@ public class GalaxyService {
             Response<Object> response = call.execute();
             if (response.code() >= 400) {
                 Logger.LogBackgroundAction(experimentName, experimentId, " Response code: "
-                        + response.code() + "" + " with body: " + (response.errorBody() != null ? response.errorBody().string() : " "));
+                        + response.code() + " with body: " + (response.errorBody() != null ? response.errorBody().string() : " "));
                 return null;
             }
             resultJson = new Gson().toJson(response.body());

@@ -12,7 +12,7 @@ import java.util.List;
 public class ExperimentSpecifications {
     public static class ExperimentWithName implements Specification<ExperimentDAO> {
 
-        private String name;
+        private final String name;
         private String regExp;
 
         public ExperimentWithName(String name) {
@@ -33,7 +33,7 @@ public class ExperimentSpecifications {
 
     public static class ExperimentWithAlgorithm implements Specification<ExperimentDAO> {
 
-        private String algorithm;
+        private final String algorithm;
 
         public ExperimentWithAlgorithm(String algorithm) {
             this.algorithm = algorithm;
@@ -50,7 +50,7 @@ public class ExperimentSpecifications {
 
     public static class ExperimentWithViewed implements Specification<ExperimentDAO> {
 
-        private Boolean viewed;
+        private final Boolean viewed;
 
         public ExperimentWithViewed(Boolean viewed) {
             this.viewed = viewed;
@@ -66,7 +66,7 @@ public class ExperimentSpecifications {
 
     public static class ExperimentWithShared implements Specification<ExperimentDAO> {
 
-        private Boolean shared;
+        private final Boolean shared;
 
         public ExperimentWithShared(Boolean shared) {
             this.shared = shared;
@@ -82,7 +82,7 @@ public class ExperimentSpecifications {
 
     public static class MyExperiment implements Specification<ExperimentDAO> {
 
-        private String username;
+        private final String username;
 
         public MyExperiment(String username) {
             this.username = username;
@@ -99,14 +99,14 @@ public class ExperimentSpecifications {
 
     public static class SharedExperiment implements Specification<ExperimentDAO> {
 
-        private boolean shared;
+        private final boolean shared;
 
         public SharedExperiment(boolean shared) {
             this.shared = shared;
         }
 
         public Predicate toPredicate(Root<ExperimentDAO> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder cb) {
-            if (shared == false) {
+            if (!shared) {
                 return cb.isTrue(cb.literal(false));
             }
             return cb.equal(root.get("shared"), shared);
@@ -115,8 +115,8 @@ public class ExperimentSpecifications {
 
     public static class ExperimentOrderBy implements Specification<ExperimentDAO> {
 
-        private String orderBy;
-        private Boolean descending;
+        private final String orderBy;
+        private final Boolean descending;
 
         public ExperimentOrderBy(String orderBy, Boolean descending) {
             if (properColumnToBeOrderedBy(orderBy))

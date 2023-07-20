@@ -22,7 +22,6 @@ import java.util.UUID;
 public interface ExperimentRepository extends CrudRepository<ExperimentDAO, UUID>, JpaSpecificationExecutor<ExperimentDAO>
 {
     ExperimentDAO findByUuid(UUID experimentUuid);
-
     /**
      * The loadExperiment access the database and load the information of a specific experiment
      *

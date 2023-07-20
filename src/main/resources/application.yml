@@ -31,6 +31,10 @@ spring:
       dialect: org.hibernate.dialect.PostgreSQL9Dialect
       ddl-auto: validate
 
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
 
 ### EXTERNAL SERVICES ###
 services:

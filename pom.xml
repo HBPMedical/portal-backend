@@ -13,14 +13,13 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.3.5.RELEASE</version>
+        <version>2.7.13</version>
     </parent>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
-        <spring-context.version>5.2.10.RELEASE</spring-context.version>
-        <springfox-boot-starter.version>3.0.0</springfox-boot-starter.version>
+        <spring-context.version>5.3.29</spring-context.version>
         <postgresql.version>42.6.0</postgresql.version>
         <hibernate.version>5.6.15.Final</hibernate.version>
         <flyway-core.version>4.2.0</flyway-core.version>
@@ -87,11 +86,6 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>${postgresql.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-boot-starter</artifactId>
-            <version>${springfox-boot-starter.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>

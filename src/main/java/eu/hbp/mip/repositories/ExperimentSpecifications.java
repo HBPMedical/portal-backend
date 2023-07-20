@@ -1,4 +1,4 @@
-package eu.hbp.mip.services.Specifications;
+package eu.hbp.mip.repositories;
 
 import eu.hbp.mip.models.DAOs.ExperimentDAO;
 import eu.hbp.mip.models.DAOs.UserDAO;

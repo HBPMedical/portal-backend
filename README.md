@@ -7,7 +7,7 @@
 To run the backend using an IDE for development, such as IntelliJ, you need a running instance of PostgreSQL.
 
 ## Deployment (using a Docker image)
-Build the image: `docker build -t hbpmip/portal-backend:latest .`
+Build the image: `docker build -t hbpmip/portal-backend:testing .`
 
 To use this image, you need a running instance of PostgreSQL and to configure the software using the following environment variables.
 

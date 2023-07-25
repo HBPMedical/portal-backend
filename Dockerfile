@@ -27,7 +27,7 @@ ENV TZ=Etc/GMT
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 #######################################################
-# Setting up env variables and workdir
+# Setting up environment
 #######################################################
 ENV APP_CONFIG_TEMPLATE="/opt/config/application.tmpl"
 ENV APP_CONFIG_LOCATION="/opt/config/application.yml"
@@ -35,6 +35,7 @@ ENV SPRING_CONFIG_LOCATION="file:/opt/config/application.yml"
 
 WORKDIR /opt
 
+RUN apk add --no-cache curl
 
 #######################################################
 # Install dockerize

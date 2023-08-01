@@ -5,6 +5,8 @@ import eu.hbp.mip.services.ActiveUserService;
 import eu.hbp.mip.services.AlgorithmService;
 import eu.hbp.mip.utils.Logger;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,9 +26,9 @@ public class AlgorithmsAPI {
         this.algorithmService = algorithmService;
     }
 
-    @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<List<ExaremeAlgorithmDTO>> getAlgorithms() {
-        Logger logger = new Logger(activeUserService.getActiveUser().getUsername(), "(GET) /algorithms");
+    @GetMapping
+    public ResponseEntity<List<ExaremeAlgorithmDTO>> getAlgorithms(Authentication authentication) {
+        Logger logger = new Logger(activeUserService.getActiveUser(authentication).getUsername(), "(GET) /algorithms");
         logger.LogUserAction("Executing...");
         List<ExaremeAlgorithmDTO> algorithms = algorithmService.getAlgorithms();
 

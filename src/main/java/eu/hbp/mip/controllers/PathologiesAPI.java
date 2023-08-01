@@ -11,6 +11,7 @@ import eu.hbp.mip.utils.Exceptions.InternalServerError;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,15 +35,19 @@ public class PathologiesAPI {
 
     @Value("#{'${services.exareme2.cdesMetadataUrl}'}")
     private String exareme2CDEsMetadataUrl;
+
     private final ActiveUserService activeUserService;
 
-    public PathologiesAPI(ActiveUserService activeUserService) {
+    private final ClaimUtils claimUtils;
+
+    public PathologiesAPI(ActiveUserService activeUserService, ClaimUtils claimUtils) {
         this.activeUserService = activeUserService;
+        this.claimUtils = claimUtils;
     }
 
-    @RequestMapping(name = "/pathologies", method = RequestMethod.GET)
+    @GetMapping
     public ResponseEntity<String> getPathologies(Authentication authentication) {
-        Logger logger = new Logger(activeUserService.getActiveUser().getUsername(), "(GET) /pathologies");
+        Logger logger = new Logger(activeUserService.getActiveUser(authentication).getUsername(), "(GET) /pathologies");
         logger.LogUserAction("Loading pathologies ...");
 
         Map<String, List<PathologyDTO.EnumerationDTO>> datasetsPerPathology = getExareme2DatasetsPerPathology(logger);
@@ -70,7 +75,7 @@ public class PathologiesAPI {
         }
 
         logger.LogUserAction("Successfully loaded all authorized pathologies");
-        return ResponseEntity.ok().body(gson.toJson(ClaimUtils.getAuthorizedPathologies(logger, authentication, pathologyDTOS)));
+        return ResponseEntity.ok().body(gson.toJson(claimUtils.getAuthorizedPathologies(logger, authentication, pathologyDTOS)));
     }
 
     public Map<String, List<PathologyDTO.EnumerationDTO>> getExareme2DatasetsPerPathology(Logger logger) {
@@ -93,12 +98,10 @@ public class PathologiesAPI {
 
         exareme2CDEsMetadata.forEach( (pathology, cdePerDataset) ->  {
             List<PathologyDTO.EnumerationDTO> pathologyDatasetDTOS = new ArrayList<>();
-            Map datasetEnumerations = (Map) cdePerDataset.get("dataset").getEnumerations();
-            datasetEnumerations.forEach((code, label) ->  pathologyDatasetDTOS.add(new PathologyDTO.EnumerationDTO((String) code, (String) label)));
+            Map<String, String> datasetEnumerations = (Map<String, String>) cdePerDataset.get("dataset").getEnumerations();
+            datasetEnumerations.forEach((code, label) ->  pathologyDatasetDTOS.add(new PathologyDTO.EnumerationDTO(code, label)));
             datasetsPerPathology.put(pathology, pathologyDatasetDTOS);
         });
-
-
 
         return datasetsPerPathology;
     }

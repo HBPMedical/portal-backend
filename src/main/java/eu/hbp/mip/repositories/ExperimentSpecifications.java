@@ -1,13 +1,14 @@
 package eu.hbp.mip.repositories;
 
 import eu.hbp.mip.models.DAOs.ExperimentDAO;
-import eu.hbp.mip.models.DAOs.UserDAO;
 import eu.hbp.mip.utils.Exceptions.BadRequestException;
+import jakarta.persistence.criteria.*;
+import lombok.NonNull;
 import org.springframework.data.jpa.domain.Specification;
 
-import javax.persistence.criteria.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class ExperimentSpecifications {
     public static class ExperimentWithName implements Specification<ExperimentDAO> {
@@ -20,7 +21,7 @@ public class ExperimentSpecifications {
             this.regExp = name;
         }
 
-        public Predicate toPredicate(Root<ExperimentDAO> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder cb) {
+        public Predicate toPredicate(@NonNull Root<ExperimentDAO> root, @NonNull CriteriaQuery<?> criteriaQuery, @NonNull CriteriaBuilder cb) {
             if (name == null) {
                 return cb.isTrue(cb.literal(true));
             } else {
@@ -28,6 +29,16 @@ public class ExperimentSpecifications {
             }
 
             return cb.like(cb.lower(root.get("name")), this.regExp.toLowerCase());
+        }
+
+        @Override
+        public @NonNull Specification<ExperimentDAO> and(Specification<ExperimentDAO> other) {
+            return Specification.super.and(other);
+        }
+
+        @Override
+        public @NonNull Specification<ExperimentDAO> or(Specification<ExperimentDAO> other) {
+            return Specification.super.or(other);
         }
     }
 
@@ -39,7 +50,7 @@ public class ExperimentSpecifications {
             this.algorithm = algorithm;
         }
 
-        public Predicate toPredicate(Root<ExperimentDAO> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder cb) {
+        public Predicate toPredicate(@NonNull Root<ExperimentDAO> root, @NonNull CriteriaQuery<?> criteriaQuery, @NonNull CriteriaBuilder cb) {
             if (algorithm == null) {
                 return cb.isTrue(cb.literal(true));
             }
@@ -56,7 +67,7 @@ public class ExperimentSpecifications {
             this.viewed = viewed;
         }
 
-        public Predicate toPredicate(Root<ExperimentDAO> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+        public Predicate toPredicate(@NonNull Root<ExperimentDAO> root, @NonNull CriteriaQuery<?> query, @NonNull CriteriaBuilder cb) {
             if (viewed == null) {
                 return cb.isTrue(cb.literal(true)); // always true = no filtering
             }
@@ -72,7 +83,7 @@ public class ExperimentSpecifications {
             this.shared = shared;
         }
 
-        public Predicate toPredicate(Root<ExperimentDAO> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder cb) {
+        public Predicate toPredicate(@NonNull Root<ExperimentDAO> root, @NonNull CriteriaQuery<?> criteriaQuery, @NonNull CriteriaBuilder cb) {
             if (shared == null) {
                 return cb.isTrue(cb.literal(true));
             }
@@ -88,11 +99,11 @@ public class ExperimentSpecifications {
             this.username = username;
         }
 
-        public Predicate toPredicate(Root<ExperimentDAO> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder cb) {
+        public Predicate toPredicate(@NonNull Root<ExperimentDAO> root, @NonNull CriteriaQuery<?> criteriaQuery, @NonNull CriteriaBuilder cb) {
             if (username == null) {
                 return cb.isTrue(cb.literal(true));
             }
-            Join<ExperimentDAO, UserDAO> experimentDAOUserDAOJoin = root.join("createdBy");
+            Join<Object, Object> experimentDAOUserDAOJoin = root.join("createdBy");
             return cb.equal(experimentDAOUserDAOJoin.get("username"), username);
         }
     }
@@ -105,11 +116,11 @@ public class ExperimentSpecifications {
             this.shared = shared;
         }
 
-        public Predicate toPredicate(Root<ExperimentDAO> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder cb) {
+        public Predicate toPredicate(@NonNull Root<ExperimentDAO> root, @NonNull CriteriaQuery<?> criteriaQuery, @NonNull CriteriaBuilder cb) {
             if (!shared) {
                 return cb.isTrue(cb.literal(false));
             }
-            return cb.equal(root.get("shared"), shared);
+            return cb.equal(root.get("shared"), true);
         }
     }
 
@@ -123,13 +134,10 @@ public class ExperimentSpecifications {
                 this.orderBy = orderBy;
             else
                 throw new BadRequestException("Please provide proper column to order by.");
-            if (descending == null)
-                this.descending = true;
-            else
-                this.descending = descending;
+            this.descending = Objects.requireNonNullElse(descending, true);
         }
 
-        public Predicate toPredicate(Root<ExperimentDAO> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder cb) {
+        public Predicate toPredicate(@NonNull Root<ExperimentDAO> root, @NonNull CriteriaQuery<?> criteriaQuery, @NonNull CriteriaBuilder cb) {
             if (descending) {
                 criteriaQuery.orderBy(cb.desc(root.get(orderBy)));
             } else {

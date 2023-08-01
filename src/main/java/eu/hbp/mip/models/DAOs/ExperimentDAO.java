@@ -3,16 +3,15 @@ package eu.hbp.mip.models.DAOs;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import javax.persistence.*;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.UUID;
 
-/**
- * Created by habfast on 21/04/16.
- */
+
 @Entity
 @Data
 @AllArgsConstructor
@@ -25,7 +24,6 @@ public class ExperimentDAO {
     @Expose
     @Id
     @Column(columnDefinition = "uuid", updatable = false)
-    @org.hibernate.annotations.Type(type = "pg-uuid")
     private UUID uuid;
 
     @Expose

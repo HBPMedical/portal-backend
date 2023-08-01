@@ -12,12 +12,8 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.Date;
-import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Created by mirco on 11.07.16.
- */
 
 public interface ExperimentRepository extends CrudRepository<ExperimentDAO, UUID>, JpaSpecificationExecutor<ExperimentDAO>
 {
@@ -69,28 +65,10 @@ public interface ExperimentRepository extends CrudRepository<ExperimentDAO, UUID
         try {
             save(experimentDAO);
         } catch (Exception e) {
-            logger.LogUserAction("Attempted to save changes to database but an error ocurred  : " + e.getMessage() + ".");
+            logger.LogUserAction("Attempted to save changes to database but an error occurred  : " + e.getMessage() + ".");
             throw new InternalServerError(e.getMessage());
         }
         return experimentDAO;
-    }
-
-    default void saveExperiment(ExperimentDAO experimentDAO, Logger logger) {
-
-        logger.LogUserAction(" id : " + experimentDAO.getUuid());
-        logger.LogUserAction(" algorithm : " + experimentDAO.getAlgorithm());
-        logger.LogUserAction(" name : " + experimentDAO.getName());
-        logger.LogUserAction(" historyId : " + experimentDAO.getWorkflowHistoryId());
-        logger.LogUserAction(" status : " + experimentDAO.getStatus());
-
-        try {
-            save(experimentDAO);
-        } catch (Exception e) {
-            logger.LogUserAction("Attempted to save changes to database but an error ocurred  : " + e.getMessage() + ".");
-            throw new InternalServerError(e.getMessage());
-        }
-
-        logger.LogUserAction("Saved experiment");
     }
 
     default void finishExperiment(ExperimentDAO experimentDAO, Logger logger) {

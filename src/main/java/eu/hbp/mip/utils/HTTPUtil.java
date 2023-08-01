@@ -18,17 +18,12 @@ public class HTTPUtil {
         throw new IllegalAccessError("HTTPUtil class");
     }
 
-    public static int sendGet(String url, StringBuilder resp) throws IOException {
-        return sendHTTP(url, "", resp, "GET", null);
+    public static void sendGet(String url, StringBuilder resp) throws IOException {
+        sendHTTP(url, "", resp, "GET", null);
     }
 
     public static int sendPost(String url, String query, StringBuilder resp) throws IOException {
         return sendHTTP(url, query, resp, "POST", null);
-    }
-
-    public static int sendAuthorizedHTTP(String url, String query, StringBuilder resp, String httpVerb,
-                                         String authorization) throws IOException {
-        return sendHTTP(url, query, resp, httpVerb, authorization);
     }
 
     private static int sendHTTP(String url, String query, StringBuilder resp, String httpVerb, String authorization)

@@ -1,73 +1,5 @@
 # Configuration template for the portal running inside a Docker container
 
-### LOG LEVELS ###
-logging:
-  level:
-    root: {{ default .Env.LOG_LEVEL_FRAMEWORK "ERROR" }}
-    org: {{ default .Env.LOG_LEVEL_FRAMEWORK "ERROR" }}
-    eu:
-      hbp: {{ default .Env.LOG_LEVEL "INFO" }}
-
-
-### AUTHENTICATION ###
-authentication:
-  enabled: {{ default .Env.AUTHENTICATION "true" }}
-
-
-### DATABASE CONFIGURATION ###
-spring:
-  portal-datasource:
-    url: {{ default .Env.PORTAL_DB_URL "jdbc:postgresql://88.197.53.106:5432/portal" }}
-    schema: {{ default .Env.PORTAL_DB_SCHEMA "public" }}
-    username: {{ default .Env.PORTAL_DB_USER "postgres" }}
-    password: {{ .Env.PORTAL_DB_PASSWORD }}
-    driver-class-name: org.postgresql.Driver
-  data:
-    jpa:
-      repositories:
-        bootstrap-mode: default
-  jpa:
-    hibernate:
-      dialect: org.hibernate.dialect.PostgreSQL9Dialect
-      ddl-auto: validate
-
-  mvc:
-    pathmatch:
-      matching-strategy: ant_path_matcher
-
-
-### EXTERNAL SERVICES ###
-services:
-  algorithmsUpdateInterval: {{  .Env.ALGORITHM_UPDATE_INTERVAL}}
-  exareme2:
-    algorithmsUrl: {{ .Env.EXAREME2_URL}}/algorithms
-    attributesUrl: {{ .Env.EXAREME2_URL}}/data_models_attributes
-    cdesMetadataUrl: {{ .Env.EXAREME2_URL}}/cdes_metadata
-
-  exareme:
-    queryExaremeUrl: {{ default .Env.EXAREME_URL "http://localhost:9090" }}/mining/query
-    algorithmsUrl: {{ default .Env.EXAREME_URL "http://localhost:9090" }}/mining/algorithms.json
-
-
-### KEYCLOAK ###
-keycloak:
-  enabled: true
-  auth-server-url: {{ .Env.KEYCLOAK_AUTH_URL }}
-  realm: {{ .Env.KEYCLOAK_REALM }}
-  resource: {{ .Env.KEYCLOAK_CLIENT_ID }}
-  use-resource-role-mappings: true
-  enable-basic-auth: true
-  credentials:
-    secret: {{ .Env.KEYCLOAK_CLIENT_SECRET }}
-  principal-attribute: "preferred_username"
-  ssl-required: {{ .Env.KEYCLOAK_SSL_REQUIRED }}
-
-### EXTERNAL FILES ###
-# Files are imported when building the docker image
-files:
-  pathologies_json: "file:/opt/portal/api/pathologies.json"
-  disabledAlgorithms_json: "file:{{ .Env.DISABLED_ALGORITHMS_CONFIG_PATH}}"
-
 
 ### EMBEDDED SERVER CONFIGURATION ###
 server:
@@ -77,10 +9,70 @@ server:
   forward-headers-strategy: native
 
 
-### ENDPOINTS ###
-endpoints:
-  enabled: true
-  health:
-    enabled: true
-    endpoint: /health
-    sensitive: false
+### LOG LEVELS ###
+logging:
+  level:
+    root: {{ default .Env.LOG_LEVEL_FRAMEWORK "ERROR" }}
+    eu:
+      hbp: {{ default .Env.LOG_LEVEL "INFO" }}
+
+
+### DATABASE CONFIGURATION ###
+spring:
+  datasource:
+    url: {{ default .Env.PORTAL_DB_URL "jdbc:postgresql://172.17.0.1:5433/portal" }}
+    username: {{ default .Env.PORTAL_DB_USER "portal" }}
+    password: {{ default .Env.PORTAL_DB_PASSWORD "portalpwd" }}
+    driver-class-name: org.postgresql.Driver
+  data:
+    jpa:
+      repositories:
+        bootstrap-mode: default
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            authorization-grant-type: authorization_code
+            client-id: {{ .Env.KEYCLOAK_REALM }}
+            client-secret: {{ .Env.KEYCLOAK_CLIENT_SECRET }}
+            provider: keycloak
+            scope: openid
+            redirect-uri: http://172.17.0.1/${server.servlet.contextPath}/login/oauth2/code/{{ .Env.KEYCLOAK_REALM }}
+        provider:
+          keycloak:
+            issuer-uri: http://172.17.0.1/auth/realms/{{ .Env.KEYCLOAK_REALM }}
+            user-name-attribute: preferred_username
+
+
+### AUTHENTICATION ###
+authentication:
+  enabled: {{ default .Env.AUTHENTICATION "1" }}
+  all_datasets_allowed_claim: research_dataset_all
+  all_experiments_allowed_claim: research_experiment_all
+  dataset_claim_prefix: research_dataset_
+
+
+### EXTERNAL SERVICES ###
+services:
+  algorithmsUpdateInterval: {{  .Env.ALGORITHM_UPDATE_INTERVAL}}
+  exareme2:
+    algorithmsUrl: {{ .Env.EXAREME2_URL}}/algorithms
+    attributesUrl: {{ .Env.EXAREME2_URL}}/data_models_attributes
+    cdesMetadataUrl: {{ .Env.EXAREME2_URL}}/cdes_metadata
+  exareme:
+    queryExaremeUrl: {{ default .Env.EXAREME_URL "http://localhost:9090" }}/mining/query
+    algorithmsUrl: {{ default .Env.EXAREME_URL "http://localhost:9090" }}/mining/algorithms.json
+
+
+### EXTERNAL FILES ###
+# Files are imported when building the docker image
+files:
+  pathologies_json: "file:/opt/portal/api/pathologies.json"
+  disabledAlgorithms_json: "file:{{ .Env.DISABLED_ALGORITHMS_CONFIG_PATH}}"

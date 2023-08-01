@@ -20,8 +20,8 @@ import javax.sql.DataSource;
 public class PersistenceConfiguration {
 
     @Primary
-    @Bean(name = "portal-datasource")
-    @ConfigurationProperties(prefix = "spring.portal-datasource")
+    @Bean(name = "datasource")
+    @ConfigurationProperties(prefix = "spring.datasource")
     public DataSource portalDataSource() {
         return DataSourceBuilder.create().build();
     }

@@ -1,24 +1,26 @@
 # Configuration for development purposes
 
+
+### EMBEDDED SERVER CONFIGURATION ###
+server:
+  servlet:
+    contextPath: "/services"
+  port: 8080
+  forward-headers-strategy: native
+
+
 ### LOG LEVELS ###
 logging:
   level:
-    root: "ERROR"
-    org: "ERROR"
+    root: "INFO"
     eu:
       hbp: "DEBUG"
 
 
-### AUTHENTICATION ###
-authentication:
-  enabled: false
-
-
 ### DATABASE CONFIGURATION ###
 spring:
-  portal-datasource:
+  datasource:
     url: "jdbc:postgresql://127.0.0.1:5433/portal"
-    schema: "public"
     username: "portal"
     password: "portalpwd"
     driver-class-name: org.postgresql.Driver
@@ -28,12 +30,33 @@ spring:
         bootstrap-mode: default
   jpa:
     hibernate:
-      dialect: org.hibernate.dialect.PostgreSQL9Dialect
       ddl-auto: validate
-
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            authorization-grant-type: authorization_code
+            client-id: MIP
+            client-secret: dae83a6b-c769-4186-8383-f0984c6edf05
+            provider: keycloak
+            scope: openid
+            redirect-uri: http://172.17.0.1/${server.servlet.contextPath}/login/oauth2/code/MIP
+        provider:
+          keycloak:
+            user-name-attribute: preferred_username
+            issuer-uri: http://172.17.0.1/auth/realms/MIP
+
+
+### AUTHENTICATION ###
+authentication:
+  enabled: 0
+  all_datasets_allowed_claim: research_dataset_all
+  all_experiments_allowed_claim: research_experiment_all
+  dataset_claim_prefix: research_dataset_
 
 
 ### EXTERNAL SERVICES ###
@@ -48,28 +71,7 @@ services:
     algorithmsUrl: "http://127.0.0.1:9090/mining/algorithms.json"
 
 
-### KEYCLOAK ###
-keycloak:
-  enabled: true
-  auth-server-url: "https://iam.humanbrainproject.eu/auth"
-  realm: "MIP"
-  resource: "mipfedqa"
-  use-resource-role-mappings: true
-  enable-basic-auth: true
-  credentials:
-    secret: "dae83a6b-c769-4186-8383-f0984c6edf05"
-  principal-attribute: "preferred_username"
-
-
 ### EXTERNAL FILES ###
 # Files are loaded from the resources
 files:
   disabledAlgorithms_json: "classPath:/disabledAlgorithms.json"
-
-
-### EMBEDDED SERVER CONFIGURATION ###
-server:
-  servlet:
-    contextPath: "/services"
-  port: 8080
-  forward-headers-strategy: native

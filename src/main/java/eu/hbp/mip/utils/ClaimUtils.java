@@ -1,42 +1,56 @@
 package eu.hbp.mip.utils;
 
-import com.google.gson.Gson;
 import eu.hbp.mip.models.DTOs.PathologyDTO;
-import eu.hbp.mip.utils.Exceptions.InternalServerError;
 import eu.hbp.mip.utils.Exceptions.UnauthorizedException;
-import org.keycloak.KeycloakPrincipal;
-import org.keycloak.adapters.springsecurity.token.KeycloakAuthenticationToken;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
-
+@Component
 public class ClaimUtils {
 
-    private static final Gson gson = new Gson();
+    @Value("${authentication.all_datasets_allowed_claim}")
+    private String allDatasetsAllowedClaim;
 
-    public static String allDatasetsAllowedClaim() {
-        return "research_dataset_all";
+    @Value("${authentication.all_experiments_allowed_claim}")
+    private String allExperimentsAllowedClaim;
+
+    @Value("${authentication.dataset_claim_prefix}")
+    private String datasetClaimPrefix;
+
+    private String getDatasetClaim(String datasetCode) {
+        return datasetClaimPrefix + datasetCode.toLowerCase();
     }
 
-    public static String allExperimentsAllowedClaim() {
-        return "research_experiment_all";
+    private static boolean hasRoleAccess(ArrayList<String> authorities, String role, Logger logger) {
+        List<String> userClaims = Arrays.asList(authorities.toString().toLowerCase()
+                .replaceAll("[\\s+\\]\\[]", "").split(","));
+
+        logger.LogUserAction("User Claims: " + userClaims);
+        return userClaims.contains(role.toLowerCase());
     }
 
-    public static String getDatasetClaim(String datasetCode) {
-        return "research_dataset_" + datasetCode.toLowerCase();
+    private static ArrayList<String> getAuthorityRoles(Authentication authentication) {
+        return (ArrayList<String>) authentication.getAuthorities().stream()
+                .map(Object::toString)
+                .collect(Collectors.toList());
     }
 
-    public static void validateAccessRightsOnDatasets(Authentication authentication,
+    public void validateAccessRightsOnDatasets(Authentication authentication,
                                                       String experimentDatasets, Logger logger) {
 
-        ArrayList<String> authorities = getKeycloakAuthorities(authentication, logger);
+        ArrayList<String> authorities = getAuthorityRoles(authentication);
 
         // Don't check for dataset claims if "super" claim exists allowing everything
-        if (!hasRoleAccess(authorities, ClaimUtils.allDatasetsAllowedClaim(), logger)) {
+        if (!hasRoleAccess(authorities, allDatasetsAllowedClaim, logger)) {
 
             for (String dataset : experimentDatasets.split(",")) {
-                String datasetRole = ClaimUtils.getDatasetClaim(dataset);
+                String datasetRole = getDatasetClaim(dataset);
                 if (!hasRoleAccess(authorities, datasetRole, logger)) {
                     logger.LogUserAction("You are not allowed to use dataset: " + dataset);
                     throw new UnauthorizedException("You are not authorized to use these datasets.");
@@ -46,70 +60,43 @@ public class ClaimUtils {
         }
     }
 
-    public static boolean validateAccessRightsOnExperiments(Authentication authentication, Logger logger) {
-
-        ArrayList<String> authorities = getKeycloakAuthorities(authentication, logger);
-
-        // Check for experiment_all claims
-        return  hasRoleAccess(authorities, ClaimUtils.allExperimentsAllowedClaim(), logger);
+    public boolean validateAccessRightsOnALLExperiments(Authentication authentication, Logger logger) {
+        ArrayList<String> authorities = getAuthorityRoles(authentication);
+        return hasRoleAccess(authorities, allExperimentsAllowedClaim, logger);
     }
 
-    public static List<PathologyDTO> getAuthorizedPathologies(Logger logger, Authentication authentication,
+    public List<PathologyDTO> getAuthorizedPathologies(Logger logger, Authentication authentication,
                                                               List<PathologyDTO> allPathologies) {
-        // --- Providing only the allowed pathologies/datasets to the user  ---
-        logger.LogUserAction("Filter out the unauthorised datasets.");
 
-        ArrayList<String> authorities = getKeycloakAuthorities(authentication, logger);
-
-        // If the "dataset_all" claim exists then return everything
-        if (hasRoleAccess(authorities, ClaimUtils.allDatasetsAllowedClaim(), logger)) {
-            return allPathologies;
-        }
+        ArrayList<String> authorities = getAuthorityRoles(authentication);
 
         List<PathologyDTO> userPathologies = new ArrayList<>();
-        for (PathologyDTO curPathology : allPathologies) {
-            List<PathologyDTO.EnumerationDTO> userPathologyDatasets = new ArrayList<>();
-            for (PathologyDTO.EnumerationDTO dataset : curPathology.getDatasets()) {
-                if (hasRoleAccess(authorities, ClaimUtils.getDatasetClaim(dataset.getCode()), logger)) {
-                    logger.LogUserAction("Added dataset: " + dataset.getCode());
-                    userPathologyDatasets.add(dataset);
+        if (hasRoleAccess(authorities, allDatasetsAllowedClaim, logger)) {
+            userPathologies = allPathologies;
+
+        } else {
+            for (PathologyDTO curPathology : allPathologies) {
+                List<PathologyDTO.EnumerationDTO> userPathologyDatasets = new ArrayList<>();
+                for (PathologyDTO.EnumerationDTO dataset : curPathology.getDatasets()) {
+                    if (hasRoleAccess(authorities, getDatasetClaim(dataset.getCode()), logger)) {
+                        userPathologyDatasets.add(dataset);
+                    }
+                }
+
+                if (userPathologyDatasets.size() > 0) {
+                    PathologyDTO userPathology = new PathologyDTO();
+                    userPathology.setCode(curPathology.getCode());
+                    userPathology.setLabel(curPathology.getLabel());
+                    userPathology.setMetadataHierarchyDTO(curPathology.getMetadataHierarchyDTO());
+                    userPathology.setDatasets(userPathologyDatasets);
+                    userPathologies.add(userPathology);
                 }
             }
-
-            if (userPathologyDatasets.size() > 0) {
-                logger.LogUserAction("Added pathology '" + curPathology.getLabel()
-                                + "' with datasets: '" + userPathologyDatasets + "'");
-
-                PathologyDTO userPathology = new PathologyDTO();
-                userPathology.setCode(curPathology.getCode());
-                userPathology.setLabel(curPathology.getLabel());
-                userPathology.setMetadataHierarchyDTO(curPathology.getMetadataHierarchyDTO());
-                userPathology.setDatasets(userPathologyDatasets);
-                userPathologies.add(userPathology);
-            }
         }
 
+        String userPathologiesSTR = userPathologies.stream().map(PathologyDTO::toString)
+                .collect(Collectors.joining(", "));
+        logger.LogUserAction("Allowed pathologies: [" + userPathologiesSTR + "]");
         return userPathologies;
-    }
-
-    private static boolean  hasRoleAccess(ArrayList<String> authorities, String role, Logger logger)
-    {
-        List<String> userClaims = Arrays.asList(authorities.toString().toLowerCase()
-                .replaceAll("[\\s+\\]\\[]", "").split(","));
-
-        logger.LogUserAction("User Claims: " + userClaims);
-        return userClaims.contains(role.toLowerCase());
-    }
-
-    private static ArrayList<String> getKeycloakAuthorities(Authentication authentication, Logger logger){
-        KeycloakAuthenticationToken token = (KeycloakAuthenticationToken) authentication;
-        KeycloakPrincipal keycloakPrincipal = (KeycloakPrincipal) token.getPrincipal();
-        if(keycloakPrincipal.getKeycloakSecurityContext().getIdToken().getOtherClaims().get("authorities") == null)
-        {
-            logger.LogUserAction("Your user has no roles.");
-            throw new InternalServerError("Your user has no roles.");
-        }
-
-         return (ArrayList<String>)keycloakPrincipal.getKeycloakSecurityContext().getIdToken().getOtherClaims().get("authorities");
     }
 }

@@ -20,7 +20,6 @@ public class UserDTO {
     private String fullname;
 
     public UserDTO(){
-
     }
 
     public UserDTO(UserDAO userdao) {

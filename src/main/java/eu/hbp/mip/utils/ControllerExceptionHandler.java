@@ -14,6 +14,8 @@ import java.util.Date;
 @ControllerAdvice
 public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
 
+    public record ErrorMessage (int statusCode, Date timestamp, String message, String description) {}
+
     @ExceptionHandler(ExperimentNotFoundException.class)
     public ResponseEntity<Object> handleExperimentNotFoundException(ExperimentNotFoundException ex, WebRequest request) {
         ErrorMessage message = new ErrorMessage(
@@ -47,21 +49,6 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(message, HttpStatus.UNAUTHORIZED);
     }
 
-    @ExceptionHandler(InternalServerError.class)
-    public ResponseEntity<ErrorMessage> handleInternalServerError(InternalServerError er, WebRequest request) {
-        logger.error("An unexpected exception occurred: " + er.getClass() +
-                "\nMessage: " + er.getMessage() +
-                "\nStacktrace: " + Arrays.toString(er.getStackTrace()).replaceAll(", ", "\n")
-        );
-        ErrorMessage message = new ErrorMessage(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                new Date(),
-                er.getMessage(),
-                request.getDescription(false));
-
-        return new ResponseEntity<>(message, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
     @ExceptionHandler(NoContent.class)
     public ResponseEntity<ErrorMessage> handleNoContent(NoContent nc, WebRequest request) {
         ErrorMessage message = new ErrorMessage(
@@ -73,7 +60,7 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(message, HttpStatus.NO_CONTENT);
     }
 
-    @ExceptionHandler(Exception.class)
+    @ExceptionHandler({InternalServerError.class, Exception.class})
     public ResponseEntity<ErrorMessage> globalExceptionHandler(Exception ex, WebRequest request) {
         logger.error("An unexpected exception occurred: " + ex.getClass() +
                 "\nMessage: " + ex.getMessage() +

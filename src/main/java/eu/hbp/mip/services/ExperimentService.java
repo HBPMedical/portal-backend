@@ -31,21 +31,27 @@ import java.util.*;
 @Service
 public class ExperimentService {
 
-
     private static final Gson gson = new Gson();
     private final ActiveUserService activeUserService;
     private final AlgorithmService algorithmService;
+    private final ClaimUtils claimUtils;
     private final ExperimentRepository experimentRepository;
-    @Value("#{'${services.exareme.queryExaremeUrl}'}")
+    @Value("${services.exareme.queryExaremeUrl}")
     private String queryExaremeUrl;
-    @Value("#{'${services.exareme2.algorithmsUrl}'}")
+    @Value("${services.exareme2.algorithmsUrl}")
     private String exareme2AlgorithmsUrl;
-    @Value("#{'${authentication.enabled}'}")
+    @Value("${authentication.enabled}")
     private boolean authenticationIsEnabled;
 
-    public ExperimentService(ActiveUserService activeUserService, AlgorithmService algorithmService, ExperimentRepository experimentRepository) {
+    public ExperimentService(
+            ActiveUserService activeUserService,
+            AlgorithmService algorithmService,
+            ClaimUtils claimUtils,
+            ExperimentRepository experimentRepository
+    ) {
         this.algorithmService = algorithmService;
         this.activeUserService = activeUserService;
+        this.claimUtils = claimUtils;
         this.experimentRepository = experimentRepository;
     }
 
@@ -60,19 +66,19 @@ public class ExperimentService {
      * @param page          is the page that is required to be retrieved
      * @param size          is the size of each page
      * @param orderBy       is the column that is required to ordered by
-     * @param descending    is a boolean to determine if the experiments will be order by descending or ascending
+     * @param descending    is a boolean to determine if the experiments will be ordered by descending or ascending order
      * @param logger        contains username and the endpoint.
      * @return a map experiments
      */
 
-    public Map getExperiments(Authentication authentication, String name, String algorithm, Boolean shared, Boolean viewed, boolean includeShared, int page, int size, String orderBy, Boolean descending, Logger logger) {
+    public Map<String, Object> getExperiments(Authentication authentication, String name, String algorithm, Boolean shared, Boolean viewed, boolean includeShared, int page, int size, String orderBy, Boolean descending, Logger logger) {
 
-        UserDAO user = activeUserService.getActiveUser();
+        UserDAO user = activeUserService.getActiveUser(authentication);
         logger.LogUserAction("Listing my experiments.");
         if (size > 50)
             throw new BadRequestException("Invalid size input, max size is 50.");
         Specification<ExperimentDAO> spec;
-        if (!authenticationIsEnabled || ClaimUtils.validateAccessRightsOnExperiments(authentication, logger)) {
+        if (!authenticationIsEnabled || claimUtils.validateAccessRightsOnALLExperiments(authentication, logger)) {
             spec = Specification
                     .where(new ExperimentSpecifications.ExperimentWithName(name))
                     .and(new ExperimentSpecifications.ExperimentWithAlgorithm(algorithm))
@@ -118,7 +124,7 @@ public class ExperimentService {
     public ExperimentDTO getExperiment(Authentication authentication, String uuid, Logger logger) {
 
         ExperimentDAO experimentDAO;
-        UserDAO user = activeUserService.getActiveUser();
+        UserDAO user = activeUserService.getActiveUser(authentication);
 
         logger.LogUserAction("Loading Experiment with uuid : " + uuid);
 
@@ -127,7 +133,7 @@ public class ExperimentService {
                 authenticationIsEnabled
                         && !experimentDAO.isShared()
                         && !experimentDAO.getCreatedBy().getUsername().equals(user.getUsername())
-                        && !ClaimUtils.validateAccessRightsOnExperiments(authentication, logger)
+                        && !claimUtils.validateAccessRightsOnALLExperiments(authentication, logger)
         ) {
             logger.LogUserAction("Accessing Experiment is unauthorized.");
             throw new UnauthorizedException("You don't have access to the experiment.");
@@ -159,10 +165,10 @@ public class ExperimentService {
 
         if (authenticationIsEnabled) {
             String experimentDatasets = getDatasetFromExperimentParameters(experimentDTO, logger);
-            ClaimUtils.validateAccessRightsOnDatasets(authentication, experimentDatasets, logger);
+            claimUtils.validateAccessRightsOnDatasets(authentication, experimentDatasets, logger);
         }
 
-        return createSynchronousExperiment(experimentDTO, algorithmEngineName, logger);
+        return createSynchronousExperiment(authentication, experimentDTO, algorithmEngineName, logger);
 
     }
 
@@ -189,7 +195,7 @@ public class ExperimentService {
 
         if (authenticationIsEnabled) {
             String experimentDatasets = getDatasetFromExperimentParameters(experimentDTO, logger);
-            ClaimUtils.validateAccessRightsOnDatasets(authentication, experimentDatasets, logger);
+            claimUtils.validateAccessRightsOnDatasets(authentication, experimentDatasets, logger);
         }
 
         logger.LogUserAction("Completed, returning: " + experimentDTO);
@@ -216,9 +222,9 @@ public class ExperimentService {
      * @param experimentDTO is the experiment information to be updated
      * @param logger        contains username and the endpoint.
      */
-    public ExperimentDTO updateExperiment(String uuid, ExperimentDTO experimentDTO, Logger logger) {
+    public ExperimentDTO updateExperiment(Authentication authentication, String uuid, ExperimentDTO experimentDTO, Logger logger) {
         ExperimentDAO experimentDAO;
-        UserDAO user = activeUserService.getActiveUser();
+        UserDAO user = activeUserService.getActiveUser(authentication);
         logger.LogUserAction("Updating experiment with uuid : " + uuid + ".");
 
         experimentDAO = experimentRepository.loadExperiment(uuid, logger);
@@ -259,9 +265,9 @@ public class ExperimentService {
      * @param uuid   is the id of the experiment to be deleted
      * @param logger contains username and the endpoint.
      */
-    public void deleteExperiment(String uuid, Logger logger) {
+    public void deleteExperiment(Authentication authentication, String uuid, Logger logger) {
         ExperimentDAO experimentDAO;
-        UserDAO user = activeUserService.getActiveUser();
+        UserDAO user = activeUserService.getActiveUser(authentication);
         logger.LogUserAction("Deleting experiment with uuid : " + uuid + ".");
 
         experimentDAO = experimentRepository.loadExperiment(uuid, logger);
@@ -408,11 +414,11 @@ public class ExperimentService {
      * @param logger        contains username and the endpoint.
      * @return the experiment information that was retrieved from exareme
      */
-    private ExperimentDTO createSynchronousExperiment(ExperimentDTO experimentDTO, String algorithmEngineName, Logger logger) {
+    private ExperimentDTO createSynchronousExperiment(Authentication authentication, ExperimentDTO experimentDTO, String algorithmEngineName, Logger logger) {
 
         logger.LogUserAction("Running the algorithm...");
 
-        ExperimentDAO experimentDAO = experimentRepository.createExperimentInTheDatabase(experimentDTO, activeUserService.getActiveUser(), logger);
+        ExperimentDAO experimentDAO = experimentRepository.createExperimentInTheDatabase(experimentDTO, activeUserService.getActiveUser(authentication), logger);
         experimentDTO.setUuid(experimentDAO.getUuid());
         logger.LogUserAction("Created experiment with uuid :" + experimentDAO.getUuid());
 

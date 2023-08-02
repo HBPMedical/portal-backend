@@ -5,7 +5,7 @@
 
     <name>portal-backend</name>
     <description>Medical Informatics Platform - portal-backend</description>
-    <groupId>eu.hbp.mip</groupId>
+    <groupId>hbp.mip</groupId>
     <artifactId>portal-backend</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>

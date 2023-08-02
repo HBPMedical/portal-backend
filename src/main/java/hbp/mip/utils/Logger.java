@@ -15,8 +15,8 @@ public class Logger {
     }
 
     public void LogUserAction(String actionInfo) {
-        LOGGER.info(" User -> " + username + " ,"
-                + "Endpoint -> " + endpoint + " ,"
+        LOGGER.info(" User -> " + username + " , "
+                + "Endpoint -> " + endpoint + " , "
                 + "Info ->  " + actionInfo);
     }
 }

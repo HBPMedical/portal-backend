@@ -83,7 +83,7 @@ public class ClaimUtils {
                     }
                 }
 
-                if (userPathologyDatasets.size() > 0) {
+                if (!userPathologyDatasets.isEmpty()) {
                     PathologyDTO userPathology = new PathologyDTO();
                     userPathology.setCode(curPathology.getCode());
                     userPathology.setLabel(curPathology.getLabel());

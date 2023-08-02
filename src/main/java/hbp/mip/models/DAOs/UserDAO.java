@@ -1,23 +1,19 @@
-/*
- * Created by mirco on 04.12.15.
- */
-
 package hbp.mip.models.DAOs;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.gson.annotations.Expose;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
+import hbp.mip.models.DTOs.UserDTO;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "`user`")
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserDAO {
 
     @Id
@@ -36,16 +32,19 @@ public class UserDAO {
     @Expose
     private Boolean agreeNDA;
 
-    public UserDAO() {
-        // Empty constructor is needed by Hibernate
-    }
-
     public UserDAO(String username, String fullname, String email, String subjectId) {
         this.username = username;
         this.fullname = fullname;
         this.email = email;
         this.agreeNDA = false;
         this.subjectId = subjectId;
+    }
 
+    public UserDAO(UserDTO userDTO) {
+        this.username = userDTO.username();
+        this.fullname = userDTO.fullname();
+        this.email = userDTO.email();
+        this.agreeNDA = userDTO.agreeNDA();
+        this.subjectId = userDTO.subjectId();
     }
 }

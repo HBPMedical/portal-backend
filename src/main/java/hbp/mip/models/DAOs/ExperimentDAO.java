@@ -6,6 +6,7 @@ import com.google.gson.annotations.Expose;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -14,6 +15,7 @@ import java.util.UUID;
 
 @Entity
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "`experiment`")
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -103,11 +105,4 @@ public class ExperimentDAO {
                 ", shared=" + this.shared +
                 ", viewed=" + this.viewed + ")";
     }
-
-    public ExperimentDAO() {
-        /*
-         *  Empty constructor is needed by Hibernate
-         */
-    }
-
 }

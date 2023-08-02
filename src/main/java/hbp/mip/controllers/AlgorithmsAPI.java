@@ -20,6 +20,7 @@ public class AlgorithmsAPI {
 
     private final AlgorithmService algorithmService;
     private final ActiveUserService activeUserService;
+
     public AlgorithmsAPI(ActiveUserService activeUserService, AlgorithmService algorithmService) {
         this.activeUserService = activeUserService;
         this.algorithmService = algorithmService;
@@ -27,7 +28,7 @@ public class AlgorithmsAPI {
 
     @GetMapping
     public ResponseEntity<List<ExaremeAlgorithmDTO>> getAlgorithms(Authentication authentication) {
-        Logger logger = new Logger(activeUserService.getActiveUser(authentication).getUsername(), "(GET) /algorithms");
+        Logger logger = new Logger(activeUserService.getActiveUser(authentication).username(), "(GET) /algorithms");
         logger.LogUserAction("Executing...");
         List<ExaremeAlgorithmDTO> algorithms = algorithmService.getAlgorithms();
 

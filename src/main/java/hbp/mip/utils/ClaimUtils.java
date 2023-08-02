@@ -70,33 +70,31 @@ public class ClaimUtils {
 
         ArrayList<String> authorities = getAuthorityRoles(authentication);
 
-        List<PathologyDTO> userPathologies = new ArrayList<>();
         if (hasRoleAccess(authorities, allDatasetsAllowedClaim, logger)) {
-            userPathologies = allPathologies;
-
-        } else {
-            for (PathologyDTO curPathology : allPathologies) {
-                List<PathologyDTO.EnumerationDTO> userPathologyDatasets = new ArrayList<>();
-                for (PathologyDTO.EnumerationDTO dataset : curPathology.getDatasets()) {
-                    if (hasRoleAccess(authorities, getDatasetClaim(dataset.getCode()), logger)) {
-                        userPathologyDatasets.add(dataset);
-                    }
-                }
-
-                if (!userPathologyDatasets.isEmpty()) {
-                    PathologyDTO userPathology = new PathologyDTO();
-                    userPathology.setCode(curPathology.getCode());
-                    userPathology.setLabel(curPathology.getLabel());
-                    userPathology.setMetadataHierarchyDTO(curPathology.getMetadataHierarchyDTO());
-                    userPathology.setDatasets(userPathologyDatasets);
-                    userPathologies.add(userPathology);
-                }
-            }
+            return allPathologies;
         }
 
-        String userPathologiesSTR = userPathologies.stream().map(PathologyDTO::toString)
-                .collect(Collectors.joining(", "));
-        logger.LogUserAction("Allowed pathologies: [" + userPathologiesSTR + "]");
+        List<PathologyDTO> userPathologies = new ArrayList<>();
+        for (PathologyDTO curPathology : allPathologies) {
+            List<PathologyDTO.EnumerationDTO> userPathologyDatasets = new ArrayList<>();
+            for (PathologyDTO.EnumerationDTO dataset : curPathology.datasets()) {
+                if (hasRoleAccess(authorities, getDatasetClaim(dataset.code()), logger)) {
+                    userPathologyDatasets.add(dataset);
+                }
+            }
+
+            if (!userPathologyDatasets.isEmpty()) {
+                PathologyDTO userPathology = new PathologyDTO(
+                        curPathology.code(),
+                        curPathology.version(),
+                        curPathology.label(),
+                        curPathology.longitudinal(),
+                        curPathology.metadataHierarchy(),
+                        userPathologyDatasets
+                );
+                userPathologies.add(userPathology);
+            }
+        }
         return userPathologies;
     }
 }

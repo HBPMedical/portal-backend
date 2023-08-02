@@ -9,18 +9,20 @@ import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.Objects;
 
 
-@Component
+@Service
 @Scope(value = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class ActiveUserService {
 
     private final UserRepository userRepository;
     @Value("${authentication.enabled}")
+
     private boolean authenticationIsEnabled;
+
     private UserDTO activeUserDetails;
 
     public ActiveUserService(UserRepository userRepository) {

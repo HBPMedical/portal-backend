@@ -19,6 +19,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 public class AlgorithmsAPI {
 
     private final AlgorithmService algorithmService;
+
     private final ActiveUserService activeUserService;
 
     public AlgorithmsAPI(ActiveUserService activeUserService, AlgorithmService algorithmService) {

@@ -17,7 +17,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -26,20 +29,15 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 public class PathologiesAPI {
 
     private static final Gson gson = new Gson();
-
+    private final ActiveUserService activeUserService;
+    private final ClaimUtils claimUtils;
     // Enable HBP collab authentication (1) or disable it (0). Default is 1
     @Value("#{'${authentication.enabled}'}")
     private boolean authenticationIsEnabled;
-
     @Value("#{'${services.exareme2.attributesUrl}'}")
     private String exareme2AttributesUrl;
-
     @Value("#{'${services.exareme2.cdesMetadataUrl}'}")
     private String exareme2CDEsMetadataUrl;
-
-    private final ActiveUserService activeUserService;
-
-    private final ClaimUtils claimUtils;
 
     public PathologiesAPI(ActiveUserService activeUserService, ClaimUtils claimUtils) {
         this.activeUserService = activeUserService;
@@ -48,7 +46,7 @@ public class PathologiesAPI {
 
     @GetMapping
     public ResponseEntity<String> getPathologies(Authentication authentication) {
-        Logger logger = new Logger(activeUserService.getActiveUser(authentication).getUsername(), "(GET) /pathologies");
+        Logger logger = new Logger(activeUserService.getActiveUser(authentication).username(), "(GET) /pathologies");
         logger.LogUserAction("Loading pathologies ...");
 
         Map<String, List<PathologyDTO.EnumerationDTO>> datasetsPerPathology = getExareme2DatasetsPerPathology(logger);
@@ -60,8 +58,7 @@ public class PathologiesAPI {
             PathologyDTO newPathology;
             try {
                 newPathology = new PathologyDTO(pathology, exareme2PathologyAttributes.get(pathology), datasetsPerPathology.get(pathology));
-            }
-            catch(InternalServerError e) {
+            } catch (InternalServerError e) {
                 logger.LogUserAction(e.getMessage());
                 continue;
             }
@@ -97,10 +94,10 @@ public class PathologiesAPI {
 
         Map<String, List<PathologyDTO.EnumerationDTO>> datasetsPerPathology = new HashMap<>();
 
-        exareme2CDEsMetadata.forEach( (pathology, cdePerDataset) ->  {
+        exareme2CDEsMetadata.forEach((pathology, cdePerDataset) -> {
             List<PathologyDTO.EnumerationDTO> pathologyDatasetDTOS = new ArrayList<>();
             Map<String, String> datasetEnumerations = (Map<String, String>) cdePerDataset.get("dataset").getEnumerations();
-            datasetEnumerations.forEach((code, label) ->  pathologyDatasetDTOS.add(new PathologyDTO.EnumerationDTO(code, label)));
+            datasetEnumerations.forEach((code, label) -> pathologyDatasetDTOS.add(new PathologyDTO.EnumerationDTO(code, label)));
             datasetsPerPathology.put(pathology, pathologyDatasetDTOS);
         });
 
@@ -122,7 +119,6 @@ public class PathologiesAPI {
             logger.LogUserAction("An exception occurred: " + e.getMessage());
             return null;
         }
-
 
         return exareme2PathologyAttributes;
     }

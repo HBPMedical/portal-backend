@@ -1,6 +1,7 @@
 package hbp.mip.services;
 
 import hbp.mip.models.DAOs.UserDAO;
+import hbp.mip.models.DTOs.UserDTO;
 import hbp.mip.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
@@ -17,12 +18,10 @@ import java.util.Objects;
 @Scope(value = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class ActiveUserService {
 
+    private final UserRepository userRepository;
     @Value("${authentication.enabled}")
     private boolean authenticationIsEnabled;
-
-    private UserDAO activeUserDetails;
-
-    private final UserRepository userRepository;
+    private UserDTO activeUserDetails;
 
     public ActiveUserService(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -34,48 +33,49 @@ public class ActiveUserService {
      *
      * @return the userDAO
      */
-    public UserDAO getActiveUser(Authentication authentication) {
-        // TODO getActiveUser should not be called in so many places.
-        // It should be called in the controller and then passed internally in the other methods as UserDTO.
-        // TODO getActiveUser should return a UserDTO instead of a DAO
-
+    public UserDTO getActiveUser(Authentication authentication) {
         if (activeUserDetails != null)
             return activeUserDetails;
 
-        // If Authentication is OFF, create anonymous user with accepted NDA
-        if (!authenticationIsEnabled) {
-            activeUserDetails = new UserDAO("anonymous", "anonymous", "anonymous@anonymous.com", "anonymousId");
-            activeUserDetails.setAgreeNDA(true);
-            userRepository.save(activeUserDetails);
-            return activeUserDetails;
-        }
+        UserDAO activeUserDAO;
+        if (authenticationIsEnabled) {
+            // If Authentication is ON, get user details from authentication info.
+            OidcUserInfo userinfo = ((DefaultOidcUser) authentication.getPrincipal()).getUserInfo();
+            activeUserDAO = new UserDAO(userinfo.getPreferredUsername(), userinfo.getFullName(), userinfo.getEmail(), userinfo.getSubject());
 
-
-        OidcUserInfo userinfo = ((DefaultOidcUser) authentication.getPrincipal()).getUserInfo();
-        activeUserDetails = new UserDAO(userinfo.getPreferredUsername(), userinfo.getFullName(), userinfo.getEmail(), userinfo.getSubject());
-
-        UserDAO activeUserDatabaseDetails = userRepository.findByUsername(activeUserDetails.getUsername());
-        if (activeUserDatabaseDetails != null) {
-            if ((!Objects.equals(activeUserDetails.getEmail(), activeUserDatabaseDetails.getEmail()))
-                    || !Objects.equals(activeUserDetails.getFullname(), activeUserDatabaseDetails.getFullname())
-            ) {
-                // Fullname and email are the only values allowed to change.
-                // username is the PK in our database and subjectid is the PK in keycloak
-                activeUserDatabaseDetails.setFullname(activeUserDetails.getFullname());
-                activeUserDatabaseDetails.setEmail(activeUserDetails.getEmail());
+            UserDAO activeUserDatabaseDetails = userRepository.findByUsername(activeUserDAO.getUsername());
+            if (activeUserDatabaseDetails != null) {
+                if ((!Objects.equals(activeUserDAO.getEmail(), activeUserDatabaseDetails.getEmail()))
+                        || !Objects.equals(activeUserDAO.getFullname(), activeUserDatabaseDetails.getFullname())
+                ) {
+                    // Fullname and email are the only values allowed to change.
+                    // username is the PK in our database and subjectid is the PK in keycloak
+                    activeUserDatabaseDetails.setFullname(activeUserDAO.getFullname());
+                    activeUserDatabaseDetails.setEmail(activeUserDAO.getEmail());
+                }
+                activeUserDAO = activeUserDatabaseDetails;
             }
-            activeUserDetails = activeUserDatabaseDetails;
+            userRepository.save(activeUserDAO);
+
+        } else {
+            // If Authentication is OFF, create anonymous user with accepted NDA
+            activeUserDAO = new UserDAO("anonymous", "anonymous", "anonymous@anonymous.com", "anonymousId");
+            activeUserDAO.setAgreeNDA(true);
+            userRepository.save(activeUserDAO);
         }
-        userRepository.save(activeUserDetails);
+
+        activeUserDetails = new UserDTO(activeUserDAO);
         return activeUserDetails;
     }
 
-    public UserDAO agreeToNDA(Authentication authentication) {
-        getActiveUser(authentication);
+    public UserDTO agreeToNDA(Authentication authentication) {
+        UserDTO userDTO = getActiveUser(authentication);
 
-        activeUserDetails.setAgreeNDA(true);
-        userRepository.save(activeUserDetails);
+        UserDAO userDAO = new UserDAO(userDTO);
+        userDAO.setAgreeNDA(true);
+        userRepository.save(userDAO);
 
+        activeUserDetails = new UserDTO(userDAO);
         return activeUserDetails;
     }
 }

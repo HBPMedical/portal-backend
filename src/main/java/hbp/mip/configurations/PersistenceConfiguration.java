@@ -44,6 +44,7 @@ public class PersistenceConfiguration {
         flyway.setDataSource(portalDataSource());
         return flyway;
 
+// TODO Flyway upgrade to latest version
 //        return Flyway.configure()
 //                .dataSource(portalDataSource())
 //                .baselineOnMigrate(true)

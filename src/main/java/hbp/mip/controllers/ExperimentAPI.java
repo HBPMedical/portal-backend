@@ -2,6 +2,7 @@ package hbp.mip.controllers;
 
 
 import hbp.mip.models.DTOs.ExperimentDTO;
+import hbp.mip.models.DTOs.UserDTO;
 import hbp.mip.services.ActiveUserService;
 import hbp.mip.services.ExperimentService;
 import hbp.mip.utils.Logger;
@@ -52,7 +53,7 @@ public class ExperimentAPI {
                 size,
                 orderBy,
                 descending,
-                new Logger(activeUserService.getActiveUser(authentication).getUsername(), "(GET) /experiments"));
+                new Logger(activeUserService.getActiveUser(authentication).username(), "(GET) /experiments"));
         return new ResponseEntity<>(experiments, HttpStatus.OK);
     }
 
@@ -61,7 +62,7 @@ public class ExperimentAPI {
     public ResponseEntity<ExperimentDTO> getExperiment(Authentication authentication, @PathVariable("uuid") String uuid) {
         ExperimentDTO experimentDTO = experimentService.getExperiment(
                 authentication, uuid,
-                new Logger(activeUserService.getActiveUser(authentication).getUsername(), "(GET) /experiments/{uuid}")
+                new Logger(activeUserService.getActiveUser(authentication).username(), "(GET) /experiments/{uuid}")
         );
         return new ResponseEntity<>(experimentDTO, HttpStatus.OK);
     }
@@ -71,7 +72,7 @@ public class ExperimentAPI {
     public ResponseEntity<ExperimentDTO> createExperiment(Authentication authentication, @RequestBody ExperimentDTO experimentDTO) {
         experimentDTO = experimentService.createExperiment(
                 authentication, experimentDTO,
-                new Logger(activeUserService.getActiveUser(authentication).getUsername(), "(POST) /experiments")
+                new Logger(activeUserService.getActiveUser(authentication).username(), "(POST) /experiments")
         );
         return new ResponseEntity<>(experimentDTO, HttpStatus.CREATED);
     }
@@ -79,11 +80,12 @@ public class ExperimentAPI {
 
     @PatchMapping(value = "/{uuid}")
     public ResponseEntity<ExperimentDTO> updateExperiment(Authentication authentication, @RequestBody ExperimentDTO experimentDTO, @PathVariable("uuid") String uuid) {
+        UserDTO user = activeUserService.getActiveUser(authentication);
         experimentDTO = experimentService.updateExperiment(
-                authentication,
+                user,
                 uuid,
                 experimentDTO,
-                new Logger(activeUserService.getActiveUser(authentication).getUsername(), "(PATCH) /experiments/{uuid}")
+                new Logger(user.username(), "(PATCH) /experiments/{uuid}")
         );
         return new ResponseEntity<>(experimentDTO, HttpStatus.OK);
     }
@@ -91,21 +93,22 @@ public class ExperimentAPI {
 
     @RequestMapping(value = "/{uuid}", method = RequestMethod.DELETE)
     public ResponseEntity<String> deleteExperiment(Authentication authentication, @PathVariable("uuid") String uuid) {
+        UserDTO user = activeUserService.getActiveUser(authentication);
         experimentService.deleteExperiment(
-                authentication,
+                user,
                 uuid,
-                new Logger(activeUserService.getActiveUser(authentication).getUsername(), "(DELETE) /experiments/{uuid}")
+                new Logger(user.username(), "(DELETE) /experiments/{uuid}")
         );
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
 
-    @PostMapping (value = "/transient")
+    @PostMapping(value = "/transient")
     public ResponseEntity<ExperimentDTO> createTransientExperiment(Authentication authentication, @RequestBody ExperimentDTO experimentDTO) {
         experimentDTO = experimentService.runTransientExperiment(
                 authentication,
                 experimentDTO,
-                new Logger(activeUserService.getActiveUser(authentication).getUsername(), "(POST) /experiments/transient")
+                new Logger(activeUserService.getActiveUser(authentication).username(), "(POST) /experiments/transient")
         );
         return new ResponseEntity<>(experimentDTO, HttpStatus.OK);
     }

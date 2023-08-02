@@ -2,11 +2,7 @@ package hbp.mip.services;
 
 import com.google.gson.Gson;
 import hbp.mip.models.DAOs.ExperimentDAO;
-import hbp.mip.models.DAOs.UserDAO;
-import hbp.mip.models.DTOs.Exareme2AlgorithmRequestDTO;
-import hbp.mip.models.DTOs.ExaremeAlgorithmRequestParamDTO;
-import hbp.mip.models.DTOs.ExaremeAlgorithmResultDTO;
-import hbp.mip.models.DTOs.ExperimentDTO;
+import hbp.mip.models.DTOs.*;
 import hbp.mip.repositories.ExperimentRepository;
 import hbp.mip.repositories.ExperimentSpecifications;
 import hbp.mip.utils.ClaimUtils;
@@ -73,7 +69,7 @@ public class ExperimentService {
 
     public Map<String, Object> getExperiments(Authentication authentication, String name, String algorithm, Boolean shared, Boolean viewed, boolean includeShared, int page, int size, String orderBy, Boolean descending, Logger logger) {
 
-        UserDAO user = activeUserService.getActiveUser(authentication);
+        UserDTO user = activeUserService.getActiveUser(authentication);
         logger.LogUserAction("Listing my experiments.");
         if (size > 50)
             throw new BadRequestException("Invalid size input, max size is 50.");
@@ -87,7 +83,7 @@ public class ExperimentService {
                     .and(new ExperimentSpecifications.ExperimentOrderBy(orderBy, descending));
         } else {
             spec = Specification
-                    .where(new ExperimentSpecifications.MyExperiment(user.getUsername()))
+                    .where(new ExperimentSpecifications.MyExperiment(user.username()))
                     .or(new ExperimentSpecifications.SharedExperiment(includeShared))
                     .and(new ExperimentSpecifications.ExperimentWithAlgorithm(algorithm))
                     .and(new ExperimentSpecifications.ExperimentWithShared(shared))
@@ -124,7 +120,7 @@ public class ExperimentService {
     public ExperimentDTO getExperiment(Authentication authentication, String uuid, Logger logger) {
 
         ExperimentDAO experimentDAO;
-        UserDAO user = activeUserService.getActiveUser(authentication);
+        UserDTO user = activeUserService.getActiveUser(authentication);
 
         logger.LogUserAction("Loading Experiment with uuid : " + uuid);
 
@@ -132,7 +128,7 @@ public class ExperimentService {
         if (
                 authenticationIsEnabled
                         && !experimentDAO.isShared()
-                        && !experimentDAO.getCreatedBy().getUsername().equals(user.getUsername())
+                        && !experimentDAO.getCreatedBy().getUsername().equals(user.username())
                         && !claimUtils.validateAccessRightsOnALLExperiments(authentication, logger)
         ) {
             logger.LogUserAction("Accessing Experiment is unauthorized.");
@@ -222,20 +218,17 @@ public class ExperimentService {
      * @param experimentDTO is the experiment information to be updated
      * @param logger        contains username and the endpoint.
      */
-    public ExperimentDTO updateExperiment(Authentication authentication, String uuid, ExperimentDTO experimentDTO, Logger logger) {
-        ExperimentDAO experimentDAO;
-        UserDAO user = activeUserService.getActiveUser(authentication);
+    public ExperimentDTO updateExperiment(UserDTO user, String uuid, ExperimentDTO experimentDTO, Logger logger) {
         logger.LogUserAction("Updating experiment with uuid : " + uuid + ".");
 
-        experimentDAO = experimentRepository.loadExperiment(uuid, logger);
+        ExperimentDAO experimentDAO = experimentRepository.loadExperiment(uuid, logger);
 
-        //Verify (PATCH) /experiments non editable fields.
         verifyPatchExperimentNonEditableFields(experimentDTO, logger);
 
-        if (!experimentDAO.getCreatedBy().getUsername().equals(user.getUsername()))
+        if (!experimentDAO.getCreatedBy().getUsername().equals(user.username()))
             throw new UnauthorizedException("You don't have access to the experiment.");
 
-        if (experimentDTO.getName() != null && experimentDTO.getName().length() != 0)
+        if (experimentDTO.getName() != null && !experimentDTO.getName().isEmpty())
             experimentDAO.setName(experimentDTO.getName());
 
         if (experimentDTO.getShared() != null)
@@ -265,14 +258,12 @@ public class ExperimentService {
      * @param uuid   is the id of the experiment to be deleted
      * @param logger contains username and the endpoint.
      */
-    public void deleteExperiment(Authentication authentication, String uuid, Logger logger) {
-        ExperimentDAO experimentDAO;
-        UserDAO user = activeUserService.getActiveUser(authentication);
+    public void deleteExperiment(UserDTO user, String uuid, Logger logger) {
         logger.LogUserAction("Deleting experiment with uuid : " + uuid + ".");
 
-        experimentDAO = experimentRepository.loadExperiment(uuid, logger);
+        ExperimentDAO experimentDAO = experimentRepository.loadExperiment(uuid, logger);
 
-        if (!experimentDAO.getCreatedBy().getUsername().equals(user.getUsername()))
+        if (!experimentDAO.getCreatedBy().getUsername().equals(user.username()))
             throw new UnauthorizedException("You don't have access to the experiment.");
 
         try {
@@ -399,7 +390,7 @@ public class ExperimentService {
             }
         }
 
-        if (experimentDatasets == null || experimentDatasets.equals("")) {
+        if (experimentDatasets == null || experimentDatasets.isEmpty()) {
             logger.LogUserAction("A dataset should be specified to run an algorithm.");
             throw new BadRequestException("Please provide at least one dataset to run the algorithm.");
         }

@@ -3,6 +3,7 @@ package hbp.mip.repositories;
 import hbp.mip.models.DAOs.ExperimentDAO;
 import hbp.mip.models.DAOs.UserDAO;
 import hbp.mip.models.DTOs.ExperimentDTO;
+import hbp.mip.models.DTOs.UserDTO;
 import hbp.mip.utils.Exceptions.BadRequestException;
 import hbp.mip.utils.Exceptions.ExperimentNotFoundException;
 import hbp.mip.utils.Exceptions.InternalServerError;
@@ -52,11 +53,11 @@ public interface ExperimentRepository extends CrudRepository<ExperimentDAO, UUID
      * @Note In the database there will be stored Algorithm Details that is the whole information about the algorithm
      * and an Algorithm column that is required for the filtering with algorithm name  in the GET /experiments.
      */
-    default ExperimentDAO createExperimentInTheDatabase(ExperimentDTO experimentDTO, UserDAO user, Logger logger) {
+    default ExperimentDAO createExperimentInTheDatabase(ExperimentDTO experimentDTO, UserDTO user, Logger logger) {
 
         ExperimentDAO experimentDAO = new ExperimentDAO();
         experimentDAO.setUuid(UUID.randomUUID());
-        experimentDAO.setCreatedBy(user);
+        experimentDAO.setCreatedBy(new UserDAO(user));
         experimentDAO.setAlgorithm(JsonConverters.convertObjectToJsonString(experimentDTO.getAlgorithm()));
         experimentDAO.setAlgorithmId(experimentDTO.getAlgorithm().getName());
         experimentDAO.setName(experimentDTO.getName());

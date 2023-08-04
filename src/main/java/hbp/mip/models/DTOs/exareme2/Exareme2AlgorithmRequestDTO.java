@@ -1,10 +1,10 @@
 package hbp.mip.models.DTOs.exareme2;
 
+import com.google.gson.JsonSyntaxException;
 import hbp.mip.models.DTOs.ExperimentExecutionDTO;
 import hbp.mip.utils.JsonConverters;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public record Exareme2AlgorithmRequestDTO(
         String request_id,
@@ -27,12 +27,12 @@ public record Exareme2AlgorithmRequestDTO(
     }
 
     private static Exareme2InputDataRequestDTO getInputData(List<ExperimentExecutionDTO.AlgorithmExecutionDTO.AlgorithmParameterExecutionDTO> exaremeAlgorithmRequestParamDTOs) {
-        if(exaremeAlgorithmRequestParamDTOs == null){
+        if (exaremeAlgorithmRequestParamDTOs == null) {
             return null;
         }
 
         Map<String, String> parameters = new HashMap<>();
-        for(var parameter: exaremeAlgorithmRequestParamDTOs){
+        for (var parameter : exaremeAlgorithmRequestParamDTOs) {
             parameters.put(parameter.name(), parameter.value());
         }
 
@@ -66,7 +66,7 @@ public record Exareme2AlgorithmRequestDTO(
     }
 
     private static Map<String, Object> getParameters(List<ExperimentExecutionDTO.AlgorithmExecutionDTO.AlgorithmParameterExecutionDTO> exaremeAlgorithmRequestParamDTOs) {
-        if(exaremeAlgorithmRequestParamDTOs == null){
+        if (exaremeAlgorithmRequestParamDTOs == null) {
             return null;
         }
 
@@ -82,24 +82,15 @@ public record Exareme2AlgorithmRequestDTO(
     }
 
     private static Map<String, Object> getPreprocessing(List<ExperimentExecutionDTO.AlgorithmExecutionDTO.TransformerExecutionDTO> exaremeTransformers) {
-        if(exaremeTransformers == null){
+        if (exaremeTransformers == null) {
             return null;
         }
 
         HashMap<String, Object> exareme2Preprocessing = new HashMap<>();
         exaremeTransformers.forEach(transformer -> {
             HashMap<String, Object> transformerParameterDTOs = new HashMap<>();
-            for (ExperimentExecutionDTO.AlgorithmExecutionDTO.AlgorithmParameterExecutionDTO parameter : transformer.parameters()) {
-
-                if (parameter.name().equals("strategies")) { // TODO Add this to the proper type conversion, should handle dict as well
-                    transformerParameterDTOs.put(parameter.name(),
-                            JsonConverters.convertJsonStringToObject(parameter.value(), HashMap.class)
-                    );
-                    continue;
-                }
-
+            for (ExperimentExecutionDTO.AlgorithmExecutionDTO.AlgorithmParameterExecutionDTO parameter : transformer.parameters())
                 transformerParameterDTOs.put(parameter.name(), convertStringToProperExareme2ParameterType(parameter.value()));
-            }
             exareme2Preprocessing.put(transformer.name(), transformerParameterDTOs);
         });
 
@@ -107,6 +98,9 @@ public record Exareme2AlgorithmRequestDTO(
     }
 
     private static Object convertStringToProperExareme2ParameterType(String str) {
+        if (isMap(str))
+            return JsonConverters.convertJsonStringToObject(str, Map.class);
+
         String[] stringValues = str.split(",");
         if (stringValues.length == 0)
             return "";
@@ -150,6 +144,18 @@ public record Exareme2AlgorithmRequestDTO(
         try {
             Integer.parseInt(strNum);
         } catch (NumberFormatException nfe) {
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean isMap(String strMap) {
+        if (strMap == null) {
+            return false;
+        }
+        try {
+            JsonConverters.convertJsonStringToObject(strMap, Map.class);
+        } catch (JsonSyntaxException e) {
             return false;
         }
         return true;

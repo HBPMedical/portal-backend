@@ -31,7 +31,7 @@ public class ClaimUtils {
         List<String> userClaims = Arrays.asList(authorities.toString().toLowerCase()
                 .replaceAll("[\\s+\\]\\[]", "").split(","));
 
-        logger.LogUserAction("User Claims: " + userClaims);
+        logger.debug("User Claims: " + userClaims);
         return userClaims.contains(role.toLowerCase());
     }
 
@@ -52,11 +52,11 @@ public class ClaimUtils {
             for (String dataset : experimentDatasets.split(",")) {
                 String datasetRole = getDatasetClaim(dataset);
                 if (!hasRoleAccess(authorities, datasetRole, logger)) {
-                    logger.LogUserAction("You are not allowed to use dataset: " + dataset);
+                    logger.warn("You are not allowed to use dataset: " + dataset);
                     throw new UnauthorizedException("You are not authorized to use these datasets.");
                 }
             }
-            logger.LogUserAction("User is authorized to use the datasets: " + experimentDatasets);
+            logger.debug("User is authorized to use the datasets: " + experimentDatasets);
         }
     }
 

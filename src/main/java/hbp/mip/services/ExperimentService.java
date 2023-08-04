@@ -1,8 +1,11 @@
 package hbp.mip.services;
 
-import com.google.gson.Gson;
 import hbp.mip.models.DAOs.ExperimentDAO;
-import hbp.mip.models.DTOs.*;
+import hbp.mip.models.DTOs.ExperimentDTO;
+import hbp.mip.models.DTOs.ExperimentExecutionDTO;
+import hbp.mip.models.DTOs.ExperimentsDTO;
+import hbp.mip.models.DTOs.UserDTO;
+import hbp.mip.models.DTOs.exareme2.Exareme2AlgorithmRequestDTO;
 import hbp.mip.repositories.ExperimentRepository;
 import hbp.mip.repositories.ExperimentSpecifications;
 import hbp.mip.utils.ClaimUtils;
@@ -21,34 +24,64 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.*;
+
+import static hbp.mip.utils.JsonConverters.convertObjectToJsonString;
 
 
 @Service
 public class ExperimentService {
 
-    private static final Gson gson = new Gson();
     private final ActiveUserService activeUserService;
-    private final AlgorithmService algorithmService;
+
     private final ClaimUtils claimUtils;
+
     private final ExperimentRepository experimentRepository;
-    @Value("${services.exareme.queryExaremeUrl}")
-    private String queryExaremeUrl;
+
     @Value("${services.exareme2.algorithmsUrl}")
     private String exareme2AlgorithmsUrl;
+
     @Value("${authentication.enabled}")
     private boolean authenticationIsEnabled;
 
     public ExperimentService(
             ActiveUserService activeUserService,
-            AlgorithmService algorithmService,
             ClaimUtils claimUtils,
             ExperimentRepository experimentRepository
     ) {
-        this.algorithmService = algorithmService;
         this.activeUserService = activeUserService;
         this.claimUtils = claimUtils;
         this.experimentRepository = experimentRepository;
+    }
+
+    private static List<Object> convertExareme2ResponseToAlgorithmResults(Logger logger, int requestResponseCode, StringBuilder requestResponseBody) {
+        Object result;
+        if (requestResponseCode == 200) {
+            result = JsonConverters.convertJsonStringToObject(String.valueOf(requestResponseBody), Object.class);
+        } else if (requestResponseCode == 400) {
+            result = convertExareme2ResponseToAlgorithmResult(String.valueOf(requestResponseBody), "text/plain+error");
+        } else if (requestResponseCode == 460) {
+            result = convertExareme2ResponseToAlgorithmResult(String.valueOf(requestResponseBody), "text/plain+user_error");
+        } else if (requestResponseCode == 461) {
+            result = convertExareme2ResponseToAlgorithmResult(String.valueOf(requestResponseBody), "text/plain+error");
+        } else if (requestResponseCode == 500) {
+            result = convertExareme2ResponseToAlgorithmResult("Something went wrong. Please inform the system administrator or try again later.", "text/plain+error");
+        } else if (requestResponseCode == 512) {
+            result = convertExareme2ResponseToAlgorithmResult(String.valueOf(requestResponseBody), "text/plain+error");
+        } else {
+            var errorMessage = "Exareme2 execution responded with an unexpected status code: " + requestResponseCode;
+            logger.error(errorMessage);
+            throw new InternalServerError(errorMessage);
+        }
+        return List.of(result);
+    }
+
+    private static Map<String, Object> convertExareme2ResponseToAlgorithmResult(String resultBody, String resultType) {
+        Map<String, Object> exaremeAlgorithmResultElement = new HashMap<>();
+        exaremeAlgorithmResultElement.put("data", resultBody);
+        exaremeAlgorithmResultElement.put("type", resultType);
+        return exaremeAlgorithmResultElement;
     }
 
     /**
@@ -66,13 +99,11 @@ public class ExperimentService {
      * @param logger        contains username and the endpoint.
      * @return a map experiments
      */
-
-    public Map<String, Object> getExperiments(Authentication authentication, String name, String algorithm, Boolean shared, Boolean viewed, boolean includeShared, int page, int size, String orderBy, Boolean descending, Logger logger) {
-
-        UserDTO user = activeUserService.getActiveUser(authentication);
-        logger.LogUserAction("Listing my experiments.");
+    public ExperimentsDTO getExperiments(Authentication authentication, String name, String algorithm, Boolean shared, Boolean viewed, boolean includeShared, int page, int size, String orderBy, Boolean descending, Logger logger) {
+        var user = activeUserService.getActiveUser(authentication);
         if (size > 50)
             throw new BadRequestException("Invalid size input, max size is 50.");
+
         Specification<ExperimentDAO> spec;
         if (!authenticationIsEnabled || claimUtils.validateAccessRightsOnALLExperiments(authentication, logger)) {
             spec = Specification
@@ -98,485 +129,239 @@ public class ExperimentService {
         if (experimentDAOs.isEmpty())
             throw new NoContent("No experiment found with the filters provided.");
 
-        List<ExperimentDTO> experimentDTOs = new ArrayList<>();
-        experimentDAOs.forEach(experimentDAO -> experimentDTOs.add(new ExperimentDTO(false, experimentDAO)));
+        List<ExperimentDTO> experiments = new ArrayList<>();
+        experimentDAOs.forEach(experimentDAO -> experiments.add(new ExperimentDTO(experimentDAO, false)));
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("experiments", experimentDTOs);
-        response.put("currentPage", pageExperiments.getNumber());
-        response.put("totalExperiments", pageExperiments.getTotalElements());
-        response.put("totalPages", pageExperiments.getTotalPages());
-
-        return response;
+        return new ExperimentsDTO(
+                experiments,
+                pageExperiments.getNumber(),
+                pageExperiments.getTotalPages(),
+                pageExperiments.getTotalElements()
+        );
     }
 
-    /**
-     * The getExperiment will retrieve the experiment from database according to the input uuid
-     *
-     * @param uuid   is the id of the experiment to be retrieved
-     * @param logger contains username and the endpoint.
-     * @return the experiment information that was retrieved from the database
-     */
     public ExperimentDTO getExperiment(Authentication authentication, String uuid, Logger logger) {
+        var user = activeUserService.getActiveUser(authentication);
 
-        ExperimentDAO experimentDAO;
-        UserDTO user = activeUserService.getActiveUser(authentication);
-
-        logger.LogUserAction("Loading Experiment with uuid : " + uuid);
-
-        experimentDAO = experimentRepository.loadExperiment(uuid, logger);
+        var experimentDAO = experimentRepository.loadExperiment(uuid, logger);
         if (
                 authenticationIsEnabled
                         && !experimentDAO.isShared()
                         && !experimentDAO.getCreatedBy().getUsername().equals(user.username())
                         && !claimUtils.validateAccessRightsOnALLExperiments(authentication, logger)
         ) {
-            logger.LogUserAction("Accessing Experiment is unauthorized.");
-            throw new UnauthorizedException("You don't have access to the experiment.");
+            logger.warn("User tried to access an unauthorized experiment with id:" + uuid);
+            throw new UnauthorizedException("You don't have access to that experiment.");
         }
-        ExperimentDTO experimentDTO = new ExperimentDTO(true, experimentDAO);
-        logger.LogUserAction("Experiment was Loaded with uuid : " + uuid + ".");
 
-        return experimentDTO;
+        return new ExperimentDTO(experimentDAO, true);
     }
 
-    /**
-     * The createExperiment will create and save an experiment in the database.
-     *
-     * @param authentication is the role of the user
-     * @param experimentDTO  is the experiment information
-     * @param logger         contains username and the endpoint.
-     * @return the experiment information which was created
-     */
-    public ExperimentDTO createExperiment(Authentication authentication, ExperimentDTO experimentDTO, Logger logger) {
-
-        // TODO ExperimentRequestDTO should be different than ExperimentResponseDTO
-        checkPostExperimentProperInput(experimentDTO, logger);
-
-        // Get the engine name from algorithmService
-        String algorithmEngineName = algorithmService.getAlgorithmEngineType(experimentDTO.getAlgorithm().getName().toUpperCase());
-        logger.LogUserAction("Algorithm runs on " + algorithmEngineName + ".");
-
-        algorithmParametersLogging(experimentDTO, logger);
+    public ExperimentDTO createExperiment(Authentication authentication, ExperimentExecutionDTO experimentExecutionDTO, Logger logger) {
+        algorithmParametersLogging(experimentExecutionDTO, logger);
 
         if (authenticationIsEnabled) {
-            String experimentDatasets = getDatasetFromExperimentParameters(experimentDTO, logger);
+            String experimentDatasets = getExperimentDatasets(experimentExecutionDTO, logger);
             claimUtils.validateAccessRightsOnDatasets(authentication, experimentDatasets, logger);
         }
 
-        return createSynchronousExperiment(authentication, experimentDTO, algorithmEngineName, logger);
+        var experimentDAO = experimentRepository.createExperimentInTheDatabase(experimentExecutionDTO, activeUserService.getActiveUser(authentication), logger);
 
+        new Thread(() -> {
+            logger.debug("Experiment's algorithm execution started in a background thread.");
+            try {
+                ExperimentAlgorithmResultDTO exaremeExperimentAlgorithmResultDTO = runExaremeAlgorithm(experimentDAO.getUuid(), experimentExecutionDTO, logger);
+                experimentDAO.setResult(convertObjectToJsonString(exaremeExperimentAlgorithmResultDTO.result()));
+                experimentDAO.setStatus((exaremeExperimentAlgorithmResultDTO.code() >= 400)
+                        ? ExperimentDAO.Status.error : ExperimentDAO.Status.success);
+            } catch (Exception e) {
+                logger.error("Exareme2 algorithm execution failed: " + e.getMessage() + "\nStacktrace: " + Arrays.toString(e.getStackTrace()));
+                experimentDAO.setStatus(ExperimentDAO.Status.error);
+            }
+
+            experimentRepository.finishExperiment(experimentDAO, logger);
+
+            // Experiment finished log is needed for the federation info (mip-deployment) script.
+            logger.info("Experiment finished: " + experimentDAO);
+        }).start();
+
+        return new ExperimentDTO(experimentDAO, false);
     }
 
-    /**
-     * Will run synchronously an experiment and return the result
-     *
-     * @param authentication is the role of the user
-     * @param experimentDTO  is the experiment information
-     * @param logger         contains username and the endpoint.
-     * @return the experiment information which was created
-     */
-    public ExperimentDTO runTransientExperiment(Authentication authentication, ExperimentDTO experimentDTO, Logger logger) {
-
-        //Checking if check (POST) /experiments has proper input.
-        checkPostExperimentProperInput(experimentDTO, logger);
-
-        // Get the engine name from algorithmService
-        String algorithmEngineName = algorithmService.getAlgorithmEngineType(experimentDTO.getAlgorithm().getName().toUpperCase());
-
-
-        experimentDTO.setUuid(UUID.randomUUID());
-
-        algorithmParametersLogging(experimentDTO, logger);
+    public ExperimentDTO runTransientExperiment(Authentication authentication, ExperimentExecutionDTO experimentExecutionDTO, Logger logger) {
+        algorithmParametersLogging(experimentExecutionDTO, logger);
 
         if (authenticationIsEnabled) {
-            String experimentDatasets = getDatasetFromExperimentParameters(experimentDTO, logger);
+            String experimentDatasets = getExperimentDatasets(experimentExecutionDTO, logger);
             claimUtils.validateAccessRightsOnDatasets(authentication, experimentDatasets, logger);
         }
 
-        logger.LogUserAction("Completed, returning: " + experimentDTO);
+        var uuid = UUID.randomUUID();
+        var algorithmResult = runExaremeAlgorithm(uuid, experimentExecutionDTO, logger);
 
-        ExaremeAlgorithmResultDTO exaremeAlgorithmResultDTO = runSynchronousExperiment(experimentDTO, algorithmEngineName, logger);
-
-        logger.LogUserAction(
-                "Experiment with uuid: " + experimentDTO.getUuid()
-                        + "gave response code: " + exaremeAlgorithmResultDTO.getCode()
-                        + " and result: " + exaremeAlgorithmResultDTO.getResult()
+        return new ExperimentDTO(
+                uuid,
+                experimentExecutionDTO.name(),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                algorithmResult.result(),
+                algorithmResult.code() >= 400 ? ExperimentDAO.Status.error : ExperimentDAO.Status.success,
+                experimentExecutionDTO.algorithm()
         );
-
-        experimentDTO.setResult(exaremeAlgorithmResultDTO.getResult());
-        experimentDTO.setStatus((exaremeAlgorithmResultDTO.getCode() >= 400)
-                ? ExperimentDAO.Status.error : ExperimentDAO.Status.success);
-
-        return experimentDTO;
     }
 
-    /**
-     * The updateExperiment will update the experiment's properties
-     *
-     * @param uuid          is the id of the experiment to be updated
-     * @param experimentDTO is the experiment information to be updated
-     * @param logger        contains username and the endpoint.
-     */
-    public ExperimentDTO updateExperiment(UserDTO user, String uuid, ExperimentDTO experimentDTO, Logger logger) {
-        logger.LogUserAction("Updating experiment with uuid : " + uuid + ".");
+    public ExperimentDTO updateExperiment(UserDTO user, String uuid, ExperimentDTO experiment, Logger logger) {
+        var experimentDAO = experimentRepository.loadExperiment(uuid, logger);
 
-        ExperimentDAO experimentDAO = experimentRepository.loadExperiment(uuid, logger);
+        verifyNonEditableFieldsAreNotBeingModified(experiment, logger);
 
-        verifyPatchExperimentNonEditableFields(experimentDTO, logger);
+        if (!experimentDAO.getCreatedBy().getUsername().equals(user.username())) {
+            logger.warn("User tried to modify a unauthorized experiment with uuid: " + uuid);
+            throw new UnauthorizedException("You don't have access to modify the experiment.");
+        }
 
-        if (!experimentDAO.getCreatedBy().getUsername().equals(user.username()))
-            throw new UnauthorizedException("You don't have access to the experiment.");
+        // Change modifiable fields if provided
+        if (experiment.name() != null && !experiment.name().isEmpty())
+            experimentDAO.setName(experiment.name());
 
-        if (experimentDTO.getName() != null && !experimentDTO.getName().isEmpty())
-            experimentDAO.setName(experimentDTO.getName());
+        if (experiment.shared() != null)
+            experimentDAO.setShared(experiment.shared());
 
-        if (experimentDTO.getShared() != null)
-            experimentDAO.setShared(experimentDTO.getShared());
-
-        if (experimentDTO.getViewed() != null)
-            experimentDAO.setViewed(experimentDTO.getViewed());
+        if (experiment.viewed() != null)
+            experimentDAO.setViewed(experiment.viewed());
 
         experimentDAO.setUpdated(new Date());
 
         try {
             experimentRepository.save(experimentDAO);
         } catch (Exception e) {
-            logger.LogUserAction("Attempted to save changes to database but an error occurred  : " + e.getMessage() + ".");
-            throw new InternalServerError(e.getMessage());
+            logger.error("Failed to save to the database: " + e.getMessage());
+            throw e;
         }
 
-        logger.LogUserAction("Updated experiment with uuid : " + uuid + ".");
-
-        experimentDTO = new ExperimentDTO(true, experimentDAO);
-        return experimentDTO;
-    }
-
-    /**
-     * The deleteExperiment will delete an experiment from the database
-     *
-     * @param uuid   is the id of the experiment to be deleted
-     * @param logger contains username and the endpoint.
-     */
-    public void deleteExperiment(UserDTO user, String uuid, Logger logger) {
-        logger.LogUserAction("Deleting experiment with uuid : " + uuid + ".");
-
-        ExperimentDAO experimentDAO = experimentRepository.loadExperiment(uuid, logger);
-
-        if (!experimentDAO.getCreatedBy().getUsername().equals(user.username()))
-            throw new UnauthorizedException("You don't have access to the experiment.");
-
-        try {
-            experimentRepository.delete(experimentDAO);
-        } catch (Exception e) {
-            logger.LogUserAction("Attempted to delete an experiment to database but an error occurred  : " + e.getMessage() + ".");
-            throw new InternalServerError(e.getMessage());
-        }
-
-        logger.LogUserAction("Deleted experiment with uuid : " + uuid + ".");
+        return new ExperimentDTO(experimentDAO, true);
     }
 
     //    /* -------------------------------  PRIVATE METHODS  ----------------------------------------------------*/
 
-    private void checkPostExperimentProperInput(ExperimentDTO experimentDTO, Logger logger) {
-        boolean properInput =
-                experimentDTO.getShared() == null
-                        && experimentDTO.getViewed() == null
-                        && experimentDTO.getCreated() == null
-                        && experimentDTO.getCreatedBy() == null
-                        && experimentDTO.getResult() == null
-                        && experimentDTO.getStatus() == null
-                        && experimentDTO.getUuid() == null;
+    public void deleteExperiment(UserDTO user, String uuid, Logger logger) {
+        ExperimentDAO experimentDAO = experimentRepository.loadExperiment(uuid, logger);
 
-        if (!properInput) {
-            logger.LogUserAction("Invalid input.");
-            throw new BadRequestException("Please provide proper input.");
+        if (!experimentDAO.getCreatedBy().getUsername().equals(user.username())) {
+            logger.warn("User " + user.username() + " tried to delete the experiment with uuid " + uuid + " but he was unauthorized.");
+            throw new UnauthorizedException("You don't have access to delete the experiment.");
+        }
+
+        try {
+            experimentRepository.delete(experimentDAO);
+        } catch (Exception e) {
+            logger.info("Attempted to delete an experiment from the database but an error occurred: " + e.getMessage());
+            throw new InternalServerError(e.getMessage());
         }
     }
 
-    private void verifyPatchExperimentNonEditableFields(ExperimentDTO experimentDTO, Logger logger) {
-        if (experimentDTO.getUuid() != null) {
-            logger.LogUserAction("Uuid is not editable.");
-            throw new BadRequestException("Uuid is not editable.");
-        }
+    private void verifyNonEditableFieldsAreNotBeingModified(ExperimentDTO experimentDTO, Logger logger) {
+        throwNonEditableExceptionIfNotNull(experimentDTO.uuid(), "uuid", logger);
+        throwNonEditableExceptionIfNotNull(experimentDTO.algorithm(), "algorithm", logger);
+        throwNonEditableExceptionIfNotNull(experimentDTO.created(), "created", logger);
+        throwNonEditableExceptionIfNotNull(experimentDTO.updated(), "updated", logger);
+        throwNonEditableExceptionIfNotNull(experimentDTO.finished(), "finished", logger);
+        throwNonEditableExceptionIfNotNull(experimentDTO.createdBy(), "createdBy", logger);
+        throwNonEditableExceptionIfNotNull(experimentDTO.result(), "result", logger);
+        throwNonEditableExceptionIfNotNull(experimentDTO.status(), "status", logger);
+    }
 
-        if (experimentDTO.getAlgorithm() != null) {
-            logger.LogUserAction("Algorithm is not editable.");
-            throw new BadRequestException("Algorithm is not editable.");
-        }
-
-        if (experimentDTO.getCreated() != null) {
-            logger.LogUserAction("Created is not editable.");
-            throw new BadRequestException("Created is not editable.");
-        }
-
-        if (experimentDTO.getCreatedBy() != null) {
-            logger.LogUserAction("CreatedBy is not editable.");
-            throw new BadRequestException("CreatedBy is not editable.");
-        }
-
-        if (experimentDTO.getUpdated() != null) {
-            logger.LogUserAction("Updated is not editable.");
-            throw new BadRequestException("Updated is not editable.");
-        }
-
-        if (experimentDTO.getFinished() != null) {
-            logger.LogUserAction("Finished is not editable.");
-            throw new BadRequestException("Finished is not editable.");
-        }
-
-        if (experimentDTO.getResult() != null) {
-            logger.LogUserAction("Result is not editable.");
-            throw new BadRequestException("Result is not editable.");
-        }
-
-        if (experimentDTO.getStatus() != null) {
-            logger.LogUserAction("Status is not editable.");
-            throw new BadRequestException("Status is not editable.");
+    private void throwNonEditableExceptionIfNotNull(Object field, String nonEditableField, Logger logger) {
+        if (field != null) {
+            var errorMessage = "Tried to edit non editable field: " + nonEditableField;
+            logger.warn(errorMessage);
+            throw new BadRequestException(errorMessage);
         }
     }
 
-    private void algorithmParametersLogging(ExperimentDTO experimentDTO, Logger logger) {
-        String algorithmName = experimentDTO.getAlgorithm().getName();
-        StringBuilder parametersLogMessage = new StringBuilder(", Parameters:\n");
-        if (experimentDTO.getAlgorithm().getParameters() != null) {
-            experimentDTO.getAlgorithm().getParameters().forEach(
+    private void algorithmParametersLogging(ExperimentExecutionDTO experimentExecutionDTO, Logger logger) {
+        ExperimentExecutionDTO.AlgorithmExecutionDTO algorithm = experimentExecutionDTO.algorithm();
+
+        String algorithmName = algorithm.name();
+
+        StringBuilder parametersLogMessage = new StringBuilder();
+        if (algorithm.parameters() != null) {
+            algorithm.parameters().forEach(
                     params -> parametersLogMessage
                             .append("  ")
-                            .append(params.getLabel())
+                            .append(params.name())
                             .append(" -> ")
-                            .append(params.getValue())
+                            .append(params.value())
                             .append("\n"));
         }
-        if (experimentDTO.getAlgorithm().getPreprocessing() != null) {
-            experimentDTO.getAlgorithm().getPreprocessing().forEach(transformer ->
+
+        if (algorithm.preprocessing() != null) {
+            algorithm.preprocessing().forEach(transformer ->
             {
                 parametersLogMessage
                         .append("  ")
-                        .append(transformer.getLabel())
+                        .append(transformer.name())
                         .append(" -> ")
                         .append("\n");
 
-                if (transformer.getParameters() != null) {
-                    transformer.getParameters().forEach(
+                if (transformer.parameters() != null) {
+                    transformer.parameters().forEach(
                             transformerParams -> parametersLogMessage
                                     .append("        ")
-                                    .append(transformerParams.getLabel())
+                                    .append(transformerParams.name())
                                     .append(" -> ")
-                                    .append(transformerParams.getValue())
+                                    .append(transformerParams.value())
                                     .append("\n"));
                     parametersLogMessage.append("\n");
                 }
             });
         }
 
-        logger.LogUserAction("Executing " + algorithmName + parametersLogMessage);
+        logger.debug("Algorithm " + algorithmName + " execution starting with parameters: \n" + parametersLogMessage);
     }
 
-    /**
-     * The getDatasetFromExperimentParameters will retrieve the dataset from the experiment parameters
-     *
-     * @param experimentDTO is the experiment information
-     * @param logger        contains username and the endpoint.
-     * @return the dataset from the experiment
-     */
-    private String getDatasetFromExperimentParameters(ExperimentDTO experimentDTO, Logger logger) {
-
+    private String getExperimentDatasets(ExperimentExecutionDTO experimentExecutionDTO, Logger logger) {
         String experimentDatasets = null;
-        for (ExaremeAlgorithmRequestParamDTO parameter : experimentDTO.getAlgorithm().getParameters()) {
-            if (parameter.getLabel().equals("dataset")) {
-                experimentDatasets = parameter.getValue();
+        for (ExperimentExecutionDTO.AlgorithmExecutionDTO.AlgorithmParameterExecutionDTO parameter : experimentExecutionDTO.algorithm().parameters()) {
+            if (parameter.name().equals("dataset")) {
+                experimentDatasets = parameter.value();
                 break;
             }
         }
 
         if (experimentDatasets == null || experimentDatasets.isEmpty()) {
-            logger.LogUserAction("A dataset should be specified to run an algorithm.");
-            throw new BadRequestException("Please provide at least one dataset to run the algorithm.");
+            logger.debug("No datasets provided in experiment execution request.");
+            throw new BadRequestException("Please provide at least one dataset.");
         }
         return experimentDatasets;
     }
 
-    /**
-     * Creates an experiment and runs it on the background.
-     * Uses the exareme or exareme2 engine that run an experiment synchronously.
-     *
-     * @param experimentDTO is the request with the experiment information
-     * @param logger        contains username and the endpoint.
-     * @return the experiment information that was retrieved from exareme
-     */
-    private ExperimentDTO createSynchronousExperiment(Authentication authentication, ExperimentDTO experimentDTO, String algorithmEngineName, Logger logger) {
-
-        logger.LogUserAction("Running the algorithm...");
-
-        ExperimentDAO experimentDAO = experimentRepository.createExperimentInTheDatabase(experimentDTO, activeUserService.getActiveUser(authentication), logger);
-        experimentDTO.setUuid(experimentDAO.getUuid());
-        logger.LogUserAction("Created experiment with uuid :" + experimentDAO.getUuid());
-
-        logger.LogUserAction("Starting execution in thread");
-        ExperimentDTO finalExperimentDTO = experimentDTO;
-        new Thread(() -> {
-
-            try {
-                ExaremeAlgorithmResultDTO exaremeAlgorithmResultDTO = runSynchronousExperiment(finalExperimentDTO, algorithmEngineName, logger);
-
-                logger.LogUserAction(
-                        "Experiment with uuid: " + experimentDAO.getUuid()
-                                + " gave response code: " + exaremeAlgorithmResultDTO.getCode()
-                                + " and result: " + exaremeAlgorithmResultDTO.getResult()
-                );
-
-                experimentDAO.setResult(JsonConverters.convertObjectToJsonString(exaremeAlgorithmResultDTO.getResult()));
-                experimentDAO.setStatus((exaremeAlgorithmResultDTO.getCode() >= 400)
-                        ? ExperimentDAO.Status.error : ExperimentDAO.Status.success);
-            } catch (Exception e) {
-                experimentDAO.setStatus(ExperimentDAO.Status.error);
-                throw e;
-            }
-
-            experimentRepository.finishExperiment(experimentDAO, logger);
-            logger.LogUserAction("Finished the experiment: " + experimentDAO);
-        }).start();
-
-        experimentDTO = new ExperimentDTO(true, experimentDAO);
-        return experimentDTO;
-    }
-
-    /**
-     * Runs the experiment to exareme or Exareme2, waiting for the response from them.
-     * Exareme and Exareme2 do not support async fetching of an algorithm result.
-     *
-     * @param experimentDTO is the request with the experiment information
-     * @return the result of experiment as well as the http status that was retrieved
-     */
-    private ExaremeAlgorithmResultDTO runSynchronousExperiment(ExperimentDTO experimentDTO, String algorithmEngineName, Logger logger) {
-        if (algorithmEngineName.equals("Exareme2")) {
-            return runExareme2Experiment(experimentDTO, logger);
-        } else {
-            return runExaremeExperiment(experimentDTO, logger);
-        }
-    }
-
-    /**
-     * The runExaremeExperiment will run an experiment using Exareme
-     *
-     * @param experimentDTO contains the information needed to run the experiment
-     * @param logger        used to log information
-     * @return the result of exareme as well as the http status that was retrieved
-     */
-    private ExaremeAlgorithmResultDTO runExaremeExperiment(ExperimentDTO experimentDTO, Logger logger) {
-        String algorithmName = experimentDTO.getAlgorithm().getName();
-        logger.LogUserAction("Starting Exareme algorithm execution, algorithm: " + algorithmName);
-
-        String algorithmEndpoint = queryExaremeUrl + "/" + algorithmName;
-        List<ExaremeAlgorithmRequestParamDTO> algorithmParameters
-                = experimentDTO.getAlgorithm().getParameters();
-        List<ExaremeAlgorithmRequestParamDTO> algorithmParametersWithoutPathologyVersion = new ArrayList<>();
-
-        for (ExaremeAlgorithmRequestParamDTO algorithmParameter : algorithmParameters) {
-            if (algorithmParameter.getName().equals("pathology")) {
-                List<String> pathology_info = Arrays.asList(algorithmParameter.getValue().split(":", 2));
-                String pathology_code = pathology_info.get(0);
-                algorithmParameter.setValue(pathology_code);
-            }
-            algorithmParametersWithoutPathologyVersion.add(algorithmParameter);
-
-        }
-
-        String algorithmBody = gson.toJson(algorithmParametersWithoutPathologyVersion);
-        logger.LogUserAction("Exareme algorithm execution. Endpoint: " + algorithmEndpoint);
-        logger.LogUserAction("Exareme algorithm execution. Body: " + algorithmBody);
-
-        StringBuilder requestResponseBody = new StringBuilder();
-        int requestResponseCode;
-        try {
-            requestResponseCode = HTTPUtil.sendPost(algorithmEndpoint, algorithmBody, requestResponseBody);
-        } catch (Exception e) {
-            throw new InternalServerError("Error occurred : " + e.getMessage());
-        }
-
-        // Results are stored in the experiment object
-        ExaremeAlgorithmResultDTO exaremeResult = JsonConverters.convertJsonStringToObject(
-                String.valueOf(requestResponseBody), ExaremeAlgorithmResultDTO.class
-        );
-        exaremeResult.setCode(requestResponseCode);
-
-        return exaremeResult;
-    }
-
-    /**
-     * The runExareme2Experiment will run an experiment using the Exareme2
-     *
-     * @param experimentDTO contains the information needed to run the experiment
-     * @param logger        is used to log
-     * @return the result of the algorithm
-     */
-    private ExaremeAlgorithmResultDTO runExareme2Experiment(ExperimentDTO experimentDTO, Logger logger) {
-        String algorithmName = experimentDTO.getAlgorithm().getName();
-        logger.LogUserAction("Starting Exareme2 algorithm execution, algorithm: " + algorithmName);
-
+    private ExperimentAlgorithmResultDTO runExaremeAlgorithm(UUID uuid, ExperimentExecutionDTO experimentExecutionDTO, Logger logger) {
+        String algorithmName = experimentExecutionDTO.algorithm().name();
         String algorithmEndpoint = exareme2AlgorithmsUrl + "/" + algorithmName.toLowerCase();
-        Exareme2AlgorithmRequestDTO exareme2AlgorithmRequestDTO =
-                new Exareme2AlgorithmRequestDTO(experimentDTO.getUuid(), experimentDTO.getAlgorithm().getParameters(), experimentDTO.getAlgorithm().getPreprocessing());
-        String algorithmBody = JsonConverters.convertObjectToJsonString(exareme2AlgorithmRequestDTO);
-        logger.LogUserAction("Exareme2 algorithm execution. Endpoint: " + algorithmEndpoint);
-        logger.LogUserAction("Exareme2 algorithm execution. Body: " + algorithmBody);
+        var exareme2AlgorithmRequestDTO = new Exareme2AlgorithmRequestDTO(uuid, experimentExecutionDTO.algorithm().parameters(), experimentExecutionDTO.algorithm().preprocessing());
+        String algorithmBody = convertObjectToJsonString(exareme2AlgorithmRequestDTO);
+        logger.debug("Exareme2 algorithm request, endpoint: " + algorithmEndpoint);
+        logger.debug("Exareme2 algorithm request, body: " + algorithmBody);
 
-        StringBuilder requestResponseBody = new StringBuilder();
         int requestResponseCode;
+        var requestResponseBody = new StringBuilder();
         try {
             requestResponseCode = HTTPUtil.sendPost(algorithmEndpoint, algorithmBody, requestResponseBody);
-        } catch (Exception e) {
-            logger.LogUserAction("An unexpected error occurred when running a mip experiment: " + e.getMessage());
-            throw new InternalServerError("");
+        } catch (IOException e) {
+            var errorMessage = "Could not run the exareme2 algorithm: " + e.getMessage();
+            logger.error(errorMessage);
+            throw new InternalServerError(errorMessage);
         }
 
-        List<Object> exaremeAlgorithmResult = new ArrayList<>();
-        if (requestResponseCode == 200) {
-            Object exareme2Result =
-                    JsonConverters.convertJsonStringToObject(String.valueOf(requestResponseBody), Object.class);
-            exaremeAlgorithmResult.add(exareme2Result);
+        var result = convertExareme2ResponseToAlgorithmResults(logger, requestResponseCode, requestResponseBody);
+        return new ExperimentAlgorithmResultDTO(requestResponseCode, result);
+    }
 
-        } else if (requestResponseCode == 400) {
-            Map<String, Object> exaremeAlgorithmResultElement = new HashMap<>();
-            exaremeAlgorithmResultElement.put("data", String.valueOf(requestResponseBody));
-            exaremeAlgorithmResultElement.put("type", "text/plain+error");
-            exaremeAlgorithmResult.add(exaremeAlgorithmResultElement);
-
-        } else if (requestResponseCode == 460) {
-            Map<String, Object> exaremeAlgorithmResultElement = new HashMap<>();
-            exaremeAlgorithmResultElement.put("data", String.valueOf(requestResponseBody));
-            exaremeAlgorithmResultElement.put("type", "text/plain+user_error");
-            exaremeAlgorithmResult.add(exaremeAlgorithmResultElement);
-
-        } else if (requestResponseCode == 461) {
-            Map<String, Object> exaremeAlgorithmResultElement = new HashMap<>();
-            exaremeAlgorithmResultElement.put("data", String.valueOf(requestResponseBody));
-            exaremeAlgorithmResultElement.put("type", "text/plain+error");
-            exaremeAlgorithmResult.add(exaremeAlgorithmResultElement);
-
-        } else if (requestResponseCode == 500) {
-            Map<String, Object> exaremeAlgorithmResultElement = new HashMap<>();
-            exaremeAlgorithmResultElement.put("data",
-                    "Something went wrong. Please inform the system administrator or try again later."
-            );
-            exaremeAlgorithmResultElement.put("type", "text/plain+error");
-            exaremeAlgorithmResult.add(exaremeAlgorithmResultElement);
-
-        } else if (requestResponseCode == 512) {
-            Map<String, Object> exaremeAlgorithmResultElement = new HashMap<>();
-            exaremeAlgorithmResultElement.put("data", String.valueOf(requestResponseBody));
-            exaremeAlgorithmResultElement.put("type", "text/plain+error");
-            exaremeAlgorithmResult.add(exaremeAlgorithmResultElement);
-
-        } else {
-            logger.LogUserAction(
-                    "Exareme2 execution responded with an unexpected status code: " + requestResponseCode
-            );
-            throw new InternalServerError("");
-        }
-
-        return new ExaremeAlgorithmResultDTO(requestResponseCode, exaremeAlgorithmResult);
-
+    record ExperimentAlgorithmResultDTO(int code, List<Object> result) {
     }
 }

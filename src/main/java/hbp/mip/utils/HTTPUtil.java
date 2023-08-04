@@ -8,9 +8,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
-/**
- * Created by mirco on 20.06.16.
- */
 public class HTTPUtil {
 
     private HTTPUtil() {
@@ -38,7 +35,7 @@ public class HTTPUtil {
 
         if (!"GET".equals(httpVerb)) {
             con.setRequestMethod(httpVerb);
-            if (query != null && query.length() > 0) {
+            if (query != null && !query.isEmpty()) {
                 con.addRequestProperty("Content-Type", "application/json");
                 con.setRequestProperty("Content-Length", Integer.toString(query.length()));
 

@@ -1,0 +1,1 @@
+ALTER TABLE experiment DROP COLUMN workflow_history_id;

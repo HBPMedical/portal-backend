@@ -1,6 +1,6 @@
 package hbp.mip.controllers;
 
-import hbp.mip.models.DTOs.ExaremeAlgorithmDTO;
+import hbp.mip.models.DTOs.AlgorithmSpecificationDTO;
 import hbp.mip.services.ActiveUserService;
 import hbp.mip.services.AlgorithmService;
 import hbp.mip.utils.Logger;
@@ -28,12 +28,11 @@ public class AlgorithmsAPI {
     }
 
     @GetMapping
-    public ResponseEntity<List<ExaremeAlgorithmDTO>> getAlgorithms(Authentication authentication) {
+    public ResponseEntity<List<AlgorithmSpecificationDTO>> getAlgorithms(Authentication authentication) {
         Logger logger = new Logger(activeUserService.getActiveUser(authentication).username(), "(GET) /algorithms");
-        logger.LogUserAction("Executing...");
-        List<ExaremeAlgorithmDTO> algorithms = algorithmService.getAlgorithms();
-
-        logger.LogUserAction("Successfully listed " + algorithms.size() + " algorithms");
+        logger.info("Request for algorithms.");
+        List<AlgorithmSpecificationDTO> algorithms = algorithmService.getAlgorithms(logger);
+        logger.info("Algorithms returned: " + algorithms.size());
         return ResponseEntity.ok(algorithms);
     }
 }

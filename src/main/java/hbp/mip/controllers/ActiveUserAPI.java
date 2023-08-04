@@ -23,15 +23,14 @@ public class ActiveUserAPI {
     public ResponseEntity<UserDTO> getTheActiveUser(Authentication authentication) {
         UserDTO activeUser = activeUserService.getActiveUser(authentication);
         Logger logger = new Logger(activeUser.username(), "(GET) /activeUser");
-        logger.LogUserAction("Loading the details of the activeUser.");
-
+        logger.info("User details returned.");
         return ResponseEntity.ok(activeUser);
     }
 
     @PostMapping(value = "/agreeNDA")
     public ResponseEntity<UserDTO> activeUserServiceAgreesToNDA(Authentication authentication) {
         Logger logger = new Logger(activeUserService.getActiveUser(authentication).username(), "(GET) /activeUser/agreeNDA");
-        logger.LogUserAction("The user agreed to the NDA");
+        logger.info("User agreed to the NDA.");
         return ResponseEntity.ok(activeUserService.agreeToNDA(authentication));
     }
 }

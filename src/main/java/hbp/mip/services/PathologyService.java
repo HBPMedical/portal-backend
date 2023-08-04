@@ -2,7 +2,7 @@ package hbp.mip.services;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import hbp.mip.models.DTOs.Exareme2CommonDataElement;
+import hbp.mip.models.DTOs.exareme2.Exareme2PathologyCommonDataElementDTO;
 import hbp.mip.models.DTOs.PathologyMetadataDTO;
 import hbp.mip.models.DTOs.PathologyDTO;
 import hbp.mip.utils.ClaimUtils;
@@ -87,22 +87,22 @@ public class PathologyService {
     }
 
     private Map<String, List<PathologyDTO.EnumerationDTO>> getExareme2DatasetsPerPathology(Logger logger) {
-        Map<String, Map<String, Exareme2CommonDataElement>> exareme2CDEsMetadata;
-        Type exaremeCDEsMetadataType = new TypeToken<HashMap<String, Map<String, Exareme2CommonDataElement>>>(){}.getType();
+        Map<String, Map<String, Exareme2PathologyCommonDataElementDTO>> exareme2CDEsMetadata;
+        Type exaremeCDEsMetadataType = new TypeToken<HashMap<String, Map<String, Exareme2PathologyCommonDataElementDTO>>>(){}.getType();
         try {
             StringBuilder response = new StringBuilder();
             HTTPUtil.sendGet(exareme2CDEsMetadataUrl, response);
             exareme2CDEsMetadata = gson.fromJson(response.toString(),exaremeCDEsMetadataType);
         } catch (IOException e) {
-            logger.LogUserAction("There was a problem communicating with exareme: " + e.getMessage());
-            return new HashMap<>();  // Return empty result
+            logger.error("Could not fetch exareme2 datasets: " + e.getMessage());
+            return new HashMap<>();
         }
 
         // Get the datasets for each pathology
         Map<String, List<PathologyDTO.EnumerationDTO>> datasetsPerPathology = new HashMap<>();
         exareme2CDEsMetadata.forEach((pathology, cdePerDataset) -> {
             List<PathologyDTO.EnumerationDTO> pathologyDatasetDTOS = new ArrayList<>();
-            Map<String, String> datasetEnumerations = (Map<String, String>) cdePerDataset.get("dataset").getEnumerations();
+            Map<String, String> datasetEnumerations = (Map<String, String>) cdePerDataset.get("dataset").enumerations();
             datasetEnumerations.forEach((code, label) -> pathologyDatasetDTOS.add(new PathologyDTO.EnumerationDTO(code, label)));
             datasetsPerPathology.put(pathology, pathologyDatasetDTOS);
         });
@@ -118,8 +118,8 @@ public class PathologyService {
             HTTPUtil.sendGet(exareme2AttributesUrl, response);
             exareme2PathologyAttributes = gson.fromJson(response.toString(),pathologyAttributesType);
         } catch (IOException e) {
-            logger.LogUserAction("There was a problem communicating with exareme: " + e.getMessage());
-            return new HashMap<>();  // Return empty result
+            logger.error("Could not fetch exareme2 pathologies' metadata: " + e.getMessage());
+            return new HashMap<>();
         }
 
         return exareme2PathologyAttributes;

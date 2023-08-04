@@ -2,16 +2,16 @@ package hbp.mip.controllers;
 
 
 import hbp.mip.models.DTOs.ExperimentDTO;
-import hbp.mip.models.DTOs.UserDTO;
+import hbp.mip.models.DTOs.ExperimentExecutionDTO;
+import hbp.mip.models.DTOs.ExperimentsDTO;
 import hbp.mip.services.ActiveUserService;
 import hbp.mip.services.ExperimentService;
+import hbp.mip.utils.JsonConverters;
 import hbp.mip.utils.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -32,18 +32,31 @@ public class ExperimentAPI {
     }
 
     @GetMapping
-    public ResponseEntity<Object> getExperiments(Authentication authentication,
-                                                 @RequestParam(name = "name", required = false) String name,
-                                                 @RequestParam(name = "algorithm", required = false) String algorithm,
-                                                 @RequestParam(name = "shared", required = false) Boolean shared,
-                                                 @RequestParam(name = "viewed", required = false) Boolean viewed,
-                                                 @RequestParam(name = "includeShared", required = false, defaultValue = "true") boolean includeShared,
-                                                 @RequestParam(name = "orderBy", required = false, defaultValue = "created") String orderBy,
-                                                 @RequestParam(name = "descending", required = false, defaultValue = "true") Boolean descending,
-                                                 @RequestParam(defaultValue = "0") int page,
-                                                 @RequestParam(defaultValue = "10") int size
+    public ResponseEntity<ExperimentsDTO> getExperiments(Authentication authentication,
+                                                         @RequestParam(name = "name", required = false) String name,
+                                                         @RequestParam(name = "algorithm", required = false) String algorithm,
+                                                         @RequestParam(name = "shared", required = false) Boolean shared,
+                                                         @RequestParam(name = "viewed", required = false) Boolean viewed,
+                                                         @RequestParam(name = "includeShared", required = false, defaultValue = "true") boolean includeShared,
+                                                         @RequestParam(name = "orderBy", required = false, defaultValue = "created") String orderBy,
+                                                         @RequestParam(name = "descending", required = false, defaultValue = "true") Boolean descending,
+                                                         @RequestParam(defaultValue = "0") int page,
+                                                         @RequestParam(defaultValue = "10") int size
     ) {
-        Map<String, Object> experiments = experimentService.getExperiments(authentication,
+        var logger = new Logger(activeUserService.getActiveUser(authentication).username(), "(GET) /experiments");
+        logger.info(
+                "Request for experiments with parameters: " +
+                        "\n\tname -> " + name +
+                        "\n\talgorithm -> " + algorithm +
+                        "\n\tshared -> " + shared +
+                        "\n\tviewed -> " + viewed +
+                        "\n\tincludeShared -> " + includeShared +
+                        "\n\torderBy -> " + orderBy +
+                        "\n\tdescending -> " + descending +
+                        "\n\tpage -> " + page +
+                        "\n\tsize -> " + size
+        );
+        var experimentsDTO = experimentService.getExperiments(authentication,
                 name,
                 algorithm,
                 shared,
@@ -53,63 +66,72 @@ public class ExperimentAPI {
                 size,
                 orderBy,
                 descending,
-                new Logger(activeUserService.getActiveUser(authentication).username(), "(GET) /experiments"));
-        return new ResponseEntity<>(experiments, HttpStatus.OK);
+                logger
+        );
+        logger.info("Experiments returned: " + experimentsDTO.experiments().size());
+        return new ResponseEntity<>(experimentsDTO, HttpStatus.OK);
     }
 
 
     @GetMapping(value = "/{uuid}")
     public ResponseEntity<ExperimentDTO> getExperiment(Authentication authentication, @PathVariable("uuid") String uuid) {
-        ExperimentDTO experimentDTO = experimentService.getExperiment(
-                authentication, uuid,
-                new Logger(activeUserService.getActiveUser(authentication).username(), "(GET) /experiments/{uuid}")
-        );
-        return new ResponseEntity<>(experimentDTO, HttpStatus.OK);
+        var logger = new Logger(activeUserService.getActiveUser(authentication).username(), "(GET) /experiments/{uuid}");
+        logger.info("Request for experiment with id: " + uuid);
+        var experimentResponse = experimentService.getExperiment(authentication, uuid, logger);
+        logger.info("Experiment returned.");
+        return new ResponseEntity<>(experimentResponse, HttpStatus.OK);
     }
 
 
     @PostMapping
-    public ResponseEntity<ExperimentDTO> createExperiment(Authentication authentication, @RequestBody ExperimentDTO experimentDTO) {
-        experimentDTO = experimentService.createExperiment(
-                authentication, experimentDTO,
-                new Logger(activeUserService.getActiveUser(authentication).username(), "(POST) /experiments")
-        );
-        return new ResponseEntity<>(experimentDTO, HttpStatus.CREATED);
+    public ResponseEntity<ExperimentDTO> createExperiment(Authentication authentication, @RequestBody ExperimentExecutionDTO experimentExecutionDTO) {
+        var logger = new Logger(activeUserService.getActiveUser(authentication).username(), "(POST) /experiments");
+        logger.info("Request for experiment creation. RequestBody: " + JsonConverters.convertObjectToJsonString(experimentExecutionDTO));
+        var experimentResponse = experimentService.createExperiment(authentication, experimentExecutionDTO, logger);
+        logger.info("Experiment created with id: " + experimentResponse.uuid());
+        return new ResponseEntity<>(experimentResponse, HttpStatus.CREATED);
     }
 
 
     @PatchMapping(value = "/{uuid}")
-    public ResponseEntity<ExperimentDTO> updateExperiment(Authentication authentication, @RequestBody ExperimentDTO experimentDTO, @PathVariable("uuid") String uuid) {
-        UserDTO user = activeUserService.getActiveUser(authentication);
-        experimentDTO = experimentService.updateExperiment(
-                user,
-                uuid,
-                experimentDTO,
-                new Logger(user.username(), "(PATCH) /experiments/{uuid}")
-        );
-        return new ResponseEntity<>(experimentDTO, HttpStatus.OK);
+    public ResponseEntity<ExperimentDTO> updateExperiment(Authentication authentication, @RequestBody ExperimentDTO experimentRequest, @PathVariable("uuid") String uuid) {
+        var user = activeUserService.getActiveUser(authentication);
+        var logger = new Logger(user.username(), "(PATCH) /experiments/{uuid}");
+        logger.info("Request for experiment update with id: " + uuid + ".  Request Body: " + JsonConverters.convertObjectToJsonString(experimentRequest));
+        var experimentResponse = experimentService.updateExperiment(user, uuid, experimentRequest, logger);
+        logger.info("Experiment updated. Id: " + uuid);
+        return new ResponseEntity<>(experimentResponse, HttpStatus.OK);
     }
 
 
     @RequestMapping(value = "/{uuid}", method = RequestMethod.DELETE)
     public ResponseEntity<String> deleteExperiment(Authentication authentication, @PathVariable("uuid") String uuid) {
-        UserDTO user = activeUserService.getActiveUser(authentication);
-        experimentService.deleteExperiment(
-                user,
-                uuid,
-                new Logger(user.username(), "(DELETE) /experiments/{uuid}")
-        );
+        var user = activeUserService.getActiveUser(authentication);
+        var logger = new Logger(user.username(), "(DELETE) /experiments/{uuid}");
+        logger.info("Request for experiment deletion with id: " + uuid);
+        experimentService.deleteExperiment(user, uuid, logger);
+        logger.info("Experiment deleted. Id: " + uuid);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
 
     @PostMapping(value = "/transient")
-    public ResponseEntity<ExperimentDTO> createTransientExperiment(Authentication authentication, @RequestBody ExperimentDTO experimentDTO) {
-        experimentDTO = experimentService.runTransientExperiment(
+    public ResponseEntity<ExperimentDTO> createTransientExperiment(Authentication authentication, @RequestBody ExperimentExecutionDTO experimentExecutionDTO) {
+        var logger = new Logger(activeUserService.getActiveUser(authentication).username(), "(POST) /experiments/transient");
+        logger.info("Request for transient experiment creation. RequestBody: " + JsonConverters.convertObjectToJsonString(experimentExecutionDTO));
+
+        var experimentResponse = experimentService.runTransientExperiment(
                 authentication,
-                experimentDTO,
-                new Logger(activeUserService.getActiveUser(authentication).username(), "(POST) /experiments/transient")
+                experimentExecutionDTO,
+                logger
         );
-        return new ResponseEntity<>(experimentDTO, HttpStatus.OK);
+
+        logger.info(
+                "Experiment (transient) finished. " +
+                        "\n\tStatus: " + experimentResponse.status() +
+                        "\n\tResult: " + experimentResponse.result()
+        );
+
+        return new ResponseEntity<>(experimentResponse, HttpStatus.OK);
     }
 }

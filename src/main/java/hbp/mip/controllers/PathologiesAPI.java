@@ -28,12 +28,13 @@ public class PathologiesAPI {
 
     @GetMapping
     public ResponseEntity<List<PathologyDTO>> getPathologies(Authentication authentication) {
-        Logger logger = new Logger(activeUserService.getActiveUser(authentication).username(), "(GET) /pathologies");
-        List<PathologyDTO> pathologies = pathologyService.getPathologies(authentication, logger);
+        var logger = new Logger(activeUserService.getActiveUser(authentication).username(), "(GET) /pathologies");
+        logger.info("Request for pathologies.");
+        var pathologies = pathologyService.getPathologies(authentication, logger);
 
         String userPathologiesSTR = pathologies.stream().map(PathologyDTO::code)
                 .collect(Collectors.joining(", "));
-        logger.LogUserAction("Access given to " + pathologies.size() + " pathologies: [" + userPathologiesSTR + "].");
+        logger.info("Pathologies returned: " + pathologies.size() + ". [" + userPathologiesSTR + "].");
 
         return ResponseEntity.ok(pathologies);
     }

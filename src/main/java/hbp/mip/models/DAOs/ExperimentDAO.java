@@ -1,6 +1,5 @@
 package hbp.mip.models.DAOs;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
 import jakarta.persistence.*;
@@ -18,7 +17,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "`experiment`")
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ExperimentDAO {
 
     private static final Gson gson = new Gson();
@@ -36,10 +34,6 @@ public class ExperimentDAO {
     @ManyToOne
     @JoinColumn(name = "created_by_username",columnDefinition = "CHARACTER VARYING")
     private UserDAO createdBy;
-
-    @Expose
-    @Column(name="workflow_history_id", columnDefinition = "TEXT")
-    private String workflowHistoryId;
 
     @Expose
     @Column(columnDefinition = "TEXT")
@@ -74,7 +68,7 @@ public class ExperimentDAO {
     @Column(columnDefinition = "BOOLEAN")
     private boolean shared = false;
 
-    // whether or not the experiment's result have been viewed by its owner
+    // Whether the experiment's result have been viewed by its owner
     @Expose
     @Column(columnDefinition = "BOOLEAN")
     private boolean viewed = false;
@@ -94,7 +88,6 @@ public class ExperimentDAO {
         return "ExperimentDAO(uuid=" + this.uuid +
                 ", name=" + this.name +
                 ", createdBy=" + this.createdBy +
-                ", workflowHistoryId=" + this.workflowHistoryId +
                 ", status=" + this.status +
                 ", result=" + this.result +
                 ", finished=" + finishedDT +

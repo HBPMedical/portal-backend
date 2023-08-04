@@ -1,6 +1,5 @@
 package hbp.mip.services;
 
-import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import hbp.mip.models.DTOs.exareme2.Exareme2PathologyCommonDataElementDTO;
 import hbp.mip.models.DTOs.PathologyMetadataDTO;
@@ -8,22 +7,17 @@ import hbp.mip.models.DTOs.PathologyDTO;
 import hbp.mip.utils.ClaimUtils;
 import hbp.mip.utils.Exceptions.InternalServerError;
 import hbp.mip.utils.HTTPUtil;
+import hbp.mip.utils.JsonConverters;
 import hbp.mip.utils.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class PathologyService {
-
-    private static final Gson gson = new Gson();
 
     private final ClaimUtils claimUtils;
 
@@ -92,10 +86,10 @@ public class PathologyService {
         try {
             StringBuilder response = new StringBuilder();
             HTTPUtil.sendGet(exareme2CDEsMetadataUrl, response);
-            exareme2CDEsMetadata = gson.fromJson(response.toString(),exaremeCDEsMetadataType);
-        } catch (IOException e) {
+            exareme2CDEsMetadata = JsonConverters.convertJsonStringToObject(response.toString(),exaremeCDEsMetadataType);
+        } catch (Exception e) {
             logger.error("Could not fetch exareme2 datasets: " + e.getMessage());
-            return new HashMap<>();
+            throw new InternalServerError(e.getMessage());
         }
 
         // Get the datasets for each pathology
@@ -110,30 +104,30 @@ public class PathologyService {
         return datasetsPerPathology;
     }
 
-    private Map<String, Map<String, Map<String, List<Object>>>> getExareme2PathologyAttributes(Logger logger) {
-        Map<String, Map<String, Map<String, List<Object>>>> exareme2PathologyAttributes;
-        Type pathologyAttributesType = new TypeToken<Map<String, Map<String, Map<String, List<PathologyMetadataDTO>>>>>(){}.getType();
+    private Map<String, DataModelAttributes> getExareme2PathologyAttributes(Logger logger) {
+        Map<String, DataModelAttributes> exareme2PathologyAttributes;
+        Type pathologyAttributesType = new TypeToken<Map<String, DataModelAttributes>>(){}.getType();
         try {
             StringBuilder response = new StringBuilder();
             HTTPUtil.sendGet(exareme2AttributesUrl, response);
-            exareme2PathologyAttributes = gson.fromJson(response.toString(),pathologyAttributesType);
-        } catch (IOException e) {
+            exareme2PathologyAttributes = JsonConverters.convertJsonStringToObject(response.toString(),pathologyAttributesType);
+        } catch (Exception e) {
             logger.error("Could not fetch exareme2 pathologies' metadata: " + e.getMessage());
-            return new HashMap<>();
+            throw new InternalServerError(e.getMessage());
         }
 
         return exareme2PathologyAttributes;
     }
 
     private Map<String, PathologyMetadataDTO> getExaremePathologiesMetadataHierarchyDTO(Logger logger) {
-        Map<String, Map<String, Map<String, List<Object>>>> pathologiesAttributes = getExareme2PathologyAttributes(logger);
+        Map<String, DataModelAttributes> pathologiesAttributes = getExareme2PathologyAttributes(logger);
 
         Map<String, PathologyMetadataDTO> pathologiesHierarchies = new HashMap<>();
         pathologiesAttributes.forEach((pathology, attributes) -> {
-            assert attributes.get("properties") != null;
-            assert attributes.get("properties").get("cdes") != null;
-            assert !attributes.get("properties").get("cdes").isEmpty();
-            pathologiesHierarchies.put(pathology, (PathologyMetadataDTO) attributes.get("properties").get("cdes").get(0));
+            assert attributes.properties != null;
+            assert attributes.properties.get("cdes") != null;
+            assert !attributes.properties.get("cdes").isEmpty();
+            pathologiesHierarchies.put(pathology, attributes.properties.get("cdes").get(0));
         });
 
         return pathologiesHierarchies;
@@ -182,5 +176,7 @@ public class PathologyService {
             }
         }
     }
+
+    record DataModelAttributes(Map<String, List<PathologyMetadataDTO>> properties, List<String> tags){}
 
 }

@@ -60,7 +60,15 @@ public class SecurityConfiguration {
     SecurityFilterChain clientSecurityFilterChain(HttpSecurity http, ClientRegistrationRepository clientRegistrationRepo) throws Exception {
         if (authenticationEnabled) {
             http.authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/login/**", "/oauth2/**", "/actuator/**").permitAll()
+                    .requestMatchers(
+                            "/login/**",
+                            "/oauth2/**",
+                            "/actuator/**",
+                            "/v3/api-docs",
+                            "/v3/api-docs/**",
+                            "/swagger-ui/**",
+                            "/swagger-ui.html"
+                    ).permitAll()
                     .requestMatchers("/**").authenticated()
             );
 

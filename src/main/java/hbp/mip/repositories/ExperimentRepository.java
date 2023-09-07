@@ -6,16 +6,16 @@ import hbp.mip.models.DTOs.ExperimentExecutionDTO;
 import hbp.mip.models.DTOs.UserDTO;
 import hbp.mip.utils.Exceptions.BadRequestException;
 import hbp.mip.utils.Exceptions.ExperimentNotFoundException;
-import hbp.mip.utils.Exceptions.InternalServerError;
 import hbp.mip.utils.JsonConverters;
 import hbp.mip.utils.Logger;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.rest.core.annotation.RestResource;
 
 import java.util.Date;
 import java.util.UUID;
 
-
+@RestResource(exported = false)
 public interface ExperimentRepository extends CrudRepository<ExperimentDAO, UUID>, JpaSpecificationExecutor<ExperimentDAO> {
     ExperimentDAO findByUuid(UUID experimentUuid);
 

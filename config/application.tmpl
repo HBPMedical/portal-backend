@@ -46,10 +46,9 @@ spring:
             client-secret: {{ .Env.KEYCLOAK_CLIENT_SECRET }}
             provider: keycloak
             scope: openid
-            redirect-uri: http://172.17.0.1/${server.servlet.contextPath}/login/oauth2/code/{{ .Env.KEYCLOAK_CLIENT_ID }}
         provider:
           keycloak:
-            issuer-uri: http://172.17.0.1/auth/realms/{{ .Env.KEYCLOAK_REALM }}
+            issuer-uri: {{ .Env.KEYCLOAK_AUTH_URL }}realms/{{ .Env.KEYCLOAK_REALM }}
             user-name-attribute: preferred_username
 
 

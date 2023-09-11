@@ -46,7 +46,6 @@ spring:
             client-secret: dae83a6b-c769-4186-8383-f0984c6edf05
             provider: keycloak
             scope: openid
-            redirect-uri: http://172.17.0.1/${server.servlet.contextPath}/login/oauth2/code/MIP
         provider:
           keycloak:
             user-name-attribute: preferred_username

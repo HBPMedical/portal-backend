@@ -1,5 +1,7 @@
 package hbp.mip.models.DTOs.exareme2;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +35,7 @@ public record Exareme2AlgorithmSpecificationDTO(
             String multiple,
             String min,
             String max,
+            @SerializedName("default")
             String default_value,
             Exareme2AlgorithmParameterSpecificationDTO.Exareme2AlgorithmEnumDTO enums,
             Exareme2AlgorithmEnumDTO dict_keys_enums,

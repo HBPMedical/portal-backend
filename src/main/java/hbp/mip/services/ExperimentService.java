@@ -342,7 +342,7 @@ public class ExperimentService {
 
     private ExperimentAlgorithmResultDTO runExaremeAlgorithm(UUID uuid, ExperimentExecutionDTO experimentExecutionDTO, Logger logger) {
         String algorithmName = experimentExecutionDTO.algorithm().name();
-        String algorithmEndpoint = exareme2AlgorithmsUrl + "/" + algorithmName.toLowerCase();
+        String algorithmEndpoint = exareme2AlgorithmsUrl + "/" + algorithmName;
         var exareme2AlgorithmRequestDTO = new Exareme2AlgorithmRequestDTO(uuid, experimentExecutionDTO.algorithm().parameters(), experimentExecutionDTO.algorithm().preprocessing());
         String algorithmBody = convertObjectToJsonString(exareme2AlgorithmRequestDTO);
         logger.debug("Exareme2 algorithm request, endpoint: " + algorithmEndpoint);

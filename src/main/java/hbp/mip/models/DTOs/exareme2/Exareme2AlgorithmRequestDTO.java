@@ -2,6 +2,7 @@ package hbp.mip.models.DTOs.exareme2;
 
 import com.google.gson.JsonSyntaxException;
 import hbp.mip.models.DTOs.ExperimentExecutionDTO;
+import hbp.mip.utils.Exceptions.InternalServerError;
 import hbp.mip.utils.JsonConverters;
 
 import java.util.*;
@@ -16,13 +17,13 @@ public record Exareme2AlgorithmRequestDTO(
     public Exareme2AlgorithmRequestDTO(
             UUID experimentUUID,
             List<ExperimentExecutionDTO.AlgorithmExecutionDTO.AlgorithmParameterExecutionDTO> exaremeAlgorithmRequestParamDTOs,
-            List<ExperimentExecutionDTO.AlgorithmExecutionDTO.TransformerExecutionDTO> exaremeTransformers
-    ) {
+            List<ExperimentExecutionDTO.AlgorithmExecutionDTO.TransformerExecutionDTO> exaremeTransformers,
+            Exareme2AlgorithmSpecificationDTO exareme2AlgorithmSpecificationDTO) {
         this(
                 experimentUUID.toString(),
                 getInputData(exaremeAlgorithmRequestParamDTOs),
-                getParameters(exaremeAlgorithmRequestParamDTOs),
-                getPreprocessing(exaremeTransformers)
+                getParameters(exaremeAlgorithmRequestParamDTOs, exareme2AlgorithmSpecificationDTO),
+                getPreprocessing(exaremeTransformers, exareme2AlgorithmSpecificationDTO)
         );
     }
 
@@ -65,7 +66,7 @@ public record Exareme2AlgorithmRequestDTO(
         );
     }
 
-    private static Map<String, Object> getParameters(List<ExperimentExecutionDTO.AlgorithmExecutionDTO.AlgorithmParameterExecutionDTO> exaremeAlgorithmRequestParamDTOs) {
+    private static Map<String, Object> getParameters(List<ExperimentExecutionDTO.AlgorithmExecutionDTO.AlgorithmParameterExecutionDTO> exaremeAlgorithmRequestParamDTOs, Exareme2AlgorithmSpecificationDTO exareme2AlgorithmSpecificationDTO) {
         if (exaremeAlgorithmRequestParamDTOs == null) {
             return null;
         }
@@ -75,26 +76,44 @@ public record Exareme2AlgorithmRequestDTO(
 
         HashMap<String, Object> exareme2Parameters = new HashMap<>();
         exaremeAlgorithmRequestParamDTOs.forEach(parameter -> {
-            if (!inputDataFields.contains(parameter.name()))
-                exareme2Parameters.put(parameter.name(), convertStringToProperExareme2ParameterType(parameter.value()));
+            if (!inputDataFields.contains(parameter.name())){
+                Exareme2AlgorithmSpecificationDTO.Exareme2AlgorithmParameterSpecificationDTO paramSpecDto = exareme2AlgorithmSpecificationDTO.parameters().get(parameter.name());
+                exareme2Parameters.put(parameter.name(), convertStringToProperExareme2ParameterTypeAccordingToSpecs(parameter.value(), paramSpecDto));
+            }
         });
         return exareme2Parameters;
     }
 
-    private static Map<String, Object> getPreprocessing(List<ExperimentExecutionDTO.AlgorithmExecutionDTO.TransformerExecutionDTO> exaremeTransformers) {
+    private static Map<String, Object> getPreprocessing(List<ExperimentExecutionDTO.AlgorithmExecutionDTO.TransformerExecutionDTO> exaremeTransformers, Exareme2AlgorithmSpecificationDTO exareme2AlgorithmSpecificationDTO) {
         if (exaremeTransformers == null) {
             return null;
         }
 
         HashMap<String, Object> exareme2Preprocessing = new HashMap<>();
         exaremeTransformers.forEach(transformer -> {
+            String transformer_name = transformer.name();
             HashMap<String, Object> transformerParameterDTOs = new HashMap<>();
-            for (ExperimentExecutionDTO.AlgorithmExecutionDTO.AlgorithmParameterExecutionDTO parameter : transformer.parameters())
-                transformerParameterDTOs.put(parameter.name(), convertStringToProperExareme2ParameterType(parameter.value()));
-            exareme2Preprocessing.put(transformer.name(), transformerParameterDTOs);
+            for (ExperimentExecutionDTO.AlgorithmExecutionDTO.AlgorithmParameterExecutionDTO parameter : transformer.parameters()){
+                String param_name = parameter.name();
+                Optional<Exareme2AlgorithmSpecificationDTO.Exareme2TransformerSpecificationDTO> transformerSpecificationDTO = exareme2AlgorithmSpecificationDTO.preprocessing().stream()
+                        .filter(transformerSpec-> transformerSpec.name().equals(transformer_name))
+                        .findFirst();
+                if (transformerSpecificationDTO.isEmpty()) throw new InternalServerError("Missing the transformer: " + transformer_name);
+
+                Exareme2AlgorithmSpecificationDTO.Exareme2AlgorithmParameterSpecificationDTO paramSpecDto = transformerSpecificationDTO.get().parameters().get(param_name);
+                transformerParameterDTOs.put(param_name, convertStringToProperExareme2ParameterTypeAccordingToSpecs(parameter.value(), paramSpecDto));
+            }
+            exareme2Preprocessing.put(transformer_name, transformerParameterDTOs);
         });
 
         return exareme2Preprocessing;
+    }
+
+    private static Object convertStringToProperExareme2ParameterTypeAccordingToSpecs(String value, Exareme2AlgorithmSpecificationDTO.Exareme2AlgorithmParameterSpecificationDTO paramSpecDto) {
+        if (paramSpecDto.enums() != null){
+            return value;
+        }
+        return convertStringToProperExareme2ParameterType(value);
     }
 
     private static Object convertStringToProperExareme2ParameterType(String str) {

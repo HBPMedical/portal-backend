@@ -5,6 +5,7 @@ import com.google.gson.reflect.TypeToken;
 import hbp.mip.models.DTOs.AlgorithmSpecificationDTO;
 import hbp.mip.models.DTOs.exareme2.Exareme2AlgorithmSpecificationDTO;
 import hbp.mip.utils.CustomResourceLoader;
+import hbp.mip.utils.Exareme2AlgorithmsSpecs;
 import hbp.mip.utils.HTTPUtil;
 import hbp.mip.utils.Logger;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +24,7 @@ public class AlgorithmService {
 
     private static final Gson gson = new Gson();
 
+    private final Exareme2AlgorithmsSpecs exareme2AlgorithmsSpecs;
     private final CustomResourceLoader resourceLoader;
 
     @Value("${files.disabledAlgorithms_json}")
@@ -31,7 +33,8 @@ public class AlgorithmService {
     @Value("${services.exareme2.algorithmsUrl}")
     private String exareme2AlgorithmsUrl;
 
-    public AlgorithmService(CustomResourceLoader resourceLoader) {
+    public AlgorithmService(Exareme2AlgorithmsSpecs exareme2AlgorithmsSpecs, CustomResourceLoader resourceLoader) {
+        this.exareme2AlgorithmsSpecs = exareme2AlgorithmsSpecs;
         this.resourceLoader = resourceLoader;
     }
 
@@ -77,6 +80,7 @@ public class AlgorithmService {
         }
 
         logger.debug("Fetched " + algorithms.size() + " exareme2 algorithms.");
+        exareme2AlgorithmsSpecs.setAlgorithms(algorithms);
         return algorithms;
     }
 

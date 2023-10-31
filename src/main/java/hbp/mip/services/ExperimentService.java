@@ -1,21 +1,16 @@
 package hbp.mip.services;
 
 import hbp.mip.models.DAOs.ExperimentDAO;
-import hbp.mip.models.DTOs.ExperimentDTO;
-import hbp.mip.models.DTOs.ExperimentExecutionDTO;
-import hbp.mip.models.DTOs.ExperimentsDTO;
-import hbp.mip.models.DTOs.UserDTO;
+import hbp.mip.models.DTOs.*;
 import hbp.mip.models.DTOs.exareme2.Exareme2AlgorithmRequestDTO;
+import hbp.mip.models.DTOs.exareme2.Exareme2AlgorithmSpecificationDTO;
 import hbp.mip.repositories.ExperimentRepository;
 import hbp.mip.repositories.ExperimentSpecifications;
-import hbp.mip.utils.ClaimUtils;
+import hbp.mip.utils.*;
 import hbp.mip.utils.Exceptions.BadRequestException;
 import hbp.mip.utils.Exceptions.InternalServerError;
 import hbp.mip.utils.Exceptions.NoContent;
 import hbp.mip.utils.Exceptions.UnauthorizedException;
-import hbp.mip.utils.HTTPUtil;
-import hbp.mip.utils.JsonConverters;
-import hbp.mip.utils.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,6 +31,7 @@ public class ExperimentService {
     private final ActiveUserService activeUserService;
 
     private final ClaimUtils claimUtils;
+    private final Exareme2AlgorithmsSpecs exareme2AlgorithmsSpecs;
 
     private final ExperimentRepository experimentRepository;
 
@@ -48,10 +44,12 @@ public class ExperimentService {
     public ExperimentService(
             ActiveUserService activeUserService,
             ClaimUtils claimUtils,
+            Exareme2AlgorithmsSpecs exareme2AlgorithmsSpecs,
             ExperimentRepository experimentRepository
     ) {
         this.activeUserService = activeUserService;
         this.claimUtils = claimUtils;
+        this.exareme2AlgorithmsSpecs = exareme2AlgorithmsSpecs;
         this.experimentRepository = experimentRepository;
     }
 
@@ -342,8 +340,9 @@ public class ExperimentService {
 
     private ExperimentAlgorithmResultDTO runExaremeAlgorithm(UUID uuid, ExperimentExecutionDTO experimentExecutionDTO, Logger logger) {
         String algorithmName = experimentExecutionDTO.algorithm().name();
-        String algorithmEndpoint = exareme2AlgorithmsUrl + "/" + algorithmName.toLowerCase();
-        var exareme2AlgorithmRequestDTO = new Exareme2AlgorithmRequestDTO(uuid, experimentExecutionDTO.algorithm().parameters(), experimentExecutionDTO.algorithm().preprocessing());
+        String algorithmEndpoint = exareme2AlgorithmsUrl + "/" + algorithmName;
+        Exareme2AlgorithmSpecificationDTO exareme2AlgorithmSpecificationDTO = getAlgorithmSpec(algorithmName);
+        var exareme2AlgorithmRequestDTO = new Exareme2AlgorithmRequestDTO(uuid, experimentExecutionDTO.algorithm().parameters(), experimentExecutionDTO.algorithm().preprocessing(), exareme2AlgorithmSpecificationDTO);
         String algorithmBody = convertObjectToJsonString(exareme2AlgorithmRequestDTO);
         logger.debug("Exareme2 algorithm request, endpoint: " + algorithmEndpoint);
         logger.debug("Exareme2 algorithm request, body: " + algorithmBody);
@@ -360,6 +359,14 @@ public class ExperimentService {
 
         var result = convertExareme2ResponseToAlgorithmResults(logger, requestResponseCode, requestResponseBody);
         return new ExperimentAlgorithmResultDTO(requestResponseCode, result);
+    }
+
+    private Exareme2AlgorithmSpecificationDTO getAlgorithmSpec(String algorithmName){
+        Optional<Exareme2AlgorithmSpecificationDTO> algorithmSpecification = exareme2AlgorithmsSpecs.getAlgorithms().stream()
+                .filter(algorithmSpec-> algorithmSpec.name().equals(algorithmName))
+                .findFirst();
+        if (algorithmSpecification.isEmpty()) throw new InternalServerError("Missing the algorithm: " + algorithmName);
+        return algorithmSpecification.get();
     }
 
     record ExperimentAlgorithmResultDTO(int code, List<Object> result) {

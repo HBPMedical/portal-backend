@@ -1,5 +1,7 @@
 package hbp.mip.models.DTOs.exareme2;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +11,6 @@ public record Exareme2AlgorithmSpecificationDTO(
         String name,
         String label,
         String desc,
-        String type,
         Exareme2AlgorithmInputdataSpecificationDTO inputdata,
         Map<String, Exareme2AlgorithmParameterSpecificationDTO> parameters,
         List<Exareme2TransformerSpecificationDTO> preprocessing
@@ -24,7 +25,6 @@ public record Exareme2AlgorithmSpecificationDTO(
         return Objects.requireNonNullElse(preprocessing, Collections.EMPTY_LIST);
     }
 
-
     public record Exareme2AlgorithmParameterSpecificationDTO(
             String label,
             String desc,
@@ -33,8 +33,9 @@ public record Exareme2AlgorithmSpecificationDTO(
             String multiple,
             String min,
             String max,
+            @SerializedName("default")
             String default_value,
-            Exareme2AlgorithmParameterSpecificationDTO.Exareme2AlgorithmEnumDTO enums,
+            Exareme2AlgorithmEnumDTO enums,
             Exareme2AlgorithmEnumDTO dict_keys_enums,
             Exareme2AlgorithmEnumDTO dict_values_enums
 

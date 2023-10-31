@@ -19,7 +19,7 @@ public record AlgorithmSpecificationDTO(
                                               List<AlgorithmParameterSpecificationDTO> parameters) {
         public TransformerSpecificationDTO(Exareme2AlgorithmSpecificationDTO.Exareme2TransformerSpecificationDTO transformerDTO) {
             this(
-                    transformerDTO.name().toUpperCase(),
+                    transformerDTO.name(),
                     transformerDTO.label(),
                     transformerDTO.desc(),
                     getAlgorithmParameterSpecifications(transformerDTO.parameters())
@@ -128,7 +128,7 @@ public record AlgorithmSpecificationDTO(
 
     public AlgorithmSpecificationDTO(Exareme2AlgorithmSpecificationDTO exareme2Algorithm){
         this(
-                exareme2Algorithm.name().toUpperCase(),
+                exareme2Algorithm.name(),
                 exareme2Algorithm.label(),
                 exareme2Algorithm.desc(),
                 getAlgorithmParameters(exareme2Algorithm),

@@ -1,8 +1,5 @@
-package hbp.mip.services;
+package hbp.mip.user;
 
-import hbp.mip.models.DAOs.UserDAO;
-import hbp.mip.models.DTOs.UserDTO;
-import hbp.mip.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;

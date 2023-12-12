@@ -1,11 +1,8 @@
-package hbp.mip.services;
+package hbp.mip.algorithm;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import hbp.mip.models.DTOs.AlgorithmSpecificationDTO;
-import hbp.mip.models.DTOs.exareme2.Exareme2AlgorithmSpecificationDTO;
 import hbp.mip.utils.CustomResourceLoader;
-import hbp.mip.utils.Exareme2AlgorithmsSpecs;
 import hbp.mip.utils.HTTPUtil;
 import hbp.mip.utils.Logger;
 import org.springframework.beans.factory.annotation.Value;

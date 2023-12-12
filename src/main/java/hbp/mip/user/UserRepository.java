@@ -1,6 +1,5 @@
-package hbp.mip.repositories;
+package hbp.mip.user;
 
-import hbp.mip.models.DAOs.UserDAO;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.rest.core.annotation.RestResource;
 

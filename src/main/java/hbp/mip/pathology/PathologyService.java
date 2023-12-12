@@ -1,9 +1,6 @@
-package hbp.mip.services;
+package hbp.mip.pathology;
 
 import com.google.gson.reflect.TypeToken;
-import hbp.mip.models.DTOs.exareme2.Exareme2PathologyCommonDataElementDTO;
-import hbp.mip.models.DTOs.PathologyMetadataDTO;
-import hbp.mip.models.DTOs.PathologyDTO;
 import hbp.mip.utils.ClaimUtils;
 import hbp.mip.utils.Exceptions.InternalServerError;
 import hbp.mip.utils.HTTPUtil;

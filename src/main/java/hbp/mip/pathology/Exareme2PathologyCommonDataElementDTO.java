@@ -1,4 +1,4 @@
-package hbp.mip.models.DTOs.exareme2;
+package hbp.mip.pathology;
 
 
 public record Exareme2PathologyCommonDataElementDTO(

@@ -1,7 +1,5 @@
-package hbp.mip.controllers;
+package hbp.mip.user;
 
-import hbp.mip.models.DTOs.UserDTO;
-import hbp.mip.services.ActiveUserService;
 import hbp.mip.utils.Logger;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;

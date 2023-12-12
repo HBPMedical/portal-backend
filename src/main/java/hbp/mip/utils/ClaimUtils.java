@@ -1,6 +1,6 @@
 package hbp.mip.utils;
 
-import hbp.mip.models.DTOs.PathologyDTO;
+import hbp.mip.pathology.PathologyDTO;
 import hbp.mip.utils.Exceptions.UnauthorizedException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;

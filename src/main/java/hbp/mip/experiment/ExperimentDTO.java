@@ -1,6 +1,6 @@
-package hbp.mip.models.DTOs;
+package hbp.mip.experiment;
 
-import hbp.mip.models.DAOs.ExperimentDAO;
+import hbp.mip.user.UserDTO;
 import hbp.mip.utils.JsonConverters;
 
 import java.util.ArrayList;

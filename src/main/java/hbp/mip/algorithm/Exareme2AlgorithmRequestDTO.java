@@ -1,7 +1,7 @@
-package hbp.mip.models.DTOs.exareme2;
+package hbp.mip.algorithm;
 
 import com.google.gson.JsonSyntaxException;
-import hbp.mip.models.DTOs.ExperimentExecutionDTO;
+import hbp.mip.experiment.ExperimentExecutionDTO;
 import hbp.mip.utils.Exceptions.InternalServerError;
 import hbp.mip.utils.JsonConverters;
 

@@ -1,11 +1,7 @@
-package hbp.mip.controllers;
+package hbp.mip.experiment;
 
 
-import hbp.mip.models.DTOs.ExperimentDTO;
-import hbp.mip.models.DTOs.ExperimentExecutionDTO;
-import hbp.mip.models.DTOs.ExperimentsDTO;
-import hbp.mip.services.ActiveUserService;
-import hbp.mip.services.ExperimentService;
+import hbp.mip.user.ActiveUserService;
 import hbp.mip.utils.JsonConverters;
 import hbp.mip.utils.Logger;
 import org.springframework.http.HttpStatus;

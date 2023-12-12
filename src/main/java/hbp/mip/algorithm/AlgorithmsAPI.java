@@ -1,8 +1,6 @@
-package hbp.mip.controllers;
+package hbp.mip.algorithm;
 
-import hbp.mip.models.DTOs.AlgorithmSpecificationDTO;
-import hbp.mip.services.ActiveUserService;
-import hbp.mip.services.AlgorithmService;
+import hbp.mip.user.ActiveUserService;
 import hbp.mip.utils.Logger;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;

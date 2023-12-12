@@ -1,7 +1,4 @@
-package hbp.mip.models.DTOs;
-
-import hbp.mip.models.DAOs.UserDAO;
-
+package hbp.mip.user;
 
 public record UserDTO(String username, String fullname, String email, String subjectId, Boolean agreeNDA){
     public UserDTO(UserDAO userDAO){

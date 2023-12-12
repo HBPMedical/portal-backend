@@ -1,4 +1,4 @@
-package hbp.mip.models.DTOs;
+package hbp.mip.pathology;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

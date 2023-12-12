@@ -1,11 +1,10 @@
-package hbp.mip.services;
+package hbp.mip.experiment;
 
-import hbp.mip.models.DAOs.ExperimentDAO;
-import hbp.mip.models.DTOs.*;
-import hbp.mip.models.DTOs.exareme2.Exareme2AlgorithmRequestDTO;
-import hbp.mip.models.DTOs.exareme2.Exareme2AlgorithmSpecificationDTO;
-import hbp.mip.repositories.ExperimentRepository;
-import hbp.mip.repositories.ExperimentSpecifications;
+import hbp.mip.algorithm.Exareme2AlgorithmsSpecs;
+import hbp.mip.algorithm.Exareme2AlgorithmRequestDTO;
+import hbp.mip.algorithm.Exareme2AlgorithmSpecificationDTO;
+import hbp.mip.user.ActiveUserService;
+import hbp.mip.user.UserDTO;
 import hbp.mip.utils.*;
 import hbp.mip.utils.Exceptions.BadRequestException;
 import hbp.mip.utils.Exceptions.InternalServerError;

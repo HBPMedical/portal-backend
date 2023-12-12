@@ -1,7 +1,6 @@
-package hbp.mip.models.DAOs;
+package hbp.mip.user;
 
 import com.google.gson.annotations.Expose;
-import hbp.mip.models.DTOs.UserDTO;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;

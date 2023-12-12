@@ -1,4 +1,4 @@
-package hbp.mip.models.DTOs.exareme2;
+package hbp.mip.algorithm;
 
 import com.google.gson.annotations.SerializedName;
 

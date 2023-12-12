@@ -1,5 +1,6 @@
 package hbp.mip.utils;
 
+import hbp.mip.utils.Exceptions.ExperimentNotFoundException;
 import hbp.mip.utils.Exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -1,7 +1,8 @@
-package hbp.mip.models.DAOs;
+package hbp.mip.experiment;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
+import hbp.mip.user.UserDAO;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

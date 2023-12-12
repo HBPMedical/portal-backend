@@ -1,9 +1,7 @@
-package hbp.mip.repositories;
+package hbp.mip.experiment;
 
-import hbp.mip.models.DAOs.ExperimentDAO;
-import hbp.mip.models.DAOs.UserDAO;
-import hbp.mip.models.DTOs.ExperimentExecutionDTO;
-import hbp.mip.models.DTOs.UserDTO;
+import hbp.mip.user.UserDAO;
+import hbp.mip.user.UserDTO;
 import hbp.mip.utils.Exceptions.BadRequestException;
 import hbp.mip.utils.Exceptions.ExperimentNotFoundException;
 import hbp.mip.utils.JsonConverters;

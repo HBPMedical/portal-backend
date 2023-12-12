@@ -1,4 +1,4 @@
-package hbp.mip.models.DTOs;
+package hbp.mip.experiment;
 
 import java.util.List;
 

@@ -22,10 +22,7 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Configuration
@@ -115,10 +112,15 @@ public class SecurityConfiguration {
     @RequiredArgsConstructor
     static class GrantedAuthoritiesMapperImpl implements GrantedAuthoritiesMapper {
         private static Collection<GrantedAuthority> extractAuthorities(Map<String, Object> claims) {
-            return ((Collection<String>) claims.get("authorities")).stream()
+            Collection<String> authorities = (Collection<String>) claims.get("authorities");
+            if (authorities == null) {
+                return Collections.emptyList(); // or throw a more informative exception if appropriate
+            }
+            return authorities.stream()
                     .map(SimpleGrantedAuthority::new)
                     .collect(Collectors.toList());
         }
+
 
         @Override
         public Collection<? extends GrantedAuthority> mapAuthorities(Collection<? extends GrantedAuthority> authorities) {

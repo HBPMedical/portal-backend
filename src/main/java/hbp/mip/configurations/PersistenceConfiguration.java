@@ -16,7 +16,7 @@ import javax.sql.DataSource;
 
 
 @Configuration
-@EnableJpaRepositories("hbp.mip.repositories")
+@EnableJpaRepositories(basePackages = {"hbp.mip.experiment", "hbp.mip.user"})
 public class PersistenceConfiguration {
 
     @Primary
@@ -33,7 +33,8 @@ public class PersistenceConfiguration {
         emfb.setDataSource(portalDataSource());
         JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
         emfb.setJpaVendorAdapter(vendorAdapter);
-        emfb.setPackagesToScan("hbp.mip.models.DAOs");
+        emfb.setPackagesToScan("hbp.mip.experiment", "hbp.mip.user");
+
         return emfb;
     }
 

@@ -11,7 +11,8 @@ public record Exareme2AlgorithmRequestDTO(
         String request_id,
         Exareme2InputDataRequestDTO inputdata,
         Map<String, Object> parameters,
-        Map<String, Object> preprocessing
+        Map<String, Object> preprocessing,
+        String type
 ) {
 
     public Exareme2AlgorithmRequestDTO(
@@ -23,7 +24,8 @@ public record Exareme2AlgorithmRequestDTO(
                 experimentUUID.toString(),
                 getInputData(exaremeAlgorithmRequestParamDTOs),
                 getParameters(exaremeAlgorithmRequestParamDTOs, exareme2AlgorithmSpecificationDTO),
-                getPreprocessing(exaremeTransformers, exareme2AlgorithmSpecificationDTO)
+                getPreprocessing(exaremeTransformers, exareme2AlgorithmSpecificationDTO),
+                "exareme2"
         );
     }
 

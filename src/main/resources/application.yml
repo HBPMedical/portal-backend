@@ -1,6 +1,5 @@
 # Configuration for development purposes
 
-
 ### EMBEDDED SERVER CONFIGURATION ###
 server:
   servlet:
@@ -8,14 +7,14 @@ server:
   port: 8080
   forward-headers-strategy: native
 
-
 ### LOG LEVELS ###
 logging:
   level:
     root: "INFO"
     eu:
       hbp: "DEBUG"
-
+  file:
+    name: /var/log/portalbackend/portalbackend.log
 
 ### DATABASE CONFIGURATION ###
 spring:
@@ -51,14 +50,12 @@ spring:
             user-name-attribute: preferred_username
             issuer-uri: http://172.17.0.1/auth/realms/MIP
 
-
 ### AUTHENTICATION ###
 authentication:
   enabled: 0
   all_datasets_allowed_claim: research_dataset_all
   all_experiments_allowed_claim: research_experiment_all
   dataset_claim_prefix: research_dataset_
-
 
 ### EXTERNAL SERVICES ###
 services:
@@ -67,7 +64,6 @@ services:
     algorithmsUrl: "http://127.0.0.1:5000/algorithms"
     attributesUrl: "http://127.0.0.1:5000/data_models_attributes"
     cdesMetadataUrl: "http://127.0.0.1:5000/cdes_metadata"
-
 
 ### EXTERNAL FILES ###
 # Files are loaded from the resources

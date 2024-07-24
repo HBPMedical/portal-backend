@@ -15,15 +15,33 @@ public record Exareme2AlgorithmRequestDTO(
         String type
 ) {
 
-    public Exareme2AlgorithmRequestDTO(
+    public static Exareme2AlgorithmRequestDTO create(
             UUID experimentUUID,
             List<ExperimentExecutionDTO.AlgorithmExecutionDTO.AlgorithmParameterExecutionDTO> exaremeAlgorithmRequestParamDTOs,
             List<ExperimentExecutionDTO.AlgorithmExecutionDTO.TransformerExecutionDTO> exaremeTransformers,
             Exareme2AlgorithmSpecificationDTO exareme2AlgorithmSpecificationDTO) {
-        this(
+
+        // List of inputDataFields
+        List<String> inputDataFields = Arrays.asList("pathology", "dataset", "x", "y", "filter");
+
+        // Create lists to hold the separated DTOs
+        List<ExperimentExecutionDTO.AlgorithmExecutionDTO.AlgorithmParameterExecutionDTO> inputDataDTOs = new ArrayList<>();
+        List<ExperimentExecutionDTO.AlgorithmExecutionDTO.AlgorithmParameterExecutionDTO> parametersDTOs = new ArrayList<>();
+
+        // Split the DTOs into the respective lists
+        for (ExperimentExecutionDTO.AlgorithmExecutionDTO.AlgorithmParameterExecutionDTO dto : exaremeAlgorithmRequestParamDTOs) {
+            if (inputDataFields.contains(dto.name())) {
+                inputDataDTOs.add(dto);
+            } else {
+                parametersDTOs.add(dto);
+            }
+        }
+
+        // Call the constructor with the separated lists
+        return new Exareme2AlgorithmRequestDTO(
                 experimentUUID.toString(),
-                getInputData(exaremeAlgorithmRequestParamDTOs),
-                getParameters(exaremeAlgorithmRequestParamDTOs, exareme2AlgorithmSpecificationDTO),
+                getInputData(inputDataDTOs),
+                getParameters(parametersDTOs, exareme2AlgorithmSpecificationDTO),
                 getPreprocessing(exaremeTransformers, exareme2AlgorithmSpecificationDTO),
                 "exareme2"
         );
@@ -73,15 +91,13 @@ public record Exareme2AlgorithmRequestDTO(
             return null;
         }
 
-        // The input_data fields should be ignored and shouldn't be added in the parameters.
-        List<String> inputDataFields = Arrays.asList("pathology", "dataset", "x", "y", "filter");
-
         HashMap<String, Object> exareme2Parameters = new HashMap<>();
         exaremeAlgorithmRequestParamDTOs.forEach(parameter -> {
-            if (!inputDataFields.contains(parameter.name())){
-                Exareme2AlgorithmSpecificationDTO.Exareme2AlgorithmParameterSpecificationDTO paramSpecDto = exareme2AlgorithmSpecificationDTO.parameters().get(parameter.name());
-                exareme2Parameters.put(parameter.name(), convertStringToProperExareme2ParameterTypeAccordingToSpecs(parameter.value(), paramSpecDto));
+            Exareme2AlgorithmSpecificationDTO.Exareme2AlgorithmParameterSpecificationDTO paramSpecDto = exareme2AlgorithmSpecificationDTO.parameters().get(parameter.name());
+            if (paramSpecDto == null){
+                throw new InternalServerError("Parameter " + parameter.name() + " not found in algorithm:" + exareme2AlgorithmSpecificationDTO.name());
             }
+            exareme2Parameters.put(parameter.name(), convertStringToProperExareme2ParameterTypeAccordingToSpecs(parameter.value(), paramSpecDto));
         });
         return exareme2Parameters;
     }
@@ -103,6 +119,9 @@ public record Exareme2AlgorithmRequestDTO(
                 if (transformerSpecificationDTO.isEmpty()) throw new InternalServerError("Missing the transformer: " + transformer_name);
 
                 Exareme2AlgorithmSpecificationDTO.Exareme2AlgorithmParameterSpecificationDTO paramSpecDto = transformerSpecificationDTO.get().parameters().get(param_name);
+                if (paramSpecDto == null){
+                    throw new InternalServerError("Parameter " + parameter.name() + " not found in transformer:" + transformerSpecificationDTO.get().name());
+                }
                 transformerParameterDTOs.put(param_name, convertStringToProperExareme2ParameterTypeAccordingToSpecs(parameter.value(), paramSpecDto));
             }
             exareme2Preprocessing.put(transformer_name, transformerParameterDTOs);

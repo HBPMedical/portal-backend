@@ -13,7 +13,8 @@ public record Exareme2AlgorithmSpecificationDTO(
         String desc,
         Exareme2AlgorithmInputdataSpecificationDTO inputdata,
         Map<String, Exareme2AlgorithmParameterSpecificationDTO> parameters,
-        List<Exareme2TransformerSpecificationDTO> preprocessing
+        List<Exareme2TransformerSpecificationDTO> preprocessing,
+        String type
 ) {
     @Override
     public Map<String, Exareme2AlgorithmParameterSpecificationDTO> parameters() {

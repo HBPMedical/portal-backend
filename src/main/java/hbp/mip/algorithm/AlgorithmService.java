@@ -7,16 +7,22 @@ import hbp.mip.utils.HTTPUtil;
 import hbp.mip.utils.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static hbp.mip.utils.InputStreamConverter.convertInputStreamToString;
 
 @Service
+@EnableScheduling
 public class AlgorithmService {
 
     private static final Gson gson = new Gson();
@@ -76,11 +82,29 @@ public class AlgorithmService {
             return Collections.emptyList();
         }
 
+        // Filter out algorithms with type "flower"
+        algorithms = algorithms.stream()
+                .filter(algorithm -> "exareme2".equals(algorithm.type()))
+                .collect(Collectors.toList());
         logger.debug("Fetched " + algorithms.size() + " exareme2 algorithms.");
         exareme2AlgorithmsSpecs.setAlgorithms(algorithms);
         return algorithms;
     }
 
+    @EnableAsync
+    public static class AlgorithmAggregator {
+
+        private final AlgorithmService algorithmService;
+
+        public AlgorithmAggregator(AlgorithmService algorithmService){
+            this.algorithmService = algorithmService;
+        }
+        @Async
+        @Scheduled(fixedDelayString = "${services.algorithmsUpdateInterval}000")
+        public void scheduleFixedRateTaskAsync() {
+            algorithmService.getExareme2Algorithms(new Logger("AlgorithmAggregator","(GET) /algorithms"));
+        }
+    }
     /**
      * Fetches the disabled algorithms from a .json file
      *

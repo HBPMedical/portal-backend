@@ -18,7 +18,7 @@ RUN mvn clean package
 #######################################################
 # Setup the running container
 #######################################################
-FROM amazoncorretto:17.0.8-alpine3.18
+FROM amazoncorretto:17.0.12-alpine3.20
 
 #######################################################
 # Setting up timezone

@@ -16,7 +16,7 @@ public class Logger {
     }
 
     private void logUserAction(String message, String logLevel){
-        String logMessage = " User -> " + username + " , " + "Endpoint -> " + endpoint + " , " + "Info ->  " + message;
+        String logMessage = "User -> " + username + " , Endpoint -> " + endpoint + " , Info -> " + message;
 
         switch (logLevel) {
             case "ERROR" -> logger.error(logMessage);

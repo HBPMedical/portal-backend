@@ -64,8 +64,8 @@ public class ControllerExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler({InternalServerError.class, Exception.class})
     public ResponseEntity<ErrorMessage> globalExceptionHandler(Exception ex, WebRequest request) {
         logger.error("An unexpected exception occurred: " + ex.getClass() +
-                "\nMessage: " + ex.getMessage() +
-                "\nStacktrace: " + Arrays.toString(ex.getStackTrace()).replaceAll(", ", "\n")
+                " Message: " + ex.getMessage() +
+                " Stacktrace: " + Arrays.toString(ex.getStackTrace())
         );
         ErrorMessage message = new ErrorMessage(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),

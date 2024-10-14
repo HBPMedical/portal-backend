@@ -42,15 +42,15 @@ public class ExperimentAPI {
         var logger = new Logger(activeUserService.getActiveUser(authentication).username(), "(GET) /experiments");
         logger.info(
                 "Request for experiments with parameters: " +
-                        "\n\tname -> " + name +
-                        "\n\talgorithm -> " + algorithm +
-                        "\n\tshared -> " + shared +
-                        "\n\tviewed -> " + viewed +
-                        "\n\tincludeShared -> " + includeShared +
-                        "\n\torderBy -> " + orderBy +
-                        "\n\tdescending -> " + descending +
-                        "\n\tpage -> " + page +
-                        "\n\tsize -> " + size
+                        "name -> " + name +
+                        " , algorithm -> " + algorithm +
+                        " , shared -> " + shared +
+                        " , viewed -> " + viewed +
+                        " , includeShared -> " + includeShared +
+                        " , orderBy -> " + orderBy +
+                        " , descending -> " + descending +
+                        " , page -> " + page +
+                        " , size -> " + size
         );
         var experimentsDTO = experimentService.getExperiments(authentication,
                 name,
@@ -71,7 +71,7 @@ public class ExperimentAPI {
 
     @GetMapping(value = "/{uuid}")
     public ResponseEntity<ExperimentDTO> getExperiment(Authentication authentication, @PathVariable("uuid") String uuid) {
-        var logger = new Logger(activeUserService.getActiveUser(authentication).username(), "(GET) /experiments/{uuid}");
+        var logger = new Logger(activeUserService.getActiveUser(authentication).username(), "(GET) /experiments/" + uuid);
         logger.info("Request for experiment with id: " + uuid);
         var experimentResponse = experimentService.getExperiment(authentication, uuid, logger);
         logger.info("Experiment returned.");
@@ -92,7 +92,7 @@ public class ExperimentAPI {
     @PatchMapping(value = "/{uuid}")
     public ResponseEntity<ExperimentDTO> updateExperiment(Authentication authentication, @RequestBody ExperimentDTO experimentRequest, @PathVariable("uuid") String uuid) {
         var user = activeUserService.getActiveUser(authentication);
-        var logger = new Logger(user.username(), "(PATCH) /experiments/{uuid}");
+        var logger = new Logger(user.username(), "(PATCH) /experiments/" + uuid);
         logger.info("Request for experiment update with id: " + uuid + ".  Request Body: " + JsonConverters.convertObjectToJsonString(experimentRequest));
         var experimentResponse = experimentService.updateExperiment(user, uuid, experimentRequest, logger);
         logger.info("Experiment updated. Id: " + uuid);
@@ -103,7 +103,7 @@ public class ExperimentAPI {
     @RequestMapping(value = "/{uuid}", method = RequestMethod.DELETE)
     public ResponseEntity<String> deleteExperiment(Authentication authentication, @PathVariable("uuid") String uuid) {
         var user = activeUserService.getActiveUser(authentication);
-        var logger = new Logger(user.username(), "(DELETE) /experiments/{uuid}");
+        var logger = new Logger(user.username(), "(DELETE) /experiments/" + uuid);
         logger.info("Request for experiment deletion with id: " + uuid);
         experimentService.deleteExperiment(user, uuid, logger);
         logger.info("Experiment deleted. Id: " + uuid);
@@ -124,8 +124,8 @@ public class ExperimentAPI {
 
         logger.info(
                 "Experiment (transient) finished. " +
-                        "\n\tStatus: " + experimentResponse.status() +
-                        "\n\tResult: " + experimentResponse.result()
+                        " Status: " + experimentResponse.status() +
+                        " Result: " + experimentResponse.result()
         );
 
         return new ResponseEntity<>(experimentResponse, HttpStatus.OK);

@@ -7,15 +7,6 @@ server:
   port: 8080
   forward-headers-strategy: native
 
-### LOG LEVELS ###
-logging:
-  level:
-    root: "INFO"
-    eu:
-      hbp: "DEBUG"
-  file:
-    name: /var/log/portalbackend/portalbackend.log
-
 ### DATABASE CONFIGURATION ###
 spring:
   datasource:

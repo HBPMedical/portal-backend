@@ -172,7 +172,7 @@ public class ExperimentService {
                 experimentDAO.setStatus((exaremeExperimentAlgorithmResultDTO.code() >= 400)
                         ? ExperimentDAO.Status.error : ExperimentDAO.Status.success);
             } catch (Exception e) {
-                logger.error("Exareme2 algorithm execution failed: " + e.getMessage() + "\nStacktrace: " + Arrays.toString(e.getStackTrace()));
+                logger.error("Exareme2 algorithm execution failed: " + e.getMessage() + " Stacktrace: " + Arrays.toString(e.getStackTrace()));
                 experimentDAO.setStatus(ExperimentDAO.Status.error);
             }
 
@@ -289,36 +289,33 @@ public class ExperimentService {
         if (algorithm.parameters() != null) {
             algorithm.parameters().forEach(
                     params -> parametersLogMessage
-                            .append("  ")
+                            .append(" ")
                             .append(params.name())
                             .append(" -> ")
                             .append(params.value())
-                            .append("\n"));
+            );
         }
 
         if (algorithm.preprocessing() != null) {
             algorithm.preprocessing().forEach(transformer ->
             {
                 parametersLogMessage
-                        .append("  ")
+                        .append(" ")
                         .append(transformer.name())
-                        .append(" -> ")
-                        .append("\n");
+                        .append(" -> ");
 
                 if (transformer.parameters() != null) {
                     transformer.parameters().forEach(
                             transformerParams -> parametersLogMessage
-                                    .append("        ")
+                                    .append(" ")
                                     .append(transformerParams.name())
                                     .append(" -> ")
-                                    .append(transformerParams.value())
-                                    .append("\n"));
-                    parametersLogMessage.append("\n");
+                                    .append(transformerParams.value()));
                 }
             });
         }
 
-        logger.debug("Algorithm " + algorithmName + " execution starting with parameters: \n" + parametersLogMessage);
+        logger.debug("Algorithm " + algorithmName + " execution starting with parameters: " + parametersLogMessage);
     }
 
     private String getExperimentDatasets(ExperimentExecutionDTO experimentExecutionDTO, Logger logger) {

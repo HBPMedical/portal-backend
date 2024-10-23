@@ -1,7 +1,7 @@
 #######################################################
 # Build the spring boot maven project
 #######################################################
-FROM maven:3.9.3-amazoncorretto-17 as mvn-build-env
+FROM maven:3.9.3-amazoncorretto-17 AS mvn-build-env
 MAINTAINER Thanasis Karampatsis <tkarabatsis@athenarc.gr>
 
 ENV CODE_PATH="/opt/code"
@@ -33,6 +33,11 @@ ENV APP_CONFIG_TEMPLATE="/opt/config/application.tmpl"
 ENV APP_CONFIG_LOCATION="/opt/config/application.yml"
 ENV SPRING_CONFIG_LOCATION="file:/opt/config/application.yml"
 
+ENV SERVICE="portal-backend"
+ENV FEDERATION="default"
+ENV LOG_LEVEL="INFO"
+ENV FRAMEWORK_LOG_LEVEL="INFO"
+
 WORKDIR /opt
 
 RUN apk add --no-cache curl
@@ -40,7 +45,7 @@ RUN apk add --no-cache curl
 #######################################################
 # Install dockerize
 #######################################################
-ENV DOCKERIZE_VERSION v0.6.1
+ENV DOCKERIZE_VERSION=v0.6.1
 RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && tar -C /usr/local/bin -xzvf dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && rm dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz

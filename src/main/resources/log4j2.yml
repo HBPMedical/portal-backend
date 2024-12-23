@@ -11,7 +11,7 @@ Configuration:
       name: ConsoleAppender
       target: SYSTEM_OUT
       PatternLayout:
-        pattern: "%d{yyyy-MM-dd HH:mm:ss.SSS} - %-5level - %logger{36} - [${env:FEDERATION:-default}] - [${env:SERVICE:-portal-backend}] - %msg%n"
+        pattern: "%d{yyyy-MM-dd HH:mm:ss,SSS} - %-5level - %logger{36} - [${env:FEDERATION:-default}] - [${env:SERVICE:-portal-backend}] - %msg%n"
 
   Loggers:
     logger:

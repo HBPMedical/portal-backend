@@ -17,10 +17,7 @@ public record ExperimentDTO(
         Date finished,
         Boolean shared,
         Boolean viewed,
-        // Result is a list of objects because there is a limitation that java has in types.
-        // Exareme has result in the type of List<HashMap<String, Object>>
-        // And there is no generic type that describes either an object or a list of objects
-        List<Object> result,
+        Object result,
         ExperimentDAO.Status status,
         ExperimentExecutionDTO.AlgorithmExecutionDTO algorithm
 ) {
@@ -34,7 +31,7 @@ public record ExperimentDTO(
                 experimentDAO.getFinished(),
                 experimentDAO.isShared(),
                 experimentDAO.isViewed(),
-                includeResult ? JsonConverters.convertJsonStringToObject(String.valueOf(experimentDAO.getResult()), ArrayList.class) : null,
+                includeResult ? JsonConverters.convertJsonStringToObject(String.valueOf(experimentDAO.getResult()), Object.class) : null,
                 experimentDAO.getStatus(),
                 JsonConverters.convertJsonStringToObject(experimentDAO.getAlgorithm(), ExperimentExecutionDTO.AlgorithmExecutionDTO.class)
         );

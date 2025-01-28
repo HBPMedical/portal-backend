@@ -1,21 +1,22 @@
 package hbp.mip.experiment;
 
-import java.util.List;
+import hbp.mip.algorithm.AlgorithmRequestDTO;
+
+import java.util.Map;
+import java.util.UUID;
 
 public record ExperimentExecutionDTO(
+        UUID uuid,
         String name,
         AlgorithmExecutionDTO algorithm
 ) {
-    public record AlgorithmExecutionDTO(
-            String name,
-            List<AlgorithmParameterExecutionDTO> parameters,
-            List<TransformerExecutionDTO> preprocessing
-    ) {
-        public record TransformerExecutionDTO(String name, String value,
-                                              List<AlgorithmParameterExecutionDTO> parameters) {
-        }
+public record AlgorithmExecutionDTO(
+        String name,
+        AlgorithmRequestDTO.InputDataRequestDTO inputdata,
+        Map<String, Object> parameters,
+        Map<String, Object> preprocessing,
+        String type    ) {
 
-        public record AlgorithmParameterExecutionDTO(String name, String value) {
-        }
     }
 }
+

@@ -54,7 +54,7 @@ public class ExperimentDAO {
     private String algorithm;
 
     @Expose
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "algorithm_id",columnDefinition = "TEXT")
     private String algorithmId;
 
     @Expose

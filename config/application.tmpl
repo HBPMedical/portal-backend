@@ -64,5 +64,5 @@ services:
 ### EXTERNAL FILES ###
 # Files are imported when building the docker image
 files:
-  pathologies_json: "file:/opt/portal/api/pathologies.json"
+  dataModels_json: "file:/opt/portal/api/dataModels.json"
   disabledAlgorithms_json: "file:{{ .Env.DISABLED_ALGORITHMS_CONFIG_PATH}}"

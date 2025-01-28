@@ -25,7 +25,6 @@ To use this image, you need a running instance of PostgreSQL and to configure th
 * PORTAL_DB_PASSWORD: Password to use when connecting to the portal database.
 
 #### EXTERNAL SERVICES ###
-* EXAREME_URL: URL to Exareme server. Default is "http://localhost:9090" .
 * EXAREME2_URL: URL to Exareme2 server. Default is "http://localhost:5000" .
 
 #### KEYCLOAK ###

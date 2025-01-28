@@ -1,6 +1,6 @@
 package hbp.mip.utils;
 
-import hbp.mip.pathology.PathologyDTO;
+import hbp.mip.datamodel.DataModelDTO;
 import hbp.mip.utils.Exceptions.UnauthorizedException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -42,14 +42,14 @@ public class ClaimUtils {
     }
 
     public void validateAccessRightsOnDatasets(Authentication authentication,
-                                                      String experimentDatasets, Logger logger) {
+                                                      List<String> experimentDatasets, Logger logger) {
 
         ArrayList<String> authorities = getAuthorityRoles(authentication);
 
         // Don't check for dataset claims if "super" claim exists allowing everything
         if (!hasRoleAccess(authorities, allDatasetsAllowedClaim, logger)) {
 
-            for (String dataset : experimentDatasets.split(",")) {
+            for (String dataset : experimentDatasets) {
                 String datasetRole = getDatasetClaim(dataset);
                 if (!hasRoleAccess(authorities, datasetRole, logger)) {
                     logger.warn("You are not allowed to use dataset: " + dataset);
@@ -65,36 +65,37 @@ public class ClaimUtils {
         return hasRoleAccess(authorities, allExperimentsAllowedClaim, logger);
     }
 
-    public List<PathologyDTO> getAuthorizedPathologies(Logger logger, Authentication authentication,
-                                                       List<PathologyDTO> allPathologies) {
+    public List<DataModelDTO> getAuthorizedDataModels(Logger logger, Authentication authentication,
+                                                       List<DataModelDTO> allDataModels) {
 
         ArrayList<String> authorities = getAuthorityRoles(authentication);
 
         if (hasRoleAccess(authorities, allDatasetsAllowedClaim, logger)) {
-            return allPathologies;
+            return allDataModels;
         }
 
-        List<PathologyDTO> userPathologies = new ArrayList<>();
-        for (PathologyDTO curPathology : allPathologies) {
-            List<PathologyDTO.EnumerationDTO> userPathologyDatasets = new ArrayList<>();
-            for (PathologyDTO.EnumerationDTO dataset : curPathology.datasets()) {
+        List<DataModelDTO> userDataModels = new ArrayList<>();
+        for (DataModelDTO curDataModel : allDataModels) {
+            List<DataModelDTO.EnumerationDTO> userDataModelDatasets = new ArrayList<>();
+            for (DataModelDTO.EnumerationDTO dataset : curDataModel.datasets()) {
                 if (hasRoleAccess(authorities, getDatasetClaim(dataset.code()), logger)) {
-                    userPathologyDatasets.add(dataset);
+                    userDataModelDatasets.add(dataset);
                 }
             }
 
-            if (!userPathologyDatasets.isEmpty()) {
-                PathologyDTO userPathology = new PathologyDTO(
-                        curPathology.code(),
-                        curPathology.version(),
-                        curPathology.label(),
-                        curPathology.longitudinal(),
-                        curPathology.metadataHierarchy(),
-                        userPathologyDatasets
+            if (!userDataModelDatasets.isEmpty()) {
+                DataModelDTO userDataModel = new DataModelDTO(
+                        curDataModel.code(),
+                        curDataModel.version(),
+                        curDataModel.label(),
+                        curDataModel.longitudinal(),
+                        curDataModel.variables(),
+                        curDataModel.groups(),
+                        userDataModelDatasets
                 );
-                userPathologies.add(userPathology);
+                userDataModels.add(userDataModel);
             }
         }
-        return userPathologies;
+        return userDataModels;
     }
 }

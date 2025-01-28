@@ -27,7 +27,7 @@ public class AlgorithmService {
 
     private static final Gson gson = new Gson();
 
-    private final Exareme2AlgorithmsSpecs exareme2AlgorithmsSpecs;
+    private final AlgorithmsSpecs algorithmsSpecs;
     private final CustomResourceLoader resourceLoader;
 
     @Value("${files.disabledAlgorithms_json}")
@@ -36,16 +36,15 @@ public class AlgorithmService {
     @Value("${services.exareme2.algorithmsUrl}")
     private String exareme2AlgorithmsUrl;
 
-    public AlgorithmService(Exareme2AlgorithmsSpecs exareme2AlgorithmsSpecs, CustomResourceLoader resourceLoader) {
-        this.exareme2AlgorithmsSpecs = exareme2AlgorithmsSpecs;
+    public AlgorithmService(AlgorithmsSpecs algorithmsSpecs, CustomResourceLoader resourceLoader) {
+        this.algorithmsSpecs = algorithmsSpecs;
         this.resourceLoader = resourceLoader;
     }
 
     public List<AlgorithmSpecificationDTO> getAlgorithms(Logger logger) {
 
-        // Fetch exareme2 algorithm specifications and convert to generic algorithm specifications.
-        ArrayList<AlgorithmSpecificationDTO> exaremeAlgorithms = new ArrayList<>();
-        getExareme2Algorithms(logger).forEach(algorithm -> exaremeAlgorithms.add(new AlgorithmSpecificationDTO(algorithm)));
+        ArrayList<AlgorithmSpecificationDTO> exaremeAlgorithms = (ArrayList<AlgorithmSpecificationDTO>) getExareme2Algorithms(logger);
+
 
         List<String> disabledAlgorithms = getDisabledAlgorithms(logger);
         logger.debug("Disabled algorithms: " + disabledAlgorithms);
@@ -67,14 +66,14 @@ public class AlgorithmService {
      *
      * @return a list of Exareme2AlgorithmSpecificationDTO or null if something fails
      */
-    private List<Exareme2AlgorithmSpecificationDTO> getExareme2Algorithms(Logger logger) {
-        List<Exareme2AlgorithmSpecificationDTO> algorithms;
+    private List<AlgorithmSpecificationDTO> getExareme2Algorithms(Logger logger) {
+        List<AlgorithmSpecificationDTO> algorithms;
         StringBuilder response = new StringBuilder();
         try {
             HTTPUtil.sendGet(exareme2AlgorithmsUrl, response);
             algorithms = gson.fromJson(
                     response.toString(),
-                    new TypeToken<List<Exareme2AlgorithmSpecificationDTO>>() {
+                    new TypeToken<List<AlgorithmSpecificationDTO>>() {
                     }.getType()
             );
         } catch (Exception e) {
@@ -87,7 +86,7 @@ public class AlgorithmService {
                 .filter(algorithm -> "exareme2".equals(algorithm.type()))
                 .collect(Collectors.toList());
         logger.debug("Fetched " + algorithms.size() + " exareme2 algorithms.");
-        exareme2AlgorithmsSpecs.setAlgorithms(algorithms);
+        algorithmsSpecs.setAlgorithms(algorithms);
         return algorithms;
     }
 
@@ -105,6 +104,7 @@ public class AlgorithmService {
             algorithmService.getExareme2Algorithms(new Logger("AlgorithmAggregator","(GET) /algorithms"));
         }
     }
+
     /**
      * Fetches the disabled algorithms from a .json file
      *

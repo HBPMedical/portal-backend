@@ -10,6 +10,6 @@ import java.util.List;
 @Getter
 @Setter
 @Component
-public class Exareme2AlgorithmsSpecs {
-    private List<Exareme2AlgorithmSpecificationDTO> algorithms = new ArrayList<>();
+public class AlgorithmsSpecs {
+    private List<AlgorithmSpecificationDTO> algorithms = new ArrayList<>();
 }

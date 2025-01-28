@@ -1,6 +1,7 @@
 package hbp.mip.user;
 
 import com.google.gson.annotations.Expose;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -20,6 +21,7 @@ public class UserDAO {
     private String username;
 
     @Expose
+    @Column(name = "subject_id")
     private String subjectId;
 
     @Expose
@@ -29,6 +31,7 @@ public class UserDAO {
     private String email;
 
     @Expose
+    @Column(name = "agree_nda")
     private Boolean agreeNDA;
 
     public UserDAO(String username, String fullname, String email, String subjectId) {

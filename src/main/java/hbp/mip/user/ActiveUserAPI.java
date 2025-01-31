@@ -5,6 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
@@ -19,16 +21,37 @@ public class ActiveUserAPI {
 
     @GetMapping
     public ResponseEntity<UserDTO> getTheActiveUser(Authentication authentication) {
-        UserDTO activeUser = activeUserService.getActiveUser(authentication);
-        Logger logger = new Logger(activeUser.username(), "(GET) /activeUser");
-        logger.info("User details returned.");
-        return ResponseEntity.ok(activeUser);
+        var user = activeUserService.getActiveUser(authentication);
+
+        // Create structured request details
+        Map<String, Object> requestDetails = Map.of(
+                "method", "GET",
+                "endpoint", "/activeUser"
+        );
+
+        var logger = new Logger(user.username(), requestDetails);
+        logger.info("HTTP request");
+
+        logger.info("User details returned.", Map.of("response", Map.of("status", 200, "user", user.username())));
+        return ResponseEntity.ok(user);
     }
 
     @PostMapping(value = "/agreeNDA")
     public ResponseEntity<UserDTO> activeUserServiceAgreesToNDA(Authentication authentication) {
-        Logger logger = new Logger(activeUserService.getActiveUser(authentication).username(), "(GET) /activeUser/agreeNDA");
-        logger.info("User agreed to the NDA.");
-        return ResponseEntity.ok(activeUserService.agreeToNDA(authentication));
+        var user = activeUserService.getActiveUser(authentication);
+
+        // Create structured request details
+        Map<String, Object> requestDetails = Map.of(
+                "method", "POST",
+                "endpoint", "/activeUser/agreeNDA"
+        );
+
+        var logger = new Logger(user.username(), requestDetails);
+        logger.info("HTTP request");
+
+        var updatedUser = activeUserService.agreeToNDA(authentication);
+
+        logger.info("User agreed to the NDA.", Map.of("response", Map.of("status", 200, "user", updatedUser.username())));
+        return ResponseEntity.ok(updatedUser);
     }
 }

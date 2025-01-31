@@ -6,20 +6,17 @@ import hbp.mip.utils.CustomResourceLoader;
 import hbp.mip.utils.HTTPUtil;
 import hbp.mip.utils.Logger;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
-
-import static hbp.mip.utils.InputStreamConverter.convertInputStreamToString;
 
 @Service
 @EnableScheduling
@@ -30,8 +27,6 @@ public class AlgorithmService {
     private final Exareme2AlgorithmsSpecs exareme2AlgorithmsSpecs;
     private final CustomResourceLoader resourceLoader;
 
-    @Value("${files.disabledAlgorithms_json}")
-    private String disabledAlgorithmsFilePath;
 
     @Value("${services.exareme2.algorithmsUrl}")
     private String exareme2AlgorithmsUrl;
@@ -42,40 +37,34 @@ public class AlgorithmService {
     }
 
     public List<AlgorithmSpecificationDTO> getAlgorithms(Logger logger) {
-
         // Fetch exareme2 algorithm specifications and convert to generic algorithm specifications.
         ArrayList<AlgorithmSpecificationDTO> exaremeAlgorithms = new ArrayList<>();
         getExareme2Algorithms(logger).forEach(algorithm -> exaremeAlgorithms.add(new AlgorithmSpecificationDTO(algorithm)));
-
-        List<String> disabledAlgorithms = getDisabledAlgorithms(logger);
-        logger.debug("Disabled algorithms: " + disabledAlgorithms);
-
-        // Remove any disabled algorithm
-        ArrayList<AlgorithmSpecificationDTO> enabledAlgorithms = new ArrayList<>();
-        for (AlgorithmSpecificationDTO algorithm : exaremeAlgorithms) {
-            if (!disabledAlgorithms.contains(algorithm.name())) {
-                enabledAlgorithms.add(algorithm);
-            }
-        }
-
-        logger.debug("Disabled " + (exaremeAlgorithms.size() - enabledAlgorithms.size()) + " algorithms.");
-        return enabledAlgorithms;
+        return exaremeAlgorithms;
     }
 
     /**
-     * This method gets all the available exareme2 algorithms and removes the disabled.
+     * This method gets all the available exareme2 algorithms.
      *
-     * @return a list of Exareme2AlgorithmSpecificationDTO or null if something fails
+     * @return a list of Exareme2AlgorithmSpecificationDTO or an empty list if something fails
      */
     private List<Exareme2AlgorithmSpecificationDTO> getExareme2Algorithms(Logger logger) {
         List<Exareme2AlgorithmSpecificationDTO> algorithms;
         StringBuilder response = new StringBuilder();
+
+        // Create structured request details
+        Map<String, Object> requestDetails = Map.of(
+                "method", "GET",
+                "endpoint", exareme2AlgorithmsUrl
+        );
+
+        logger.info("Fetching Exareme2 algorithms", requestDetails);
+
         try {
             HTTPUtil.sendGet(exareme2AlgorithmsUrl, response);
             algorithms = gson.fromJson(
                     response.toString(),
-                    new TypeToken<List<Exareme2AlgorithmSpecificationDTO>>() {
-                    }.getType()
+                    new TypeToken<List<Exareme2AlgorithmSpecificationDTO>>() {}.getType()
             );
         } catch (Exception e) {
             logger.error("Could not fetch exareme2 algorithms: " + e.getMessage());
@@ -96,31 +85,20 @@ public class AlgorithmService {
 
         private final AlgorithmService algorithmService;
 
-        public AlgorithmAggregator(AlgorithmService algorithmService){
+        public AlgorithmAggregator(AlgorithmService algorithmService) {
             this.algorithmService = algorithmService;
         }
+
         @Async
         @Scheduled(fixedDelayString = "${services.algorithmsUpdateInterval}000")
         public void scheduleFixedRateTaskAsync() {
-            algorithmService.getExareme2Algorithms(new Logger("AlgorithmAggregator","(GET) /algorithms"));
-        }
-    }
-    /**
-     * Fetches the disabled algorithms from a .json file
-     *
-     * @return a list with their names
-     */
-    private List<String> getDisabledAlgorithms(Logger logger) {
-        Resource resource = resourceLoader.getResource(disabledAlgorithmsFilePath);
-        try {
-            return gson.fromJson(
-                    convertInputStreamToString(resource.getInputStream()),
-                    new TypeToken<List<String>>() {
-                    }.getType()
+            Map<String, Object> requestDetails = Map.of(
+                    "method", "GET",
+                    "endpoint", "/algorithms (scheduled fetch)"
             );
-        } catch (IOException e) {
-            logger.error("Could not load the disabled algorithms. Exception: " + e.getMessage());
-            return Collections.emptyList();
+
+            var logger = new Logger("AlgorithmAggregator", requestDetails);
+            algorithmService.getExareme2Algorithms(logger);
         }
     }
 }

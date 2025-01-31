@@ -14,7 +14,6 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 
 import javax.sql.DataSource;
 
-
 @Configuration
 @EnableJpaRepositories(basePackages = {"hbp.mip.experiment", "hbp.mip.user"})
 public class PersistenceConfiguration {
@@ -38,17 +37,11 @@ public class PersistenceConfiguration {
         return emfb;
     }
 
-    @Bean(name = "flyway", initMethod = "migrate")
-    public Flyway migrations() {
-        Flyway flyway = new Flyway();
-        flyway.setBaselineOnMigrate(true);
-        flyway.setDataSource(portalDataSource());
-        return flyway;
-
-// TODO Flyway upgrade to latest version
-//        return Flyway.configure()
-//                .dataSource(portalDataSource())
-//                .baselineOnMigrate(true)
-//                .load();
+    @Bean(name = "flyway")
+    public Flyway flyway() {
+        return Flyway.configure()  // ✅ Correct way to configure Flyway
+                .dataSource(portalDataSource())  // ✅ Assign the DataSource properly
+                .baselineOnMigrate(true)  // ✅ Use configuration method instead of setBaselineOnMigrate()
+                .load();  // ✅ Create Flyway instance
     }
 }

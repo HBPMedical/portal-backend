@@ -1,4 +1,12 @@
 # Configuration for development purposes
+logging:
+  structured:
+    format:
+      file: logstash
+      console: ecs
+  file:
+    name: logs/application.log  # Ensure correct file extension
+
 
 ### EMBEDDED SERVER CONFIGURATION ###
 server:
@@ -55,8 +63,3 @@ services:
     algorithmsUrl: "http://127.0.0.1:5000/algorithms"
     attributesUrl: "http://127.0.0.1:5000/data_models_attributes"
     cdesMetadataUrl: "http://127.0.0.1:5000/cdes_metadata"
-
-### EXTERNAL FILES ###
-# Files are loaded from the resources
-files:
-  disabledAlgorithms_json: "classPath:/disabledAlgorithms.json"

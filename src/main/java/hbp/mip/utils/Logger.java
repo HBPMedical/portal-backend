@@ -1,28 +1,26 @@
 package hbp.mip.utils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public class Logger {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Logger.class);
-    private static final ObjectMapper objectMapper = new ObjectMapper(); // JSON Mapper
 
     /**
      * Constructor: Automatically sets MDC context with structured logging.
      */
     public Logger(String requestId, String username, Map<String, Object> requestDetails) {
-        // Ensure request_id remains the same
-
         MDC.put("request_id", requestId);
         MDC.put("username", username);
 
-        // Nest the request inside a "http" object
         if (requestDetails != null) {
-            MDC.put("http", toJson(Map.of("request", requestDetails)));
+            // Flatten the request details before adding them to MDC
+            Map<String, Object> flatRequestDetails = flattenMap(requestDetails, "http.request");
+            flatRequestDetails.forEach((key, value) -> MDC.put(key, String.valueOf(value)));
         }
     }
 
@@ -38,19 +36,10 @@ public class Logger {
      */
     private void logUserAction(String message, String logLevel, Map<String, Object> additionalData) {
         try {
-            // Extract response from additional data and update MDC
-            if (additionalData != null && additionalData.get("response") instanceof Map) {
-                Map<String, Object> response = (Map<String, Object>) additionalData.get("response");
-
-                // Merge the existing "http" MDC field with the response
-                String currentHttpContext = MDC.get("http");
-                Map<String, Object> httpContext = currentHttpContext != null
-                        ? objectMapper.readValue(currentHttpContext, Map.class)
-                        : Map.of();
-
-                // Add the response data
-                httpContext = Map.of("request", httpContext.get("request"), "response", response);
-                MDC.put("http", toJson(httpContext));
+            if (additionalData != null) {
+                // Flatten additional data and add it to MDC
+                Map<String, Object> flatAdditionalData = flattenMap(additionalData, "http");
+                flatAdditionalData.forEach((key, value) -> MDC.put(key, String.valueOf(value)));
             }
 
             // Log with MDC context
@@ -63,8 +52,6 @@ public class Logger {
 
         } catch (Exception e) {
             throw new RuntimeException("Error structuring JSON log message", e);
-        } finally {
-            MDC.clear(); // Always clear MDC **AFTER** logging response
         }
     }
 
@@ -105,13 +92,25 @@ public class Logger {
     }
 
     /**
-     * Converts a map to a JSON string for MDC storage.
+     * Recursively flattens a nested map into a single-level map with concatenated keys.
      */
-    private static String toJson(Map<String, Object> map) {
-        try {
-            return objectMapper.writeValueAsString(map);
-        } catch (Exception e) {
-            return "{}"; // Fallback in case of error
+    private static Map<String, Object> flattenMap(Map<String, Object> map, String parentKey) {
+        Map<String, Object> flattenedMap = new HashMap<>();
+        flattenMapHelper(map, parentKey.isEmpty() ? "" : parentKey + ".", flattenedMap);
+        return flattenedMap;
+    }
+
+    private static void flattenMapHelper(Map<String, Object> map, String parentKey, Map<String, Object> result) {
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            String key = parentKey + entry.getKey();
+            Object value = entry.getValue();
+
+            if (value instanceof Map<?, ?>) {
+                flattenMapHelper((Map<String, Object>) value, key + ".", result);
+            } else {
+                result.put(key, String.valueOf(value)); // Convert values to String for MDC
+            }
         }
     }
+
 }

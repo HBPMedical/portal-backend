@@ -1,68 +1,87 @@
 # Configuration template for the portal running inside a Docker container
 
-
 ### EMBEDDED SERVER CONFIGURATION ###
 server:
-  servlet:
-    contextPath: "/services"
   port: 8080
+  servlet:
+    context-path: "/services"
   forward-headers-strategy: native
 
-
-### DATABASE CONFIGURATION ###
+### DATABASE ###
 spring:
   datasource:
-    url: {{ default .Env.PORTAL_DB_URL "jdbc:postgresql://172.17.0.1:5433/portal" }}
-    username: {{ default .Env.PORTAL_DB_USER "portal" }}
-    password: {{ default .Env.PORTAL_DB_PASSWORD "portalpwd" }}
+    url:       {{ default .Env.PORTAL_DB_URL "jdbc:postgresql://172.17.0.1:5433/portal" }}
+    username:  {{ default .Env.PORTAL_DB_USER "portal" }}
+    password:  {{ default .Env.PORTAL_DB_PASSWORD "portalpwd" }}
     driver-class-name: org.postgresql.Driver
-  data:
-    jpa:
-      repositories:
-        bootstrap-mode: default
+
   jpa:
     hibernate:
       ddl-auto: validate
+    open-in-view: false        # safe default for stateless REST
+
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
+
   jackson:
     default-property-inclusion: non_null
+
+  task:                        # fixes @Async executor ambiguity
+    execution:
+      pool:
+        max-size: 8
+        queue-capacity: 100
+      thread-name-prefix: async-
+
   security:
     oauth2:
+      # ★ Accept the EdDSA-signed ID-token / access-token
+      jwt:
+        jws-algorithms: {{ default .Env.JWT_JWS_ALGORITHMS "EdDSA" }}
+
+      #
+      # -- browser login (authorization_code) --
+      #
       client:
         registration:
           keycloak:
+            client-id:       {{ .Env.KEYCLOAK_CLIENT_ID }}
+            client-secret:   {{ .Env.KEYCLOAK_CLIENT_SECRET }}
             authorization-grant-type: authorization_code
-            client-id: {{ .Env.KEYCLOAK_CLIENT_ID }}
-            client-secret: {{ .Env.KEYCLOAK_CLIENT_SECRET }}
             provider: keycloak
             scope: openid
         provider:
           keycloak:
-            issuer-uri: {{ .Env.KEYCLOAK_AUTH_URL }}realms/{{ .Env.KEYCLOAK_REALM }}
+            issuer-uri:      {{ .Env.KEYCLOAK_AUTH_URL }}realms/{{ .Env.KEYCLOAK_REALM }}
             user-name-attribute: preferred_username
+      #
+      # -- bearer-token API support ------------
+      #
+      resourceserver:
+        jwt:
+          issuer-uri:        {{ .Env.KEYCLOAK_AUTH_URL }}realms/{{ .Env.KEYCLOAK_REALM }}
+logging:
+  level:
+    com.nimbusds.jose: TRACE
+    org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter: TRACE
 
-
-### AUTHENTICATION ###
+### AUTHENTICATION FLAGS ###
 authentication:
   enabled: {{ default .Env.AUTHENTICATION "1" }}
   all_datasets_allowed_claim: research_dataset_all
   all_experiments_allowed_claim: research_experiment_all
   dataset_claim_prefix: research_dataset_
 
-
 ### EXTERNAL SERVICES ###
 services:
-  algorithmsUpdateInterval: {{  .Env.ALGORITHM_UPDATE_INTERVAL}}
+  algorithmsUpdateInterval: {{ .Env.ALGORITHM_UPDATE_INTERVAL }}
   exareme2:
-    algorithmsUrl: {{ .Env.EXAREME2_URL}}/algorithms
-    attributesUrl: {{ .Env.EXAREME2_URL}}/data_models_attributes
-    cdesMetadataUrl: {{ .Env.EXAREME2_URL}}/cdes_metadata
-
+    algorithmsUrl:  {{ .Env.EXAREME2_URL }}/algorithms
+    attributesUrl:  {{ .Env.EXAREME2_URL }}/data_models_attributes
+    cdesMetadataUrl: {{ .Env.EXAREME2_URL }}/cdes_metadata
 
 ### EXTERNAL FILES ###
-# Files are imported when building the docker image
 files:
-  pathologies_json: "file:/opt/portal/api/pathologies.json"
-  disabledAlgorithms_json: "file:{{ .Env.DISABLED_ALGORITHMS_CONFIG_PATH}}"
+  pathologies_json:         file:/opt/portal/api/pathologies.json
+  disabledAlgorithms_json:  file:{{ .Env.DISABLED_ALGORITHMS_CONFIG_PATH }}

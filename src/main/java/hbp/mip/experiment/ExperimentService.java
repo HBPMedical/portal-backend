@@ -157,10 +157,10 @@ public class ExperimentService {
     public ExperimentDTO createExperiment(Authentication authentication, ExperimentExecutionDTO experimentExecutionDTO, Logger logger) {
         algorithmParametersLogging(experimentExecutionDTO, logger);
 
-        if (authenticationIsEnabled) {
-            String experimentDatasets = getExperimentDatasets(experimentExecutionDTO, logger);
-            claimUtils.validateAccessRightsOnDatasets(authentication, experimentDatasets, logger);
-        }
+//        if (authenticationIsEnabled) {
+//            String experimentDatasets = getExperimentDatasets(experimentExecutionDTO, logger);
+//            claimUtils.validateAccessRightsOnDatasets(authentication, experimentDatasets, logger);
+//        }
 
         var experimentDAO = experimentRepository.createExperimentInTheDatabase(experimentExecutionDTO, activeUserService.getActiveUser(authentication), logger);
 

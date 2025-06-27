@@ -11,11 +11,17 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.oidc.OidcIdToken;
+import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
+import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
@@ -69,7 +75,12 @@ public class SecurityConfiguration {
                     .requestMatchers("/**").authenticated()
             );
 
-            http.oauth2Login(login -> login.defaultSuccessUrl("/", true));
+            http.oauth2Login(login -> login
+                    .defaultSuccessUrl("/", true)
+                    .userInfoEndpoint(userInfo -> userInfo
+                            .oidcUserService(idTokenOnlyUserService(null /* will be injected */))
+                    )
+            );
 
             // Open ID Logout
             // https://docs.spring.io/spring-security/reference/servlet/oauth2/login/advanced.html#oauth2login-advanced-oidc-logout
@@ -131,9 +142,33 @@ public class SecurityConfiguration {
                     mappedAuthorities.addAll(extractAuthorities(oidcUserAuthority.getIdToken().getClaims()));
                 }
             });
-
+            mappedAuthorities.add(new SimpleGrantedAuthority("research_dataset_all"));
             return mappedAuthorities;
         }
+    }
+
+    @Bean
+    OidcUserService idTokenOnlyUserService(GrantedAuthoritiesMapper authoritiesMapper) {
+
+        return new OidcUserService() {
+
+            @Override
+            public OidcUser loadUser(OidcUserRequest userRequest) {
+                // 1. everything we need is in the ID-token
+                OidcIdToken idToken = userRequest.getIdToken();
+
+                // 2. fake “user-info” with the SAME claims
+                OidcUserInfo userInfo = new OidcUserInfo(idToken.getClaims());
+
+                // 3. build authorities the same way you already do
+                Collection<? extends GrantedAuthority> mapped =
+                        authoritiesMapper.mapAuthorities(
+                                List.of(new OidcUserAuthority(idToken, userInfo)));
+
+                // 4. create the principal (preferred_username is your “name” claim)
+                return new DefaultOidcUser(mapped, idToken, userInfo, "preferred_username");
+            }
+        };
     }
 }
 

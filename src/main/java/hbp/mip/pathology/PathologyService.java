@@ -32,12 +32,7 @@ public class PathologyService {
     }
 
     public List<PathologyDTO> getPathologies(Authentication authentication, Logger logger) {
-        List<PathologyDTO> allPathologyDTOs = getAggregatedPathologyDTOs(logger);
-
-        if (!authenticationIsEnabled) {
-            return allPathologyDTOs;
-        }
-        return claimUtils.getAuthorizedPathologies(logger, authentication, allPathologyDTOs);
+        return getAggregatedPathologyDTOs(logger);
     }
 
     /**

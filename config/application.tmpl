@@ -66,3 +66,7 @@ services:
 files:
   dataModels_json: "file:/opt/portal/api/dataModels.json"
   disabledAlgorithms_json: "file:{{ .Env.DISABLED_ALGORITHMS_CONFIG_PATH}}"
+
+
+frontend:
+  base-url: {{ .Env.FRONTEND_BASE_URL }}

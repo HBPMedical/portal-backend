@@ -39,7 +39,11 @@ public interface ExperimentRepository extends CrudRepository<ExperimentDAO, UUID
 
     default ExperimentDAO createExperimentInTheDatabase(ExperimentExecutionDTO experimentExecutionDTO, UserDTO user, Logger logger) {
         ExperimentDAO experimentDAO = new ExperimentDAO();
-        experimentDAO.setUuid(experimentExecutionDTO.uuid());
+        UUID experimentUuid = experimentExecutionDTO.uuid() != null
+                ? experimentExecutionDTO.uuid()
+                : UUID.randomUUID();
+
+        experimentDAO.setUuid(experimentUuid);
         experimentDAO.setCreatedBy(new UserDAO(user));
         experimentDAO.setAlgorithm(JsonConverters.convertObjectToJsonString(experimentExecutionDTO.algorithm()));
         experimentDAO.setAlgorithmId(experimentExecutionDTO.algorithm().name());

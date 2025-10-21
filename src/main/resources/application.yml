@@ -32,18 +32,18 @@ spring:
         registration:
           keycloak:
             authorization-grant-type: authorization_code
-            client-id: MIP
-            client-secret: dae83a6b-c769-4186-8383-f0984c6edf05
+            client-id: mippublic
+            client-secret: a62c2031-14ee-4a20-8271-a6513982bebf
             provider: keycloak
             scope: openid
         provider:
           keycloak:
             user-name-attribute: preferred_username
-            issuer-uri: http://172.17.0.1/auth/realms/MIP
+            issuer-uri: https://iam.ebrains.eu/auth/realms/MIP
 
 ### AUTHENTICATION ###
 authentication:
-  enabled: 0
+  enabled: 1
   all_datasets_allowed_claim: research_dataset_all
   all_experiments_allowed_claim: research_experiment_all
   dataset_claim_prefix: research_dataset_
@@ -60,3 +60,6 @@ services:
 # Files are loaded from the resources
 files:
   disabledAlgorithms_json: "classPath:/disabledAlgorithms.json"
+
+frontend:
+  base-url: "http://localhost:4200"

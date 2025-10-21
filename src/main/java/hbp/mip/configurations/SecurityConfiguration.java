@@ -17,6 +17,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
@@ -30,8 +31,17 @@ import java.util.stream.Collectors;
 @EnableMethodSecurity
 public class SecurityConfiguration {
 
+    private final SpaRedirectAuthenticationSuccessHandler spaRedirectAuthenticationSuccessHandler;
+    private final FrontendRedirectCaptureFilter frontendRedirectCaptureFilter;
+
     @Value("${authentication.enabled}")
     private boolean authenticationEnabled;
+
+    public SecurityConfiguration(SpaRedirectAuthenticationSuccessHandler spaRedirectAuthenticationSuccessHandler,
+                                 FrontendRedirectCaptureFilter frontendRedirectCaptureFilter) {
+        this.spaRedirectAuthenticationSuccessHandler = spaRedirectAuthenticationSuccessHandler;
+        this.frontendRedirectCaptureFilter = frontendRedirectCaptureFilter;
+    }
 
     // This Bean is used when there is no authentication and there is no keycloak server running due to this bug:
     // https://github.com/spring-projects/spring-security/issues/11397#issuecomment-1655906163
@@ -56,6 +66,7 @@ public class SecurityConfiguration {
     @Bean
     SecurityFilterChain clientSecurityFilterChain(HttpSecurity http, ClientRegistrationRepository clientRegistrationRepo) throws Exception {
         if (authenticationEnabled) {
+            http.addFilterBefore(frontendRedirectCaptureFilter, OAuth2AuthorizationRequestRedirectFilter.class);
             http.authorizeHttpRequests(auth -> auth
                     .requestMatchers(
                             "/login/**",
@@ -69,7 +80,7 @@ public class SecurityConfiguration {
                     .requestMatchers("/**").authenticated()
             );
 
-            http.oauth2Login(login -> login.defaultSuccessUrl("/", true));
+            http.oauth2Login(login -> login.successHandler(spaRedirectAuthenticationSuccessHandler));
 
             // Open ID Logout
             // https://docs.spring.io/spring-security/reference/servlet/oauth2/login/advanced.html#oauth2login-advanced-oidc-logout

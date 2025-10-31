@@ -55,6 +55,7 @@ services:
     algorithmsUrl: "http://127.0.0.1:5000/algorithms"
     attributesUrl: "http://127.0.0.1:5000/data_models_attributes"
     cdesMetadataUrl: "http://127.0.0.1:5000/cdes_metadata"
+    datasets_variables: "http://127.0.0.1:5000/datasets_variables"
 
 ### EXTERNAL FILES ###
 # Files are loaded from the resources

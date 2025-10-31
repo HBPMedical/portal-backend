@@ -1,6 +1,7 @@
 package hbp.mip.pathology;
 
 import java.util.List;
+import java.util.Map;
 
 
 public record PathologyDTO(
@@ -9,9 +10,9 @@ public record PathologyDTO(
         String label,
         Boolean longitudinal,
         PathologyMetadataDTO metadataHierarchy,
-        List<EnumerationDTO> datasets
+        List<EnumerationDTO> datasets,
+        Map<String, List<String>> datasetsVariables
 ) {
     public record EnumerationDTO(String code, String label) {
     }
 }
-

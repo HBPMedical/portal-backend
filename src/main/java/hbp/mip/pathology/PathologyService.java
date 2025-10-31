@@ -27,6 +27,9 @@ public class PathologyService {
     @Value("${services.exareme2.cdesMetadataUrl}")
     private String exareme2CDEsMetadataUrl;
 
+    @Value("${services.exareme2.datasets_variables}")
+    private String exareme2DatasetsVariables;
+
     public PathologyService(ClaimUtils claimUtils) {
         this.claimUtils = claimUtils;
     }
@@ -48,12 +51,35 @@ public class PathologyService {
     private List<PathologyDTO> getAggregatedPathologyDTOs(Logger logger) {
         Map<String, PathologyMetadataDTO> pathologiesMetadataHierarchy = getExaremePathologiesMetadataHierarchyDTO(logger);
         Map<String, List<PathologyDTO.EnumerationDTO>> datasetsPerPathology = getExareme2DatasetsPerPathology(logger);
+        Map<String, Map<String, List<String>>> datasetsVariablesPerPathology = getExareme2DatasetsVariables(logger);
 
         List<PathologyDTO> allPathologyDTOs = new ArrayList<>();
         for (String pathology : datasetsPerPathology.keySet()) {
             PathologyMetadataDTO pathologyMetadata = pathologiesMetadataHierarchy.get(pathology);
             assert pathologyMetadata != null;
             List<PathologyDTO.EnumerationDTO> pathologyDatasets = datasetsPerPathology.get(pathology);
+            Map<String, List<String>> pathologyDatasetVariables = Collections.emptyMap();
+            Map<String, List<String>> rawDatasetVariables = datasetsVariablesPerPathology.get(pathology);
+            if (rawDatasetVariables != null && !rawDatasetVariables.isEmpty()) {
+                Set<String> datasetCodes = new HashSet<>();
+                for (PathologyDTO.EnumerationDTO datasetDTO : pathologyDatasets) {
+                    datasetCodes.add(datasetDTO.code());
+                }
+
+                Map<String, List<String>> copy = new HashMap<>();
+                rawDatasetVariables.forEach((datasetCode, variables) -> {
+                    if (datasetCodes.contains(datasetCode)) {
+                        List<String> safeVariables = variables != null
+                                ? Collections.unmodifiableList(new ArrayList<>(variables))
+                                : Collections.emptyList();
+                        copy.put(datasetCode, safeVariables);
+                    }
+                });
+
+                if (!copy.isEmpty()) {
+                    pathologyDatasetVariables = Collections.unmodifiableMap(copy);
+                }
+            }
 
             // Exareme collects the dataset CDE enumerations automatically from the nodes when there is an addition/deletion.
             // Exareme provides that information in a separate endpoint from the rest of the pathologies' metadata.
@@ -70,7 +96,8 @@ public class PathologyService {
                             pathologyMetadata.label(),
                             pathologyMetadata.longitudinal(),
                             pathologyMetadata,
-                            pathologyDatasets
+                            pathologyDatasets,
+                            pathologyDatasetVariables
                     )
             );
         }
@@ -99,6 +126,21 @@ public class PathologyService {
         });
 
         return datasetsPerPathology;
+    }
+
+    private Map<String, Map<String, List<String>>> getExareme2DatasetsVariables(Logger logger) {
+        Map<String, Map<String, List<String>>> datasetsVariables;
+        Type datasetsVariablesType = new TypeToken<Map<String, Map<String, List<String>>>>(){}.getType();
+        try {
+            StringBuilder response = new StringBuilder();
+            HTTPUtil.sendGet(exareme2DatasetsVariables, response);
+            datasetsVariables = JsonConverters.convertJsonStringToObject(response.toString(), datasetsVariablesType);
+        } catch (Exception e) {
+            logger.error("Could not fetch exareme2 datasets variables: " + e.getMessage());
+            throw new InternalServerError(e.getMessage());
+        }
+
+        return datasetsVariables != null ? datasetsVariables : Collections.emptyMap();
     }
 
     private Map<String, DataModelAttributes> getExareme2PathologyAttributes(Logger logger) {

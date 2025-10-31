@@ -8,7 +8,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
@@ -77,20 +80,33 @@ public class ClaimUtils {
         List<PathologyDTO> userPathologies = new ArrayList<>();
         for (PathologyDTO curPathology : allPathologies) {
             List<PathologyDTO.EnumerationDTO> userPathologyDatasets = new ArrayList<>();
+            Map<String, List<String>> filteredDatasetVariables = new HashMap<>();
+            Map<String, List<String>> originalDatasetVariables = curPathology.datasetsVariables();
             for (PathologyDTO.EnumerationDTO dataset : curPathology.datasets()) {
                 if (hasRoleAccess(authorities, getDatasetClaim(dataset.code()), logger)) {
                     userPathologyDatasets.add(dataset);
+                    List<String> variables = originalDatasetVariables != null
+                            ? originalDatasetVariables.get(dataset.code())
+                            : null;
+                    List<String> safeVariables = variables != null
+                            ? Collections.unmodifiableList(new ArrayList<>(variables))
+                            : Collections.emptyList();
+                    filteredDatasetVariables.put(dataset.code(), safeVariables);
                 }
             }
 
             if (!userPathologyDatasets.isEmpty()) {
+                Map<String, List<String>> userDatasetsVariables = filteredDatasetVariables.isEmpty()
+                        ? Collections.emptyMap()
+                        : Collections.unmodifiableMap(filteredDatasetVariables);
                 PathologyDTO userPathology = new PathologyDTO(
                         curPathology.code(),
                         curPathology.version(),
                         curPathology.label(),
                         curPathology.longitudinal(),
                         curPathology.metadataHierarchy(),
-                        userPathologyDatasets
+                        userPathologyDatasets,
+                        userDatasetsVariables
                 );
                 userPathologies.add(userPathology);
             }

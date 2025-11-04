@@ -1,6 +1,6 @@
 package hbp.mip.utils;
 
-import hbp.mip.pathology.PathologyDTO;
+import hbp.mip.datamodel.DataModelDTO;
 import hbp.mip.utils.Exceptions.UnauthorizedException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -45,13 +45,11 @@ public class ClaimUtils {
     }
 
     public void validateAccessRightsOnDatasets(Authentication authentication,
-                                                      List<String> experimentDatasets, Logger logger) {
+                                               List<String> experimentDatasets, Logger logger) {
 
         ArrayList<String> authorities = getAuthorityRoles(authentication);
 
-        // Don't check for dataset claims if "super" claim exists allowing everything
         if (!hasRoleAccess(authorities, allDatasetsAllowedClaim, logger)) {
-
             for (String dataset : experimentDatasets) {
                 String datasetRole = getDatasetClaim(dataset);
                 if (!hasRoleAccess(authorities, datasetRole, logger)) {
@@ -69,7 +67,7 @@ public class ClaimUtils {
     }
 
     public List<DataModelDTO> getAuthorizedDataModels(Logger logger, Authentication authentication,
-                                                       List<DataModelDTO> allDataModels) {
+                                                      List<DataModelDTO> allDataModels) {
 
         ArrayList<String> authorities = getAuthorityRoles(authentication);
 
@@ -79,55 +77,52 @@ public class ClaimUtils {
 
         List<DataModelDTO> userDataModels = new ArrayList<>();
         for (DataModelDTO curDataModel : allDataModels) {
-            List<DataModelDTO.EnumerationDTO> userDataModelDatasets = new ArrayList<>();
-            for (DataModelDTO.EnumerationDTO dataset : curDataModel.datasets()) {
-        List<PathologyDTO> userPathologies = new ArrayList<>();
-        for (PathologyDTO curPathology : allPathologies) {
-            List<PathologyDTO.EnumerationDTO> userPathologyDatasets = new ArrayList<>();
-            Map<String, List<String>> filteredDatasetVariables = new HashMap<>();
-            Map<String, List<String>> originalDatasetVariables = curPathology.datasetsVariables();
-            for (PathologyDTO.EnumerationDTO dataset : curPathology.datasets()) {
-                if (hasRoleAccess(authorities, getDatasetClaim(dataset.code()), logger)) {
-                    userDataModelDatasets.add(dataset);
-                    userPathologyDatasets.add(dataset);
-                    List<String> variables = originalDatasetVariables != null
-                            ? originalDatasetVariables.get(dataset.code())
-                            : null;
-                    List<String> safeVariables = variables != null
-                            ? Collections.unmodifiableList(new ArrayList<>(variables))
-                            : Collections.emptyList();
-                    filteredDatasetVariables.put(dataset.code(), safeVariables);
-                }
+            List<DataModelDTO.EnumerationDTO> dataModelDatasets = curDataModel.datasets();
+            if (dataModelDatasets == null || dataModelDatasets.isEmpty()) {
+                continue;
             }
 
-            if (!userDataModelDatasets.isEmpty()) {
-                Map<String, List<String>> userDatasetsVariables = filteredDatasetVariables.isEmpty()
-                        ? Collections.emptyMap()
-                        : Collections.unmodifiableMap(filteredDatasetVariables);
-                DataModelDTO userDataModel = new DataModelDTO(
-                        curDataModel.code(),
-                        curDataModel.version(),
-                        curDataModel.label(),
-                        curDataModel.longitudinal(),
-                        curDataModel.variables(),
-                        curDataModel.groups(),
-                        userDataModelDatasets,
-                        userDatasetsVariables
-            if (!userPathologyDatasets.isEmpty()) {
-                Map<String, List<String>> userDatasetsVariables = filteredDatasetVariables.isEmpty()
-                        ? Collections.emptyMap()
-                        : Collections.unmodifiableMap(filteredDatasetVariables);
-                PathologyDTO userPathology = new PathologyDTO(
-                        curPathology.code(),
-                        curPathology.version(),
-                        curPathology.label(),
-                        curPathology.longitudinal(),
-                        curPathology.metadataHierarchy(),
-                        userPathologyDatasets,
-                        userDatasetsVariables
-                );
-                userDataModels.add(userDataModel);
+            List<DataModelDTO.EnumerationDTO> userDataModelDatasets = new ArrayList<>();
+            Map<String, List<String>> filteredDatasetVariables = new HashMap<>();
+            Map<String, List<String>> originalDatasetVariables = curDataModel.datasetsVariables();
+
+            for (DataModelDTO.EnumerationDTO dataset : dataModelDatasets) {
+                if (!hasRoleAccess(authorities, getDatasetClaim(dataset.code()), logger)) {
+                    continue;
+                }
+
+                userDataModelDatasets.add(dataset);
+                if (originalDatasetVariables == null) {
+                    continue;
+                }
+
+                List<String> variables = originalDatasetVariables.get(dataset.code());
+                List<String> safeVariables = variables != null
+                        ? Collections.unmodifiableList(new ArrayList<>(variables))
+                        : Collections.emptyList();
+                filteredDatasetVariables.put(dataset.code(), safeVariables);
             }
+
+            if (userDataModelDatasets.isEmpty()) {
+                continue;
+            }
+
+            List<DataModelDTO.EnumerationDTO> safeDatasets = Collections.unmodifiableList(new ArrayList<>(userDataModelDatasets));
+            Map<String, List<String>> userDatasetsVariables = filteredDatasetVariables.isEmpty()
+                    ? Collections.emptyMap()
+                    : Collections.unmodifiableMap(filteredDatasetVariables);
+
+            DataModelDTO userDataModel = new DataModelDTO(
+                    curDataModel.code(),
+                    curDataModel.version(),
+                    curDataModel.label(),
+                    curDataModel.longitudinal(),
+                    curDataModel.variables(),
+                    curDataModel.groups(),
+                    safeDatasets,
+                    userDatasetsVariables
+            );
+            userDataModels.add(userDataModel);
         }
         return userDataModels;
     }

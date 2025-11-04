@@ -5,7 +5,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public record DataModelDTO(
@@ -15,14 +19,17 @@ public record DataModelDTO(
         Boolean longitudinal,
         List<CommonDataElementDTO> variables,
         List<DataModelGroupDTO> groups,
-        List<DataModelDTO.EnumerationDTO> datasets
+        List<DataModelDTO.EnumerationDTO> datasets,
+        Map<String, List<String>> datasetsVariables
 ) {
 
-    public DataModelDTO withDatasets() {
+
+    public DataModelDTO withDatasets(Map<String, List<String>> datasetVariablesByDataset) {
         // Find the datasets enumeration if it exists in variables or groups
         List<EnumerationDTO> datasets = findDatasetEnumerations(this.variables, this.groups);
-        // Return a new instance of DataModelDTO with datasets set appropriately
-        return new DataModelDTO(this.code, this.version, this.label, this.longitudinal, this.variables, this.groups, datasets);
+        Map<String, List<String>> datasetsVariables = normaliseDatasetVariables(datasetVariablesByDataset);
+        // Return a new instance of DataModelDTO with datasets and variables set appropriately
+        return new DataModelDTO(this.code, this.version, this.label, this.longitudinal, this.variables, this.groups, datasets, datasetsVariables);
     }
 
     private static List<EnumerationDTO> findDatasetEnumerations(List<CommonDataElementDTO> variables, List<DataModelGroupDTO> groups) {
@@ -64,6 +71,29 @@ public record DataModelDTO(
             }
         }
         return Optional.empty();
+    }
+
+    private static Map<String, List<String>> normaliseDatasetVariables(Map<String, List<String>> datasetVariablesByDataset) {
+        if (datasetVariablesByDataset == null || datasetVariablesByDataset.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        Map<String, List<String>> normalisedVariables = new HashMap<>();
+        datasetVariablesByDataset.forEach((datasetCode, variables) -> {
+            if (datasetCode == null) {
+                return;
+            }
+            List<String> safeVariables = (variables == null || variables.isEmpty())
+                    ? Collections.emptyList()
+                    : Collections.unmodifiableList(new ArrayList<>(variables));
+            normalisedVariables.put(datasetCode, safeVariables);
+        });
+
+        if (normalisedVariables.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        return Collections.unmodifiableMap(normalisedVariables);
     }
 
     public record DataModelGroupDTO(

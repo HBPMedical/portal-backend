@@ -25,6 +25,13 @@ class PortalBackendClient:
 
     def _request(self, method: str, path: str, **kwargs: Any) -> Any:
         kwargs.setdefault("timeout", self.timeout)
+        headers = dict(kwargs.get("headers") or {})
+        if method.upper() in {"POST", "PUT", "PATCH", "DELETE"}:
+            xsrf_token = self.session.cookies.get("XSRF-TOKEN")
+            if xsrf_token and "X-XSRF-TOKEN" not in headers:
+                headers["X-XSRF-TOKEN"] = xsrf_token
+        if headers:
+            kwargs["headers"] = headers
         response = self.session.request(method, self._url(path), **kwargs)
         response.raise_for_status()
 
@@ -40,6 +47,10 @@ class PortalBackendClient:
     def get_algorithms(self) -> Any:
         """GET /algorithms"""
         return self._request("GET", "/algorithms")
+
+    def set_session_cookies(self, cookies: Dict[str, str]) -> None:
+        """Set session cookies for authenticated requests (e.g., JSESSIONID, XSRF-TOKEN)."""
+        self.session.cookies.update(cookies)
 
     def get_active_user(self) -> Any:
         """GET /activeUser"""

@@ -34,6 +34,7 @@ public class ExperimentAPI {
                                                          @RequestParam(name = "shared", required = false) Boolean shared,
                                                          @RequestParam(name = "viewed", required = false) Boolean viewed,
                                                          @RequestParam(name = "includeShared", required = false, defaultValue = "true") boolean includeShared,
+                                                         @RequestParam(name = "mine", required = false, defaultValue = "false") boolean mine,
                                                          @RequestParam(name = "orderBy", required = false, defaultValue = "created") String orderBy,
                                                          @RequestParam(name = "descending", required = false, defaultValue = "true") Boolean descending,
                                                          @RequestParam(defaultValue = "0") int page,
@@ -47,6 +48,7 @@ public class ExperimentAPI {
                         " , shared -> " + shared +
                         " , viewed -> " + viewed +
                         " , includeShared -> " + includeShared +
+                        " , mine -> " + mine +
                         " , orderBy -> " + orderBy +
                         " , descending -> " + descending +
                         " , page -> " + page +
@@ -58,6 +60,7 @@ public class ExperimentAPI {
                 shared,
                 viewed,
                 includeShared,
+                mine,
                 page,
                 size,
                 orderBy,

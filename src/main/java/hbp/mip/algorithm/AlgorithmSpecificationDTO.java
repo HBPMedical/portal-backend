@@ -13,9 +13,7 @@ public record AlgorithmSpecificationDTO(
         String desc,
         Exareme2AlgorithmInputdataSpecificationDTO inputdata,
         Map<String, AlgorithmParameterSpecificationDTO> parameters,
-        List<TransformerSpecificationDTO> preprocessing,
-        String type
-) {
+        List<TransformerSpecificationDTO> preprocessing) {
     @Override
     public Map<String, AlgorithmParameterSpecificationDTO> parameters() {
         return Objects.requireNonNullElse(parameters, Collections.EMPTY_MAP);
@@ -34,8 +32,7 @@ public record AlgorithmSpecificationDTO(
             String multiple,
             String min,
             String max,
-            @SerializedName("default")
-            String default_value,
+            @SerializedName("default") String default_value,
             AlgorithmEnumDTO enums,
             AlgorithmEnumDTO dict_keys_enums,
             AlgorithmEnumDTO dict_values_enums
@@ -43,8 +40,7 @@ public record AlgorithmSpecificationDTO(
     ) {
         public record AlgorithmEnumDTO(
                 String type,
-                List<String> source
-        ) {
+                List<String> source) {
         }
     }
 
@@ -53,8 +49,7 @@ public record AlgorithmSpecificationDTO(
             AlgorithmInputDataDetailSpecificationDTO y,
             AlgorithmInputDataDetailSpecificationDTO data_model,
             AlgorithmInputDataDetailSpecificationDTO datasets,
-            AlgorithmInputDataDetailSpecificationDTO filter
-    ) {
+            AlgorithmInputDataDetailSpecificationDTO filter) {
     }
 
     public record AlgorithmInputDataDetailSpecificationDTO(
@@ -73,8 +68,7 @@ public record AlgorithmSpecificationDTO(
             String name,
             String label,
             String desc,
-            Map<String, AlgorithmParameterSpecificationDTO> parameters
-    ) {
+            Map<String, AlgorithmParameterSpecificationDTO> parameters) {
         @Override
         public Map<String, AlgorithmParameterSpecificationDTO> parameters() {
             return Objects.requireNonNullElse(parameters, Collections.EMPTY_MAP);

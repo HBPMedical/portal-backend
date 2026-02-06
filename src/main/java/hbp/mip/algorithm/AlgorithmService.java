@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static hbp.mip.utils.InputStreamConverter.convertInputStreamToString;
 
@@ -43,8 +42,8 @@ public class AlgorithmService {
 
     public List<AlgorithmSpecificationDTO> getAlgorithms(Logger logger) {
 
-        ArrayList<AlgorithmSpecificationDTO> exaremeAlgorithms = (ArrayList<AlgorithmSpecificationDTO>) getExareme2Algorithms(logger);
-
+        ArrayList<AlgorithmSpecificationDTO> exaremeAlgorithms = (ArrayList<AlgorithmSpecificationDTO>) getExareme2Algorithms(
+                logger);
 
         List<String> disabledAlgorithms = getDisabledAlgorithms(logger);
         logger.debug("Disabled algorithms: " + disabledAlgorithms);
@@ -62,9 +61,11 @@ public class AlgorithmService {
     }
 
     /**
-     * This method gets all the available exareme2 algorithms and removes the disabled.
+     * This method gets all the available exareme2 algorithms and removes the
+     * disabled.
      *
-     * @return a list of Exareme2AlgorithmSpecificationDTO or null if something fails
+     * @return a list of Exareme2AlgorithmSpecificationDTO or null if something
+     *         fails
      */
     private List<AlgorithmSpecificationDTO> getExareme2Algorithms(Logger logger) {
         List<AlgorithmSpecificationDTO> algorithms;
@@ -74,17 +75,16 @@ public class AlgorithmService {
             algorithms = gson.fromJson(
                     response.toString(),
                     new TypeToken<List<AlgorithmSpecificationDTO>>() {
-                    }.getType()
-            );
+                    }.getType());
         } catch (Exception e) {
             logger.error("Could not fetch exareme2 algorithms: " + e.getMessage());
             return Collections.emptyList();
         }
 
         // Filter out algorithms with type "flower"
-        algorithms = algorithms.stream()
-                .filter(algorithm -> "exareme2".equals(algorithm.type()))
-                .collect(Collectors.toList());
+        // algorithms = algorithms.stream()
+        // .filter(algorithm -> "exareme2".equals(algorithm.type()))
+        // .collect(Collectors.toList());
         logger.debug("Fetched " + algorithms.size() + " exareme2 algorithms.");
         algorithmsSpecs.setAlgorithms(algorithms);
         return algorithms;
@@ -95,13 +95,14 @@ public class AlgorithmService {
 
         private final AlgorithmService algorithmService;
 
-        public AlgorithmAggregator(AlgorithmService algorithmService){
+        public AlgorithmAggregator(AlgorithmService algorithmService) {
             this.algorithmService = algorithmService;
         }
+
         @Async
         @Scheduled(fixedDelayString = "${services.algorithmsUpdateInterval}000")
         public void scheduleFixedRateTaskAsync() {
-            algorithmService.getExareme2Algorithms(new Logger("AlgorithmAggregator","(GET) /algorithms"));
+            algorithmService.getExareme2Algorithms(new Logger("AlgorithmAggregator", "(GET) /algorithms"));
         }
     }
 
@@ -116,8 +117,7 @@ public class AlgorithmService {
             return gson.fromJson(
                     convertInputStreamToString(resource.getInputStream()),
                     new TypeToken<List<String>>() {
-                    }.getType()
-            );
+                    }.getType());
         } catch (IOException e) {
             logger.error("Could not load the disabled algorithms. Exception: " + e.getMessage());
             return Collections.emptyList();

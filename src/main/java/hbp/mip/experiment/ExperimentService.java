@@ -32,7 +32,8 @@ public class ExperimentService {
     @Value("${authentication.enabled}")
     private boolean authenticationIsEnabled;
 
-    public ExperimentService(ActiveUserService activeUserService, ClaimUtils claimUtils, ExperimentRepository experimentRepository) {
+    public ExperimentService(ActiveUserService activeUserService, ClaimUtils claimUtils,
+            ExperimentRepository experimentRepository) {
         this.activeUserService = activeUserService;
         this.claimUtils = claimUtils;
         this.experimentRepository = experimentRepository;
@@ -58,24 +59,34 @@ public class ExperimentService {
     }
 
     /**
-     * The getExperiments will retrieve the experiments from database according to the filters.
+     * The getExperiments will retrieve the experiments from database according to
+     * the filters.
      *
-     * @param name          is optional, in case it is required to filter the experiments by name
-     * @param algorithm     is optional, in case it is required to filter the experiments by algorithm name
-     * @param shared        is optional, in case it is required to filter the experiments by shared
-     * @param viewed        is optional, in case it is required to filter the experiments by viewed
-     * @param includeShared is optional, in case it is required to retrieve the experiment that is shared
+     * @param name          is optional, in case it is required to filter the
+     *                      experiments by name
+     * @param algorithm     is optional, in case it is required to filter the
+     *                      experiments by algorithm name
+     * @param shared        is optional, in case it is required to filter the
+     *                      experiments by shared
+     * @param viewed        is optional, in case it is required to filter the
+     *                      experiments by viewed
+     * @param includeShared is optional, in case it is required to retrieve the
+     *                      experiment that is shared
      * @param page          is the page that is required to be retrieved
      * @param size          is the size of each page
      * @param orderBy       is the column that is required to ordered by
-     * @param descending    is a boolean to determine if the experiments will be ordered by descending or ascending order
+     * @param descending    is a boolean to determine if the experiments will be
+     *                      ordered by descending or ascending order
      * @param logger        contains username and the endpoint.
      * @return a map experiments
      */
-    public ExperimentsDTO getExperiments(Authentication authentication, String name, String algorithm, Boolean shared, Boolean viewed, boolean includeShared, int page, int size, String orderBy, Boolean descending, Logger logger) {
+    public ExperimentsDTO getExperiments(Authentication authentication, String name, String algorithm, Boolean shared,
+            Boolean viewed, boolean includeShared, boolean mine, int page, int size, String orderBy, Boolean descending,
+            Logger logger) {
         validatePageSize(size);
 
-        Specification<ExperimentDAO> spec = buildExperimentSpecification(authentication, name, algorithm, shared, viewed, includeShared, orderBy, descending, logger);
+        Specification<ExperimentDAO> spec = buildExperimentSpecification(authentication, name, algorithm, shared,
+                viewed, includeShared, mine, orderBy, descending, logger);
         Pageable pageable = PageRequest.of(page, size);
         Page<ExperimentDAO> experimentsPage = experimentRepository.findAll(spec, pageable);
 
@@ -92,28 +103,37 @@ public class ExperimentService {
         }
     }
 
-    private Specification<ExperimentDAO> buildExperimentSpecification(Authentication authentication, String name, String algorithm, Boolean shared, Boolean viewed, boolean includeShared, String orderBy, Boolean descending, Logger logger) {
+    private Specification<ExperimentDAO> buildExperimentSpecification(Authentication authentication, String name,
+            String algorithm, Boolean shared, Boolean viewed, boolean includeShared, boolean mine, String orderBy,
+            Boolean descending, Logger logger) {
         var user = activeUserService.getActiveUser(authentication);
-        boolean hasAccessRights = !authenticationIsEnabled || claimUtils.validateAccessRightsOnALLExperiments(authentication, logger);
+        boolean hasAccessRights = !authenticationIsEnabled
+                || claimUtils.validateAccessRightsOnALLExperiments(authentication, logger);
 
-        return hasAccessRights
-                ? Specification.where(new ExperimentSpecifications.ExperimentWithName(name))
-                .and(new ExperimentSpecifications.ExperimentWithAlgorithm(algorithm))
-                .and(new ExperimentSpecifications.ExperimentWithShared(shared))
-                .and(new ExperimentSpecifications.ExperimentWithViewed(viewed))
-                .and(new ExperimentSpecifications.ExperimentOrderBy(orderBy, descending))
-                : Specification.where(new ExperimentSpecifications.MyExperiment(user.username()))
-                .or(new ExperimentSpecifications.SharedExperiment(includeShared))
-                .and(new ExperimentSpecifications.ExperimentWithAlgorithm(algorithm))
-                .and(new ExperimentSpecifications.ExperimentWithShared(shared))
-                .and(new ExperimentSpecifications.ExperimentWithViewed(viewed))
+        Specification<ExperimentDAO> spec;
+
+        if (mine) {
+            spec = Specification.where(new ExperimentSpecifications.MyExperiment(user.username()));
+        } else if (hasAccessRights) {
+            spec = Specification.where(null);
+        } else {
+            spec = Specification.where(new ExperimentSpecifications.MyExperiment(user.username()))
+                    .or(new ExperimentSpecifications.SharedExperiment(includeShared));
+        }
+
+        return spec
                 .and(new ExperimentSpecifications.ExperimentWithName(name))
+                .and(new ExperimentSpecifications.ExperimentWithAlgorithm(algorithm))
+                .and(new ExperimentSpecifications.ExperimentWithShared(shared))
+                .and(new ExperimentSpecifications.ExperimentWithViewed(viewed))
                 .and(new ExperimentSpecifications.ExperimentOrderBy(orderBy, descending));
     }
 
     private ExperimentsDTO createExperimentsDTO(Page<ExperimentDAO> pageExperiments) {
-        List<ExperimentDTO> experiments = pageExperiments.map(experimentDAO -> new ExperimentDTO(experimentDAO, false)).getContent();
-        return new ExperimentsDTO(experiments, pageExperiments.getNumber(), pageExperiments.getTotalPages(), pageExperiments.getTotalElements());
+        List<ExperimentDTO> experiments = pageExperiments.map(experimentDAO -> new ExperimentDTO(experimentDAO, false))
+                .getContent();
+        return new ExperimentsDTO(experiments, pageExperiments.getNumber(), pageExperiments.getTotalPages(),
+                pageExperiments.getTotalElements());
     }
 
     public ExperimentDTO getExperiment(Authentication authentication, String uuid, Logger logger) {
@@ -123,9 +143,12 @@ public class ExperimentService {
         return new ExperimentDTO(experimentDAO, true);
     }
 
-    private void validateExperimentAccess(Authentication authentication, ExperimentDAO experimentDAO, String uuid, Logger logger) {
+    private void validateExperimentAccess(Authentication authentication, ExperimentDAO experimentDAO, String uuid,
+            Logger logger) {
         var user = activeUserService.getActiveUser(authentication);
-        boolean unauthorizedAccess = authenticationIsEnabled && !experimentDAO.isShared() && !experimentDAO.getCreatedBy().getUsername().equals(user.username()) && !claimUtils.validateAccessRightsOnALLExperiments(authentication, logger);
+        boolean unauthorizedAccess = authenticationIsEnabled && !experimentDAO.isShared()
+                && !experimentDAO.getCreatedBy().getUsername().equals(user.username())
+                && !claimUtils.validateAccessRightsOnALLExperiments(authentication, logger);
 
         if (unauthorizedAccess) {
             logger.warn("User tried to access an unauthorized experiment with id:" + uuid);
@@ -133,30 +156,37 @@ public class ExperimentService {
         }
     }
 
-    public ExperimentDTO createExperiment(Authentication authentication, ExperimentExecutionDTO experimentExecutionDTO, Logger logger) {
+    public ExperimentDTO createExperiment(Authentication authentication, ExperimentExecutionDTO experimentExecutionDTO,
+            Logger logger) {
         algorithmParametersLogging(experimentExecutionDTO, logger);
 
         validateDatasetAccess(authentication, experimentExecutionDTO, logger);
 
-        ExperimentDAO experimentDAO = experimentRepository.createExperimentInTheDatabase(experimentExecutionDTO, activeUserService.getActiveUser(authentication), logger);
+        ExperimentDAO experimentDAO = experimentRepository.createExperimentInTheDatabase(experimentExecutionDTO,
+                activeUserService.getActiveUser(authentication), logger);
         runAlgorithmInBackground(experimentDAO, experimentExecutionDTO, logger);
 
         return new ExperimentDTO(experimentDAO, false);
     }
 
-    private void validateDatasetAccess(Authentication authentication, ExperimentExecutionDTO experimentExecutionDTO, Logger logger) {
+    private void validateDatasetAccess(Authentication authentication, ExperimentExecutionDTO experimentExecutionDTO,
+            Logger logger) {
         if (authenticationIsEnabled) {
-            claimUtils.validateAccessRightsOnDatasets(authentication, experimentExecutionDTO.algorithm().inputdata().datasets(), logger);
+            claimUtils.validateAccessRightsOnDatasets(authentication,
+                    experimentExecutionDTO.algorithm().inputdata().datasets(), logger);
         }
     }
 
-    private void runAlgorithmInBackground(ExperimentDAO experimentDAO, ExperimentExecutionDTO experimentExecutionDTO, Logger logger) {
+    private void runAlgorithmInBackground(ExperimentDAO experimentDAO, ExperimentExecutionDTO experimentExecutionDTO,
+            Logger logger) {
         new Thread(() -> {
             try {
                 logger.debug("Experiment's algorithm execution started in a background thread.");
-                ExperimentAlgorithmResultDTO resultDTO = runExaremeAlgorithm(experimentDAO.getUuid(), experimentExecutionDTO, logger);
+                ExperimentAlgorithmResultDTO resultDTO = runExaremeAlgorithm(experimentDAO.getUuid(),
+                        experimentExecutionDTO, logger);
                 experimentDAO.setResult(convertObjectToJsonString(resultDTO.result()));
-                experimentDAO.setStatus(resultDTO.code() >= 400 ? ExperimentDAO.Status.error : ExperimentDAO.Status.success);
+                experimentDAO
+                        .setStatus(resultDTO.code() >= 400 ? ExperimentDAO.Status.error : ExperimentDAO.Status.success);
             } catch (Exception e) {
                 logger.error("Exareme2 algorithm execution failed: " + e.getMessage());
                 experimentDAO.setStatus(ExperimentDAO.Status.error);
@@ -166,15 +196,20 @@ public class ExperimentService {
         }).start();
     }
 
-    public ExperimentDTO runTransientExperiment(Authentication authentication, ExperimentExecutionDTO experimentExecutionDTO, Logger logger) {
+    public ExperimentDTO runTransientExperiment(Authentication authentication,
+            ExperimentExecutionDTO experimentExecutionDTO, Logger logger) {
         algorithmParametersLogging(experimentExecutionDTO, logger);
 
         validateDatasetAccess(authentication, experimentExecutionDTO, logger);
         UUID uuid = UUID.randomUUID();
         ExperimentAlgorithmResultDTO algorithmResult = runExaremeAlgorithm(uuid, experimentExecutionDTO, logger);
 
-        return new ExperimentDTO(uuid, experimentExecutionDTO.name(), null, null, null, null, null, null, algorithmResult.result(), algorithmResult.code() >= 400 ? ExperimentDAO.Status.error : ExperimentDAO.Status.success, experimentExecutionDTO.algorithm());
+        return new ExperimentDTO(uuid, experimentExecutionDTO.name(), null, null, null, null, null, null,
+                algorithmResult.result(),
+                algorithmResult.code() >= 400 ? ExperimentDAO.Status.error : ExperimentDAO.Status.success,
+                experimentExecutionDTO.algorithm());
     }
+
     public ExperimentDTO updateExperiment(UserDTO user, String uuid, ExperimentDTO experiment, Logger logger) {
         ExperimentDAO experimentDAO = experimentRepository.loadExperiment(uuid, logger);
 
@@ -228,14 +263,16 @@ public class ExperimentService {
 
     private void checkDeleteAuthorization(UserDTO user, ExperimentDAO experimentDAO, String uuid, Logger logger) {
         if (!experimentDAO.getCreatedBy().getUsername().equals(user.username())) {
-            logger.warn("User " + user.username() + " tried to delete the experiment with uuid " + uuid + " but was unauthorized.");
+            logger.warn("User " + user.username() + " tried to delete the experiment with uuid " + uuid
+                    + " but was unauthorized.");
             throw new UnauthorizedException("You don't have access to delete the experiment.");
         }
     }
 
     private void verifyNonEditableFieldsAreNotBeingModified(ExperimentDTO experimentDTO, Logger logger) {
         List.of("uuid", "algorithm", "created", "updated", "finished", "createdBy", "result", "status")
-                .forEach(field -> throwNonEditableExceptionIfNotNull(getFieldValue(experimentDTO, field), field, logger));
+                .forEach(field -> throwNonEditableExceptionIfNotNull(getFieldValue(experimentDTO, field), field,
+                        logger));
     }
 
     private void throwNonEditableExceptionIfNotNull(Object field, String nonEditableField, Logger logger) {
@@ -260,50 +297,42 @@ public class ExperimentService {
         ExperimentExecutionDTO.AlgorithmExecutionDTO algorithm = experimentExecutionDTO.algorithm();
         StringBuilder parametersLogMessage = new StringBuilder();
 
-        Optional.ofNullable(algorithm.parameters()).ifPresent(parameters ->
-                parameters.forEach((paramName, paramValue) ->
-                        parametersLogMessage.append(" ").append(paramName).append(" -> ").append(paramValue)
-                )
-        );
+        Optional.ofNullable(algorithm.parameters()).ifPresent(parameters -> parameters.forEach((paramName,
+                paramValue) -> parametersLogMessage.append(" ").append(paramName).append(" -> ").append(paramValue)));
 
-        Optional.ofNullable(algorithm.preprocessing()).ifPresent(preprocessing ->
-                preprocessing.forEach((name, value) ->
-                        parametersLogMessage.append(" ").append(name).append(" -> ").append(value)
-                )
-        );
+        Optional.ofNullable(algorithm.preprocessing()).ifPresent(preprocessing -> preprocessing
+                .forEach((name, value) -> parametersLogMessage.append(" ").append(name).append(" -> ").append(value)));
 
         if (algorithm.inputdata() != null) {
             AlgorithmRequestDTO.InputDataRequestDTO inputData = algorithm.inputdata();
             parametersLogMessage.append(" Input Data Model: ").append(inputData.data_model());
 
-            Optional.ofNullable(inputData.datasets()).ifPresent(datasets ->
-                    parametersLogMessage.append(" Datasets: ").append(datasets)
-            );
+            Optional.ofNullable(inputData.datasets())
+                    .ifPresent(datasets -> parametersLogMessage.append(" Datasets: ").append(datasets));
 
-            Optional.ofNullable(inputData.x()).ifPresent(xVars ->
-                    parametersLogMessage.append(" X Variables: ").append(xVars)
-            );
+            Optional.ofNullable(inputData.x())
+                    .ifPresent(xVars -> parametersLogMessage.append(" X Variables: ").append(xVars));
 
-            Optional.ofNullable(inputData.y()).ifPresent(yVars ->
-                    parametersLogMessage.append(" Y Variables: ").append(yVars)
-            );
+            Optional.ofNullable(inputData.y())
+                    .ifPresent(yVars -> parametersLogMessage.append(" Y Variables: ").append(yVars));
 
             if (inputData.filters() != null) {
                 AlgorithmRequestDTO.FilterRequestDTO filters = inputData.filters();
                 parametersLogMessage.append(" Filter Condition: ").append(filters.condition());
 
-                Optional.ofNullable(filters.rules()).ifPresent(rules ->
-                        parametersLogMessage.append(" Filter Rules: ").append(rules)
-                );
+                Optional.ofNullable(filters.rules())
+                        .ifPresent(rules -> parametersLogMessage.append(" Filter Rules: ").append(rules));
             }
         }
 
         logger.debug("Algorithm " + algorithm.name() + " execution starting with parameters: " + parametersLogMessage);
     }
 
-    private ExperimentAlgorithmResultDTO runExaremeAlgorithm(UUID uuid, ExperimentExecutionDTO experimentExecutionDTO, Logger logger) {
+    private ExperimentAlgorithmResultDTO runExaremeAlgorithm(UUID uuid, ExperimentExecutionDTO experimentExecutionDTO,
+            Logger logger) {
         String algorithmEndpoint = exareme2AlgorithmsUrl + "/" + experimentExecutionDTO.algorithm().name();
-        var requestBody = convertObjectToJsonString(AlgorithmRequestDTO.create(uuid, experimentExecutionDTO.algorithm()));
+        var requestBody = convertObjectToJsonString(
+                AlgorithmRequestDTO.create(uuid, experimentExecutionDTO.algorithm()));
 
         logger.debug("Exareme2 algorithm request, endpoint: " + algorithmEndpoint);
         logger.debug("Exareme2 algorithm request, body: " + requestBody);

@@ -37,15 +37,20 @@ public class SecurityConfiguration {
     @Value("${authentication.enabled}")
     private boolean authenticationEnabled;
 
+    @Value("${frontend.base-url}")
+    private String frontendBaseUrl;
+
     public SecurityConfiguration(SpaRedirectAuthenticationSuccessHandler spaRedirectAuthenticationSuccessHandler,
-                                 FrontendRedirectCaptureFilter frontendRedirectCaptureFilter) {
+            FrontendRedirectCaptureFilter frontendRedirectCaptureFilter) {
         this.spaRedirectAuthenticationSuccessHandler = spaRedirectAuthenticationSuccessHandler;
         this.frontendRedirectCaptureFilter = frontendRedirectCaptureFilter;
     }
 
-    // This Bean is used when there is no authentication and there is no keycloak server running due to this bug:
+    // This Bean is used when there is no authentication and there is no keycloak
+    // server running due to this bug:
     // https://github.com/spring-projects/spring-security/issues/11397#issuecomment-1655906163
-    // So we overwrite the ClientRegistrationRepository Bean to avoid the IP server lookup.
+    // So we overwrite the ClientRegistrationRepository Bean to avoid the IP server
+    // lookup.
     @Bean
     @ConditionalOnProperty(prefix = "authentication", name = "enabled", havingValue = "0")
     public ClientRegistrationRepository clientRegistrationRepository() {
@@ -64,7 +69,8 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    SecurityFilterChain clientSecurityFilterChain(HttpSecurity http, ClientRegistrationRepository clientRegistrationRepo) throws Exception {
+    SecurityFilterChain clientSecurityFilterChain(HttpSecurity http,
+            ClientRegistrationRepository clientRegistrationRepo) throws Exception {
         if (authenticationEnabled) {
             http.addFilterBefore(frontendRedirectCaptureFilter, OAuth2AuthorizationRequestRedirectFilter.class);
             http.authorizeHttpRequests(auth -> auth
@@ -75,17 +81,17 @@ public class SecurityConfiguration {
                             "/v3/api-docs",
                             "/v3/api-docs/**",
                             "/swagger-ui/**",
-                            "/swagger-ui.html"
-                    ).permitAll()
-                    .requestMatchers("/**").authenticated()
-            );
+                            "/swagger-ui.html")
+                    .permitAll()
+                    .requestMatchers("/**").authenticated());
 
             http.oauth2Login(login -> login.successHandler(spaRedirectAuthenticationSuccessHandler));
 
             // Open ID Logout
             // https://docs.spring.io/spring-security/reference/servlet/oauth2/login/advanced.html#oauth2login-advanced-oidc-logout
-            OidcClientInitiatedLogoutSuccessHandler successHandler = new OidcClientInitiatedLogoutSuccessHandler(clientRegistrationRepo);
-            successHandler.setPostLogoutRedirectUri("{baseUrl}");
+            OidcClientInitiatedLogoutSuccessHandler successHandler = new OidcClientInitiatedLogoutSuccessHandler(
+                    clientRegistrationRepo);
+            successHandler.setPostLogoutRedirectUri(frontendBaseUrl);
             http.logout(logout -> logout.logoutSuccessHandler(successHandler));
 
             // ---> XSRF Token handling
@@ -102,18 +108,14 @@ public class SecurityConfiguration {
             http.csrf((csrf) -> csrf
                     .csrfTokenRepository(tokenRepository)
                     .csrfTokenRequestHandler(requestHandler::handle)
-                    .ignoringRequestMatchers("/logout")
-            );
+                    .ignoringRequestMatchers("/logout"));
             // <--- XSRF Token handling
-
 
         } else {
             http.authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/**").permitAll()
-            );
+                    .requestMatchers("/**").permitAll());
             http.csrf((csrf) -> csrf
-                    .ignoringRequestMatchers("/**")
-            );
+                    .ignoringRequestMatchers("/**"));
 
         }
         return http.build();
@@ -132,9 +134,9 @@ public class SecurityConfiguration {
                     .collect(Collectors.toList());
         }
 
-
         @Override
-        public Collection<? extends GrantedAuthority> mapAuthorities(Collection<? extends GrantedAuthority> authorities) {
+        public Collection<? extends GrantedAuthority> mapAuthorities(
+                Collection<? extends GrantedAuthority> authorities) {
             Set<GrantedAuthority> mappedAuthorities = new HashSet<>();
 
             authorities.forEach(authority -> {
@@ -147,4 +149,3 @@ public class SecurityConfiguration {
         }
     }
 }
-

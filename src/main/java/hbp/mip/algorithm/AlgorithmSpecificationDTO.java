@@ -28,7 +28,7 @@ public record AlgorithmSpecificationDTO(
             String label,
             String desc,
             List<String> types,
-            String notblank,
+            String required,
             String multiple,
             String min,
             String max,
@@ -57,7 +57,7 @@ public record AlgorithmSpecificationDTO(
             String desc,
             List<String> types,
             List<String> stattypes,
-            String notblank,
+            String required,
             String multiple,
             Integer enumslen
 

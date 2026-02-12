@@ -207,7 +207,8 @@ public class ExperimentService {
         return new ExperimentDTO(uuid, experimentExecutionDTO.name(), null, null, null, null, null, null,
                 algorithmResult.result(),
                 algorithmResult.code() >= 400 ? ExperimentDAO.Status.error : ExperimentDAO.Status.success,
-                experimentExecutionDTO.algorithm());
+                experimentExecutionDTO.algorithm(),
+                experimentExecutionDTO.mipVersion());
     }
 
     public ExperimentDTO updateExperiment(UserDTO user, String uuid, ExperimentDTO experiment, Logger logger) {

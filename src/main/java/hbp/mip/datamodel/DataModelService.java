@@ -21,14 +21,14 @@ public class DataModelService {
     @Value("${authentication.enabled}")
     private boolean authenticationIsEnabled;
 
-    @Value("${services.exareme2.attributesUrl}")
-    private String exareme2AttributesUrl;
+    @Value("${services.exaflow.attributesUrl}")
+    private String exaflowAttributesUrl;
 
-    @Value("${services.exareme2.datasets_variables}")
-    private String exareme2DatasetsVariables;
+    @Value("${services.exaflow.datasets_variables}")
+    private String exaflowDatasetsVariables;
 
-    @Value("${services.exareme2.cdesMetadataUrl}")
-    private String exareme2CDEsMetadataUrl;
+    @Value("${services.exaflow.cdesMetadataUrl}")
+    private String exaflowCDEsMetadataUrl;
 
     public DataModelService(ClaimUtils claimUtils) {
         this.claimUtils = claimUtils;
@@ -45,7 +45,7 @@ public class DataModelService {
     }
 
     private List<DataModelDTO> getAggregatedDataModelDTOs(Logger logger) {
-        Map<String, DataModelAttributes> exareme2DataModelAttributes;
+        Map<String, DataModelAttributes> exaflowDataModelAttributes;
         Map<String, Map<String, List<String>>> datasetsVariablesByDataModel;
         Map<String, List<DataModelDTO.EnumerationDTO>> datasetEnumerationsByDataModel;
         Type pathologyAttributesType = new TypeToken<Map<String, DataModelAttributes>>(){}.getType();
@@ -54,35 +54,35 @@ public class DataModelService {
 
         try {
             StringBuilder response = new StringBuilder();
-            HTTPUtil.sendGet(exareme2AttributesUrl, response);
-            exareme2DataModelAttributes = JsonConverters.convertJsonStringToObject(response.toString(), pathologyAttributesType);
+            HTTPUtil.sendGet(exaflowAttributesUrl, response);
+            exaflowDataModelAttributes = JsonConverters.convertJsonStringToObject(response.toString(), pathologyAttributesType);
         } catch (Exception e) {
-            logger.error("Could not fetch exareme2 dataModels' metadata: " + e.getMessage());
+            logger.error("Could not fetch exaflow dataModels' metadata: " + e.getMessage());
             throw new InternalServerError(e.getMessage());
         }
 
         try {
             StringBuilder response = new StringBuilder();
-            HTTPUtil.sendGet(exareme2DatasetsVariables, response);
+            HTTPUtil.sendGet(exaflowDatasetsVariables, response);
             Map<String, Map<String, List<String>>> convertedResponse = JsonConverters.convertJsonStringToObject(response.toString(), datasetsVariablesType);
             datasetsVariablesByDataModel = convertedResponse != null ? convertedResponse : Collections.emptyMap();
         } catch (Exception e) {
-            logger.error("Could not fetch exareme2 datasets variables: " + e.getMessage());
+            logger.error("Could not fetch exaflow datasets variables: " + e.getMessage());
             throw new InternalServerError(e.getMessage());
         }
 
         try {
             StringBuilder response = new StringBuilder();
-            HTTPUtil.sendGet(exareme2CDEsMetadataUrl, response);
+            HTTPUtil.sendGet(exaflowCDEsMetadataUrl, response);
             Map<String, Map<String, CDEMetadata>> convertedResponse = JsonConverters.convertJsonStringToObject(response.toString(), cdesMetadataType);
             datasetEnumerationsByDataModel = convertedResponse != null ? extractDatasetEnumerations(convertedResponse) : Collections.emptyMap();
         } catch (Exception e) {
-            logger.error("Could not fetch exareme2 datasets availability: " + e.getMessage());
+            logger.error("Could not fetch exaflow datasets availability: " + e.getMessage());
             throw new InternalServerError(e.getMessage());
         }
 
         List<DataModelDTO> dataModelDTOs = new ArrayList<>();
-        exareme2DataModelAttributes.forEach((pathology, attributes) -> {
+        exaflowDataModelAttributes.forEach((pathology, attributes) -> {
             assert attributes.properties != null;
             assert attributes.properties.get("cdes") != null;
             assert !attributes.properties.get("cdes").isEmpty();

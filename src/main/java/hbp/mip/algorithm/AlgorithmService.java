@@ -32,8 +32,8 @@ public class AlgorithmService {
     @Value("${files.disabledAlgorithms_json}")
     private String disabledAlgorithmsFilePath;
 
-    @Value("${services.exareme2.algorithmsUrl}")
-    private String exareme2AlgorithmsUrl;
+    @Value("${services.exaflow.algorithmsUrl}")
+    private String exaflowAlgorithmsUrl;
 
     public AlgorithmService(AlgorithmsSpecs algorithmsSpecs, CustomResourceLoader resourceLoader) {
         this.algorithmsSpecs = algorithmsSpecs;
@@ -42,7 +42,7 @@ public class AlgorithmService {
 
     public List<AlgorithmSpecificationDTO> getAlgorithms(Logger logger) {
 
-        ArrayList<AlgorithmSpecificationDTO> exaremeAlgorithms = (ArrayList<AlgorithmSpecificationDTO>) getExareme2Algorithms(
+        ArrayList<AlgorithmSpecificationDTO> exaflowAlgorithms = (ArrayList<AlgorithmSpecificationDTO>) getExaflowAlgorithms(
                 logger);
 
         List<String> disabledAlgorithms = getDisabledAlgorithms(logger);
@@ -50,42 +50,38 @@ public class AlgorithmService {
 
         // Remove any disabled algorithm
         ArrayList<AlgorithmSpecificationDTO> enabledAlgorithms = new ArrayList<>();
-        for (AlgorithmSpecificationDTO algorithm : exaremeAlgorithms) {
+        for (AlgorithmSpecificationDTO algorithm : exaflowAlgorithms) {
             if (!disabledAlgorithms.contains(algorithm.name())) {
                 enabledAlgorithms.add(algorithm);
             }
         }
 
-        logger.debug("Disabled " + (exaremeAlgorithms.size() - enabledAlgorithms.size()) + " algorithms.");
+        logger.debug("Disabled " + (exaflowAlgorithms.size() - enabledAlgorithms.size()) + " algorithms.");
         return enabledAlgorithms;
     }
 
     /**
-     * This method gets all the available exareme2 algorithms and removes the
+     * This method gets all the available exaflow algorithms and removes the
      * disabled.
      *
-     * @return a list of Exareme2AlgorithmSpecificationDTO or null if something
+     * @return a list of ExaflowAlgorithmSpecificationDTO or null if something
      *         fails
      */
-    private List<AlgorithmSpecificationDTO> getExareme2Algorithms(Logger logger) {
+    private List<AlgorithmSpecificationDTO> getExaflowAlgorithms(Logger logger) {
         List<AlgorithmSpecificationDTO> algorithms;
         StringBuilder response = new StringBuilder();
         try {
-            HTTPUtil.sendGet(exareme2AlgorithmsUrl, response);
+            HTTPUtil.sendGet(exaflowAlgorithmsUrl, response);
             algorithms = gson.fromJson(
                     response.toString(),
                     new TypeToken<List<AlgorithmSpecificationDTO>>() {
                     }.getType());
         } catch (Exception e) {
-            logger.error("Could not fetch exareme2 algorithms: " + e.getMessage());
+            logger.error("Could not fetch exaflow algorithms: " + e.getMessage());
             return Collections.emptyList();
         }
 
-        // Filter out algorithms with type "flower"
-        // algorithms = algorithms.stream()
-        // .filter(algorithm -> "exareme2".equals(algorithm.type()))
-        // .collect(Collectors.toList());
-        logger.debug("Fetched " + algorithms.size() + " exareme2 algorithms.");
+        logger.debug("Fetched " + algorithms.size() + " exaflow algorithms.");
         algorithmsSpecs.setAlgorithms(algorithms);
         return algorithms;
     }
@@ -102,7 +98,7 @@ public class AlgorithmService {
         @Async
         @Scheduled(fixedDelayString = "${services.algorithmsUpdateInterval}000")
         public void scheduleFixedRateTaskAsync() {
-            algorithmService.getExareme2Algorithms(new Logger("AlgorithmAggregator", "(GET) /algorithms"));
+            algorithmService.getExaflowAlgorithms(new Logger("AlgorithmAggregator", "(GET) /algorithms"));
         }
     }
 

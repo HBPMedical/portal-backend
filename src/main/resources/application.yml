@@ -40,6 +40,9 @@ spring:
           keycloak:
             user-name-attribute: preferred_username
             issuer-uri: https://iam.ebrains.eu/auth/realms/MIP
+      resourceserver:
+        jwt:
+          issuer-uri: https://iam.ebrains.eu/auth/realms/MIP
 
 ### AUTHENTICATION ###
 authentication:
@@ -51,7 +54,7 @@ authentication:
 ### EXTERNAL SERVICES ###
 services:
   algorithmsUpdateInterval: 100
-  exareme2:
+  exaflow:
     algorithmsUrl: "http://127.0.0.1:5000/algorithms"
     attributesUrl: "http://127.0.0.1:5000/data_models_attributes"
     datasets_variables: "http://127.0.0.1:5000/datasets_variables"

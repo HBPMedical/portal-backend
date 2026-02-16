@@ -42,6 +42,10 @@ spring:
           keycloak:
             issuer-uri: {{ .Env.KEYCLOAK_AUTH_URL }}realms/{{ .Env.KEYCLOAK_REALM }}
             user-name-attribute: preferred_username
+      # Allow API clients (e.g. notebooks) to authenticate with Bearer JWTs.
+      resourceserver:
+        jwt:
+          issuer-uri: {{ .Env.KEYCLOAK_AUTH_URL }}realms/{{ .Env.KEYCLOAK_REALM }}
 
 
 ### AUTHENTICATION ###
@@ -55,11 +59,11 @@ authentication:
 ### EXTERNAL SERVICES ###
 services:
   algorithmsUpdateInterval: {{  .Env.ALGORITHM_UPDATE_INTERVAL}}
-  exareme2:
-    algorithmsUrl: {{ .Env.EXAREME2_URL}}/algorithms
-    attributesUrl: {{ .Env.EXAREME2_URL}}/data_models_attributes
-    cdesMetadataUrl: {{ .Env.EXAREME2_URL}}/cdes_metadata
-    datasets_variables: {{ .Env.EXAREME2_URL}}/datasets_variables
+  exaflow:
+    algorithmsUrl: {{ .Env.EXAFLOW_URL}}/algorithms
+    attributesUrl: {{ .Env.EXAFLOW_URL}}/data_models_attributes
+    cdesMetadataUrl: {{ .Env.EXAFLOW_URL}}/cdes_metadata
+    datasets_variables: {{ .Env.EXAFLOW_URL}}/datasets_variables
 
 
 ### EXTERNAL FILES ###

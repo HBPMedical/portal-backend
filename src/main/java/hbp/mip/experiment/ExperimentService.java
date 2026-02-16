@@ -26,8 +26,8 @@ public class ExperimentService {
     private final ClaimUtils claimUtils;
     private final ExperimentRepository experimentRepository;
 
-    @Value("${services.exareme2.algorithmsUrl}")
-    private String exareme2AlgorithmsUrl;
+    @Value("${services.exaflow.algorithmsUrl}")
+    private String exaflowAlgorithmsUrl;
 
     @Value("${authentication.enabled}")
     private boolean authenticationIsEnabled;
@@ -42,18 +42,18 @@ public class ExperimentService {
     private static Object convertResponseToAlgorithmResults(Logger logger, int code, StringBuilder responseBody) {
         return switch (code) {
             case 200 -> JsonConverters.convertJsonStringToObject(responseBody.toString(), Object.class);
-            case 400, 460, 461, 512 -> convertExareme2ResponseToAlgorithmResult(responseBody.toString());
-            case 500 -> convertExareme2ResponseToAlgorithmResult(GENERIC_ERROR_MESSAGE);
+            case 400, 460, 461, 512 -> convertExaflowResponseToAlgorithmResult(responseBody.toString());
+            case 500 -> convertExaflowResponseToAlgorithmResult(GENERIC_ERROR_MESSAGE);
             default -> handleUnexpectedResponseCode(logger, code);
         };
     }
 
-    private static Map<String, Object> convertExareme2ResponseToAlgorithmResult(String resultBody) {
+    private static Map<String, Object> convertExaflowResponseToAlgorithmResult(String resultBody) {
         return Map.of("data", resultBody, "type", "text/plain+error");
     }
 
     private static Object handleUnexpectedResponseCode(Logger logger, int code) {
-        String errorMessage = "Exareme2 execution responded with an unexpected status code: " + code;
+        String errorMessage = "Exaflow execution responded with an unexpected status code: " + code;
         logger.error(errorMessage);
         throw new InternalServerError(errorMessage);
     }
@@ -182,13 +182,13 @@ public class ExperimentService {
         new Thread(() -> {
             try {
                 logger.debug("Experiment's algorithm execution started in a background thread.");
-                ExperimentAlgorithmResultDTO resultDTO = runExaremeAlgorithm(experimentDAO.getUuid(),
+                ExperimentAlgorithmResultDTO resultDTO = runExaflowAlgorithm(experimentDAO.getUuid(),
                         experimentExecutionDTO, logger);
                 experimentDAO.setResult(convertObjectToJsonString(resultDTO.result()));
                 experimentDAO
                         .setStatus(resultDTO.code() >= 400 ? ExperimentDAO.Status.error : ExperimentDAO.Status.success);
             } catch (Exception e) {
-                logger.error("Exareme2 algorithm execution failed: " + e.getMessage());
+                logger.error("Exaflow algorithm execution failed: " + e.getMessage());
                 experimentDAO.setStatus(ExperimentDAO.Status.error);
             }
             experimentRepository.finishExperiment(experimentDAO, logger);
@@ -202,7 +202,7 @@ public class ExperimentService {
 
         validateDatasetAccess(authentication, experimentExecutionDTO, logger);
         UUID uuid = UUID.randomUUID();
-        ExperimentAlgorithmResultDTO algorithmResult = runExaremeAlgorithm(uuid, experimentExecutionDTO, logger);
+        ExperimentAlgorithmResultDTO algorithmResult = runExaflowAlgorithm(uuid, experimentExecutionDTO, logger);
 
         return new ExperimentDTO(uuid, experimentExecutionDTO.name(), null, null, null, null, null, null,
                 algorithmResult.result(),
@@ -329,21 +329,21 @@ public class ExperimentService {
         logger.debug("Algorithm " + algorithm.name() + " execution starting with parameters: " + parametersLogMessage);
     }
 
-    private ExperimentAlgorithmResultDTO runExaremeAlgorithm(UUID uuid, ExperimentExecutionDTO experimentExecutionDTO,
+    private ExperimentAlgorithmResultDTO runExaflowAlgorithm(UUID uuid, ExperimentExecutionDTO experimentExecutionDTO,
             Logger logger) {
-        String algorithmEndpoint = exareme2AlgorithmsUrl + "/" + experimentExecutionDTO.algorithm().name();
+        String algorithmEndpoint = exaflowAlgorithmsUrl + "/" + experimentExecutionDTO.algorithm().name();
         var requestBody = convertObjectToJsonString(
                 AlgorithmRequestDTO.create(uuid, experimentExecutionDTO.algorithm()));
 
-        logger.debug("Exareme2 algorithm request, endpoint: " + algorithmEndpoint);
-        logger.debug("Exareme2 algorithm request, body: " + requestBody);
+        logger.debug("Exaflow algorithm request, endpoint: " + algorithmEndpoint);
+        logger.debug("Exaflow algorithm request, body: " + requestBody);
 
         int responseCode;
         var responseBody = new StringBuilder();
         try {
             responseCode = HTTPUtil.sendPost(algorithmEndpoint, requestBody, responseBody);
         } catch (IOException e) {
-            logger.error("Could not run the exareme2 algorithm: " + e.getMessage());
+            logger.error("Could not run the exaflow algorithm: " + e.getMessage());
             throw new InternalServerError(e.getMessage());
         }
 

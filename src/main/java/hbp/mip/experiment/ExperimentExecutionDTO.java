@@ -14,8 +14,7 @@ public record ExperimentExecutionDTO(
                         String name,
                         AlgorithmRequestDTO.InputDataRequestDTO inputdata,
                         Map<String, Object> parameters,
-                        Map<String, Object> preprocessing,
-                        String type) {
+                        Map<String, Object> preprocessing) {
 
         }
 }

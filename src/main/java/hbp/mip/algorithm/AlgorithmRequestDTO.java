@@ -10,8 +10,7 @@ public record AlgorithmRequestDTO(
         String request_id,
         InputDataRequestDTO inputdata,
         Map<String, Object> parameters,
-        Map<String, Object> preprocessing,
-        String type
+        Map<String, Object> preprocessing
 ) {
 
     public static AlgorithmRequestDTO create(UUID experimentUUID,ExperimentExecutionDTO.AlgorithmExecutionDTO algorithmExecutionDTO){
@@ -19,8 +18,7 @@ public record AlgorithmRequestDTO(
                 experimentUUID.toString(),
                 algorithmExecutionDTO.inputdata(),
                 algorithmExecutionDTO.parameters(),
-                algorithmExecutionDTO.preprocessing(),
-                algorithmExecutionDTO.type()
+                algorithmExecutionDTO.preprocessing()
         );
     }
 

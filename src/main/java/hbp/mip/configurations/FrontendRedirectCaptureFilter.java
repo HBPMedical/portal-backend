@@ -23,10 +23,13 @@ public class FrontendRedirectCaptureFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         if (isAuthorizationRequest(request)) {
-            String targetPath = resolveRedirectPath(request);
-            if (targetPath != null) {
+            CapturedRedirect redirect = resolveRedirect(request);
+            if (redirect != null && StringUtils.hasText(redirect.targetPath())) {
                 HttpSession session = request.getSession(true);
-                session.setAttribute(SpaRedirectAuthenticationSuccessHandler.REDIRECT_PATH_ATTRIBUTE, targetPath);
+                session.setAttribute(SpaRedirectAuthenticationSuccessHandler.REDIRECT_PATH_ATTRIBUTE, redirect.targetPath());
+                if (StringUtils.hasText(redirect.frontendBaseUrl())) {
+                    session.setAttribute(SpaRedirectAuthenticationSuccessHandler.FRONTEND_BASE_URL_ATTRIBUTE, redirect.frontendBaseUrl());
+                }
             }
         }
 
@@ -40,27 +43,29 @@ public class FrontendRedirectCaptureFilter extends OncePerRequestFilter {
         return requestUri.startsWith(expectedPrefix);
     }
 
-    private String resolveRedirectPath(HttpServletRequest request) {
+    private CapturedRedirect resolveRedirect(HttpServletRequest request) {
         String explicitValue = request.getParameter("frontend_redirect");
         if (StringUtils.hasText(explicitValue)) {
-            return normalizePath(explicitValue);
+            URI explicitUri = parseUri(explicitValue);
+            if (explicitUri != null && StringUtils.hasText(explicitUri.getScheme()) && StringUtils.hasText(explicitUri.getRawAuthority())) {
+                // frontend_redirect can be a full URL (e.g. http://localhost:4200/#/home).
+                String baseUrl = explicitUri.getScheme() + "://" + explicitUri.getRawAuthority();
+                String targetPath = buildPathQueryFragment(explicitUri);
+                return new CapturedRedirect(baseUrl, targetPath);
+            }
+
+            // Otherwise treat it as a path (or hash route) and normalize.
+            return new CapturedRedirect(null, normalizePath(explicitValue));
         }
 
         URI refererUri = parseUri(request.getHeader("Referer"));
         if (refererUri != null) {
-            String path = refererUri.getRawPath();
-            String query = refererUri.getRawQuery();
-
-            if (!StringUtils.hasText(path)) {
-                path = "/";
+            String baseUrl = null;
+            if (StringUtils.hasText(refererUri.getScheme()) && StringUtils.hasText(refererUri.getRawAuthority())) {
+                baseUrl = refererUri.getScheme() + "://" + refererUri.getRawAuthority();
             }
-
-            String normalizedPath = normalizePath(path);
-            if (StringUtils.hasText(query)) {
-                normalizedPath += "?" + query;
-            }
-
-            return normalizedPath;
+            String targetPath = buildPathQueryFragment(refererUri);
+            return new CapturedRedirect(baseUrl, targetPath);
         }
 
         return null;
@@ -75,6 +80,26 @@ public class FrontendRedirectCaptureFilter extends OncePerRequestFilter {
         } catch (URISyntaxException ex) {
             return null;
         }
+    }
+
+    private static String buildPathQueryFragment(URI uri) {
+        String path = uri.getRawPath();
+        String query = uri.getRawQuery();
+        String fragment = uri.getRawFragment();
+
+        if (!StringUtils.hasText(path)) {
+            path = "/";
+        }
+
+        String normalizedPath = normalizePath(path);
+        if (StringUtils.hasText(query)) {
+            normalizedPath += "?" + query;
+        }
+        if (StringUtils.hasText(fragment)) {
+            normalizedPath += "#" + fragment;
+        }
+
+        return normalizedPath;
     }
 
     private static String normalizePath(String path) {
@@ -93,5 +118,8 @@ public class FrontendRedirectCaptureFilter extends OncePerRequestFilter {
         }
 
         return trimmed;
+    }
+
+    private record CapturedRedirect(String frontendBaseUrl, String targetPath) {
     }
 }

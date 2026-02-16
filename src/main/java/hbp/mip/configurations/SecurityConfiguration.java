@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
@@ -18,10 +19,13 @@ import org.springframework.security.oauth2.client.registration.InMemoryClientReg
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -37,7 +41,7 @@ public class SecurityConfiguration {
     @Value("${authentication.enabled}")
     private boolean authenticationEnabled;
 
-    @Value("${frontend.base-url}")
+    @Value("${frontend.base-url:}")
     private String frontendBaseUrl;
 
     public SecurityConfiguration(SpaRedirectAuthenticationSuccessHandler spaRedirectAuthenticationSuccessHandler,
@@ -87,11 +91,18 @@ public class SecurityConfiguration {
 
             http.oauth2Login(login -> login.successHandler(spaRedirectAuthenticationSuccessHandler));
 
+            // Allow API clients (e.g. notebooks) to authenticate with Bearer JWTs.
+            // This runs alongside oauth2Login (session-based) authentication.
+            http.oauth2ResourceServer(oauth2 -> oauth2
+                    .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
+
             // Open ID Logout
             // https://docs.spring.io/spring-security/reference/servlet/oauth2/login/advanced.html#oauth2login-advanced-oidc-logout
             OidcClientInitiatedLogoutSuccessHandler successHandler = new OidcClientInitiatedLogoutSuccessHandler(
                     clientRegistrationRepo);
-            successHandler.setPostLogoutRedirectUri(frontendBaseUrl);
+            if (StringUtils.hasText(frontendBaseUrl)) {
+                successHandler.setPostLogoutRedirectUri(frontendBaseUrl);
+            }
             http.logout(logout -> logout.logoutSuccessHandler(successHandler));
 
             // ---> XSRF Token handling
@@ -108,6 +119,11 @@ public class SecurityConfiguration {
             http.csrf((csrf) -> csrf
                     .csrfTokenRepository(tokenRepository)
                     .csrfTokenRequestHandler(requestHandler::handle)
+                    // Bearer-token clients should not need CSRF (they are not cookie-authenticated).
+                    .ignoringRequestMatchers((request) -> {
+                        String authz = request.getHeader("Authorization");
+                        return authz != null && authz.startsWith("Bearer ");
+                    })
                     .ignoringRequestMatchers("/logout"));
             // <--- XSRF Token handling
 
@@ -119,6 +135,67 @@ public class SecurityConfiguration {
 
         }
         return http.build();
+    }
+
+    private static JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtGrantedAuthoritiesConverter fallback = new JwtGrantedAuthoritiesConverter();
+        // Do not force ROLE_ prefix; the app expects raw authority strings (e.g. research_dataset_*).
+        fallback.setAuthorityPrefix("");
+
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter((Jwt jwt) -> {
+            List<GrantedAuthority> out = new ArrayList<>();
+
+            // 1) Preferred: our realm may map roles directly into an "authorities" claim.
+            Object raw = jwt.getClaims().get("authorities");
+            if (raw instanceof Collection<?> col) {
+                for (Object v : col) {
+                    if (v != null) {
+                        out.add(new SimpleGrantedAuthority(v.toString()));
+                    }
+                }
+            }
+
+            // 2) Keycloak default: realm_access.roles
+            Object realmAccess = jwt.getClaims().get("realm_access");
+            if (realmAccess instanceof Map<?, ?> m) {
+                Object roles = m.get("roles");
+                if (roles instanceof Collection<?> col) {
+                    for (Object v : col) {
+                        if (v != null) {
+                            out.add(new SimpleGrantedAuthority(v.toString()));
+                        }
+                    }
+                }
+            }
+
+            // 3) Keycloak default: resource_access.<client>.roles (collect all client roles)
+            Object resourceAccess = jwt.getClaims().get("resource_access");
+            if (resourceAccess instanceof Map<?, ?> ra) {
+                for (Object entryVal : ra.values()) {
+                    if (!(entryVal instanceof Map<?, ?> m)) {
+                        continue;
+                    }
+                    Object roles = m.get("roles");
+                    if (!(roles instanceof Collection<?> col)) {
+                        continue;
+                    }
+                    for (Object v : col) {
+                        if (v != null) {
+                            out.add(new SimpleGrantedAuthority(v.toString()));
+                        }
+                    }
+                }
+            }
+
+            if (!out.isEmpty()) {
+                return out;
+            }
+
+            // Fallback to scope-based authorities if present.
+            return fallback.convert(jwt);
+        });
+        return converter;
     }
 
     @Component

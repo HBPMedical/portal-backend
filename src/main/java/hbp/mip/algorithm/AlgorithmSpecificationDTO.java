@@ -11,7 +11,7 @@ public record AlgorithmSpecificationDTO(
         String name,
         String label,
         String desc,
-        Exareme2AlgorithmInputdataSpecificationDTO inputdata,
+        ExaflowAlgorithmInputdataSpecificationDTO inputdata,
         Map<String, AlgorithmParameterSpecificationDTO> parameters,
         List<TransformerSpecificationDTO> preprocessing) {
     @Override
@@ -44,7 +44,7 @@ public record AlgorithmSpecificationDTO(
         }
     }
 
-    public record Exareme2AlgorithmInputdataSpecificationDTO(
+    public record ExaflowAlgorithmInputdataSpecificationDTO(
             AlgorithmInputDataDetailSpecificationDTO x,
             AlgorithmInputDataDetailSpecificationDTO y,
             AlgorithmInputDataDetailSpecificationDTO data_model,

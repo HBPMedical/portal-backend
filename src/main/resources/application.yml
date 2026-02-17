@@ -32,8 +32,8 @@ spring:
         registration:
           keycloak:
             authorization-grant-type: authorization_code
-            client-id: mippublic
-            client-secret: a62c2031-14ee-4a20-8271-a6513982bebf
+            client-id: replaceme
+            client-secret: replaceme 
             provider: keycloak
             scope: openid
         provider:

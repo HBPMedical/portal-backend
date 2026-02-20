@@ -2,18 +2,19 @@
 # Build the spring boot maven project
 #######################################################
 FROM maven:3.9.3-amazoncorretto-17 AS mvn-build-env
-MAINTAINER Thanasis Karampatsis <tkarabatsis@athenarc.gr>
+LABEL maintainer="Thanasis Karampatsis <tkarabatsis@athenarc.gr>"
 
 ENV CODE_PATH="/opt/code"
 WORKDIR $CODE_PATH
 
-COPY pom.xml $CODE_PATH
+COPY pom.xml $CODE_PATH/
 
-RUN mvn clean compile test
+# Pre-fetch dependencies first to improve build cache efficiency.
+RUN mvn -B -ntp dependency:go-offline
 
 COPY src/ $CODE_PATH/src
 
-RUN mvn clean package
+RUN mvn -B -ntp clean package
 
 #######################################################
 # Setup the running container
@@ -54,7 +55,7 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
 #######################################################
 # Prepare the spring boot application files
 #######################################################
-COPY /config/application.tmpl $APP_CONFIG_TEMPLATE
+COPY config/application.tmpl $APP_CONFIG_TEMPLATE
 COPY --from=mvn-build-env /opt/code/target/portal-backend.jar /usr/share/jars/
 
 
@@ -62,10 +63,10 @@ COPY --from=mvn-build-env /opt/code/target/portal-backend.jar /usr/share/jars/
 # Configuration for the backend config files
 #######################################################
 ENV DISABLED_ALGORITHMS_CONFIG_PATH="/opt/portal/algorithms/disabledAlgorithms.json"
-COPY /config/disabledAlgorithms.json $DISABLED_ALGORITHMS_CONFIG_PATH
+COPY config/disabledAlgorithms.json $DISABLED_ALGORITHMS_CONFIG_PATH
 VOLUME /opt/portal/api
 
 
-ENTRYPOINT ["sh", "-c", "dockerize -template $APP_CONFIG_TEMPLATE:$APP_CONFIG_LOCATION java -Daeron.term.buffer.length -jar /usr/share/jars/portal-backend.jar"]
+ENTRYPOINT ["sh", "-ec", "exec dockerize -template ${APP_CONFIG_TEMPLATE}:${APP_CONFIG_LOCATION} java -Daeron.term.buffer.length -jar /usr/share/jars/portal-backend.jar"]
 EXPOSE 8080
-HEALTHCHECK --start-period=60s CMD curl -v --silent http://localhost:8080/services/actuator/health 2>&1 | grep UP
+HEALTHCHECK --start-period=60s CMD curl --fail --silent --show-error http://localhost:8080/services/actuator/health | grep -q '"status":"UP"'
